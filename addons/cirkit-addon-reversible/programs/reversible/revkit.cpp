@@ -79,6 +79,7 @@
 #include <reversible/cli/commands/required_lines.hpp>
 #include <reversible/cli/commands/reverse.hpp>
 #include <reversible/cli/commands/revgen.hpp>
+#include <reversible/cli/commands/revtest.hpp>
 #include <reversible/cli/commands/revsim.hpp>
 #include <reversible/cli/commands/revsimp.hpp>
 #include <reversible/cli/commands/rms.hpp>
@@ -87,6 +88,7 @@
 #include <reversible/cli/commands/tof.hpp>
 #include <reversible/cli/commands/tpar.hpp>
 #include <reversible/cli/commands/unique_names.hpp>
+#include <reversible/cli/commands/alex.hpp>
 
 #ifdef USE_EXPERIMENTAL_REVERSIBLE_COMMANDS
 #include <reversible/cli/commands/commands.hpp>
@@ -181,6 +183,10 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( gen_reciprocal );
   ADD_COMMAND( revgen );
 
+    cli.set_category( "Test (Gerhard)" );
+    
+    ADD_COMMAND( revtest );
+
   cli.set_category( "Various" );
 
   ADD_COMMAND( abc );
@@ -191,9 +197,11 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( print_io );
   ADD_COMMAND( random_circuit );
   ADD_COMMAND( tt );
+    ADD_COMMAND( alex );
 
 #ifdef USE_EXPERIMENTAL_REVERSIBLE_COMMANDS
   EXPERIMENTAL_REVERSIBLE_COMMANDS
+    
 #endif
 
 ALICE_END
