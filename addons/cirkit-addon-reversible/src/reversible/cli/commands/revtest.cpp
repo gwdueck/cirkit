@@ -188,7 +188,7 @@ bool revtest_command::execute()
     const auto& circuits = env->store<circuit>();
     circuit circ_IBM = transform_to_IBM_Q5( circuits.current() );
     
-    write_qc( circ_IBM, "../../test.qc", true );
+    write_qc( circ_IBM, "../../test.qc", false );
     return true;
 }
 

@@ -51,7 +51,6 @@ class alex_command : public cirkit_command
 
 protected:
   bool execute();
-  void testing ( circuit& circ );
 
 private:
 
