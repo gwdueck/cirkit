@@ -117,6 +117,7 @@ ALICE_BEGIN(revkit)
   ADD_WRITE_COMMAND( pla, "PLA" );
   ADD_WRITE_COMMAND( projectq, "ProjectQ" );
   ADD_WRITE_COMMAND( qc, "QC" );
+  ADD_WRITE_COMMAND( qasm, "QASM" );
   ADD_WRITE_COMMAND( qcode, "QCode" );
   ADD_WRITE_COMMAND( qpic, "qpic" );
   ADD_WRITE_COMMAND( quipper, "Quipper" );

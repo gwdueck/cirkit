@@ -60,13 +60,11 @@ namespace cirkit
  ******************************************************************************/
 
 revtest_command::revtest_command( const environment::ptr& env )
-  : cirkit_command( env, "Reversible circuit simplification" )
+  : cirkit_command( env, "Translate Clifford+T circuits to IBM Q" )
 {
-  opts.add_options()
-    ( "methods",   value_with_default( &methods ), "optimization methods:\nm: try to merge gates with same target\nn: cancel NOT gates\na: merge adjacent gates\ne: resynthesize same-target gates with exorcism\ns: propagate SWAP gates (may change output order)" )
-    ( "noreverse",                                 "do not optimize in reverse direction" )
-    ;
-  be_verbose();
+//  opts.add_options()
+//    ;
+//  be_verbose();
   add_new_option();
 }
 
@@ -79,7 +77,7 @@ command::rules_t revtest_command::validity_rules() const
     
 bool revtest_command::execute()
 {
-    auto& circ = env->store<circuit>();
+/*    auto& circ = env->store<circuit>();
 
 //    const auto vars = create_name_list( "v%d", circ.lines() );
     const auto vars = create_name_list( "v%d", 5u );
@@ -184,11 +182,16 @@ bool revtest_command::execute()
         }
     }
     
-    
-    const auto& circuits = env->store<circuit>();
+ */
+    auto& circuits = env->store<circuit>();
     circuit circ_IBM = transform_to_IBM_Q5( circuits.current() );
     
-    write_qc( circ_IBM, "../../test.qc", false );
+    if ( is_set( "new" ) )
+    {
+        circuits.extend();
+    }
+
+    circuits.current() = circ_IBM;
     return true;
 }
 

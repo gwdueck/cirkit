@@ -52,6 +52,7 @@
 #include <reversible/io/write_pla.hpp>
 #include <reversible/io/write_projectq.hpp>
 #include <reversible/io/write_qc.hpp>
+#include <reversible/io/write_qasm.hpp>
 #include <reversible/io/write_qcode.hpp>
 #include <reversible/io/write_qpic.hpp>
 #include <reversible/io/write_quipper.hpp>
@@ -305,6 +306,21 @@ void store_write_io_type<circuit, io_qc_tag_t>( const circuit& circ, const std::
 {
   write_qc( circ, filename, cmd.is_set( "iqc" ) );
 }
+    
+template<>
+    bool store_can_write_io_type<circuit, io_qasm_tag_t>( command& cmd )
+    {
+        cmd.opts.add_options()
+        ( "iqc", "write IQC compliant files" )
+        ;
+        return true;
+    }
+    
+template<>
+    void store_write_io_type<circuit, io_qasm_tag_t>( const circuit& circ, const std::string& filename, const command& cmd )
+    {
+        write_qasm( circ, filename, cmd.is_set( "iqc" ) );
+    }
 
 template<>
 void store_write_io_type<circuit, io_qcode_tag_t>( const circuit& circ, const std::string& filename, const command& cmd )
