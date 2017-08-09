@@ -27,10 +27,10 @@
 /**
  * @file alex.hpp
  *
- * @brief Generate reversible structures
+ * @brief Test
  *
- * @author Mathias Soeken
- * @since  2.3
+ * @author A.G.A.
+ * @2
  */
 
 #ifndef CLI_ALEX_COMMAND_HPP
@@ -43,15 +43,24 @@
 namespace cirkit
 {
 
+	void remove_line_control_target ( gate& control, const gate& target );
+	bool line_control_target ( const gate& control, const gate& target );
+	bool different_polarity_controls ( const gate& ga, const gate& gb );
+	bool controls_same_line ( const gate& ga, const gate& gb );
+	bool targets_same_line ( const gate& ga, const gate& gb );
+	void swap_gates ( circuit::const_iterator itGate, circuit::const_iterator nextGate );
+	bool single_control( const gate& ga, const gate& gb );
+	
+	
 class alex_command : public cirkit_command
     {
     public:
         alex_command( const environment::ptr& env );
-
+		void choose_rule( unsigned& y, const unsigned i );
 
 protected:
   bool execute();
-
+  
 private:
 
 };

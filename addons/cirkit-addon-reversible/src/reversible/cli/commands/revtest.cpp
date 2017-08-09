@@ -39,9 +39,11 @@
 #include <reversible/target_tags.hpp>
 #include <reversible/functions/copy_metadata.hpp>
 #include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/add_line_to_circuit.hpp>
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/io/write_qc.hpp>
 #include <reversible/variable.hpp>
+
 
 bool valid_CNOT[5][5] = {{0,1,1,0,0}, {0,0,1,0,0}, {0,0,0,0,0}, {0,0,1,0,1}, {0,0,1,0,0}};
 namespace cirkit
@@ -207,6 +209,13 @@ circuit transform_to_IBM_Q5( const circuit& circ )
     unsigned target, control;
     std::vector<unsigned int> new_controls;
     copy_metadata( circ, circ_IBM );
+    
+    // all IBM circuits have exactly 5 line
+    for(unsigned i = circ.lines()+1 ; i <= 5u; i++)
+    {
+        add_line_to_circuit( circ_IBM, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
+    }
+
     
     // iterate through the gates
     for ( const auto& gate : circ )
