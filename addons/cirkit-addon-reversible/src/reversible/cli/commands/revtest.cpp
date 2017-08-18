@@ -27,6 +27,7 @@
 #include "revtest.hpp"
 
 #include <fstream>
+#include <algorithm>
 
 #include <alice/rules.hpp>
 #include <core/utils/range_utils.hpp>
@@ -41,6 +42,7 @@
 #include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/add_line_to_circuit.hpp>
 #include <reversible/functions/add_gates.hpp>
+#include <reversible/functions/remove_dup_gates.hpp>
 #include <reversible/io/write_qc.hpp>
 #include <reversible/variable.hpp>
 
@@ -186,14 +188,33 @@ bool revtest_command::execute()
     
  */
     auto& circuits = env->store<circuit>();
-    circuit circ_IBM = transform_to_IBM_Q5( circuits.current() );
-    
-    if ( is_set( "new" ) )
+    circuit circ_working = circuits.current();
+    unsigned start = circ_working.lines()+1;
+    for(unsigned i = start ; i <= 5u; i++)
     {
-        circuits.extend();
+        add_line_to_circuit( circ_working, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
     }
-
-    circuits.current() = circ_IBM;
+    int perm[5] = {0, 1, 2, 3, 4};
+    circuit circ_copy = circ_working;
+    do
+    {
+        circ_working = circ_copy;
+        permute_lines( circ_working , perm);
+        circuit circ_IBM = transform_to_IBM_Q5( circ_working );
+        if ( is_set( "new" ) )
+        {
+            circuits.extend();
+        }
+        
+        for(int i = 0; i < 5; i++)
+        {
+            std::cout << perm[i] << " ";
+        }
+        std::cout << "gates = " << circ_IBM.num_gates();
+        circ_IBM = remove_dup_gates( circ_IBM);
+        std::cout << " no dup = " << circ_IBM.num_gates() << std::endl;
+        circuits.current() = circ_IBM;
+    } while ( std::next_permutation(perm,perm+5) );
     return true;
 }
 
@@ -259,11 +280,11 @@ circuit transform_to_IBM_Q5( const circuit& circ )
                     append_toffoli( circ_IBM, new_controls, 2u );
                     append_hadamard( circ_IBM, 2u );
                     append_hadamard( circ_IBM, target );
-                    append_toffoli( circ_IBM, new_controls, 2u );
+                  //  append_toffoli( circ_IBM, new_controls, 2u );
                     
                     append_toffoli( circ_IBM, gate.controls(), 2u );
                     
-                    append_toffoli( circ_IBM, new_controls, 2u );
+                  //  append_toffoli( circ_IBM, new_controls, 2u );
                     append_hadamard( circ_IBM, 2u );
                     append_hadamard( circ_IBM, target );
                     append_toffoli( circ_IBM, new_controls, 2u );
@@ -276,48 +297,8 @@ circuit transform_to_IBM_Q5( const circuit& circ )
         }
         else if ( is_pauli( gate ) )
         {
-            
             const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
-            
             append_pauli( circ_IBM, target, tag.axis, tag.root, tag.adjoint );
- /*           
-            switch ( tag.axis )
-            {
-                case pauli_axis::X:
-                    assert( tag.root == 1u );
-                    std::cout << "x";
-                    break;
-                    
-                case pauli_axis::Y:
-                    assert( tag.root == 1u );
-                    std::cout << "y";
-                    break;
-                    
-                case pauli_axis::Z:
-                    switch ( tag.root )
-                {
-                    case 1u:
-                        std::cout << "z";
-                        break;
-                    case 2u:
-                        std::cout << "s";
-                        break;
-                    case 4u:
-                        std::cout << "t";
-                        break;
-                    default:
-                        assert( false );
-                }
-                    break;
-            }
-
-            if ( tag.adjoint )
-            {
-                std::cout << "dg";
-            }
-            
-            std::cout << " q[" << target << "];" << std::endl;
- */
         }
         else if ( is_hadamard( gate ) )
         {
@@ -332,7 +313,29 @@ circuit transform_to_IBM_Q5( const circuit& circ )
     
     return circ_IBM;
 }
-    
+
+    // permute the line in the circuit
+    // assume it is a qc circuit
+void permute_lines( circuit& circ , int perm[])
+    {
+        unsigned target, control;
+        for ( auto& gate : circ )
+        {
+            target = gate.targets().front();
+            gate.remove_target(target);
+            gate.add_target(perm[target]);
+            if( !gate.controls().empty() )
+            {
+                control = gate.controls().front().line();
+                gate.remove_control( make_var(control) );
+                gate.add_control( make_var(perm[control]) );
+                
+            }
+            
+        }
+
+    }
+
 }
 
 // Local Variables:

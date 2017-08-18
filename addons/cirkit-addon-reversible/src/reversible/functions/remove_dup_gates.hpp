@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,42 +25,25 @@
  */
 
 /**
- * @file revtest.hpp
+ * @file remove_dup_gates.hpp
  *
- * @brief Reversible circuit test
+ * @brief remove dupplicat adjacent gates that are self inverse
  *
  * @author Gerhard Dueck
- * @since  2.3
+ * @since  2.1
  */
 
-#ifndef CLI_REVTEST_COMMAND_HPP
-#define CLI_REVTEST_COMMAND_HPP
+#ifndef REMOVE_DUP_GATES_HPP
+#define REMOVE_DUP_GATES_HPP
 
-#include <string>
 #include <reversible/circuit.hpp>
-#include <core/cli/cirkit_command.hpp>
 
 namespace cirkit
 {
-circuit transform_to_IBM_Q5( const circuit& circ );
-void permute_lines( circuit& circ , int perm[]);
 
-class revtest_command : public cirkit_command
-{
-public:
-  revtest_command( const environment::ptr& env );
-
-protected:
-  rules_t validity_rules() const;
-  bool execute();
-
-public:
-  log_opt_t log() const;
-
-private:
-  std::string methods = "mnaes";
-};
-
+circuit remove_dup_gates( const circuit& circ );
+bool equal(const gate& g1, const gate& g2 );
+    
 }
 
 #endif
