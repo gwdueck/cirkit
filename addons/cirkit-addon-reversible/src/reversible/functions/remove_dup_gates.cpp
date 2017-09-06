@@ -36,16 +36,31 @@ namespace cirkit
 circuit remove_dup_gates( const circuit& circ )
 {
     circuit result = circ;
-    unsigned i = 1;
-    while(i < result.num_gates())
+    unsigned i = 0, j;
+    while(i < result.num_gates() - 1 )
     {
-        if( equal(result[i-1], result[i]) )
+        j = i + 1;
+        bool done = false;
+        bool incr_i = true;
+        while( ( !done ) && ( j < result.num_gates() ) )
         {
-            result.remove_gate_at(i);
-            result.remove_gate_at(i-1);
-            i--;
+            if( equal( result[i], result[j] ) )
+            {
+                result.remove_gate_at(j);
+                result.remove_gate_at(i);
+                done = true;
+                i = 0; // overkill, but to safe 
+                incr_i = false;
+            }
+            if(!done && gates_can_move( result[i], result[j]) )
+            {
+                j++;
+            }
+            else{
+                done = true;
+            }
         }
-        else
+        if ( incr_i )
         {
             i++;
         }
@@ -81,6 +96,33 @@ bool equal(const gate& g1, const gate& g2 )
     }
     
     return true;
+}
+ 
+// check if the two gates may be inter changed
+// WARNING: only written for Clifford+T gates
+bool gates_can_move( const gate& g1, const gate& g2 )
+{
+    unsigned target_g2 = g2.targets().front();
+    // only move hadamard if it does not intersect with control nor target
+    if ( is_hadamard( g1 ) )
+    {
+        if ( target_g2 == g1.targets().front() ){
+            return false;
+        }
+        if ( g2.controls().empty() )
+        {
+            return true;
+        }
+        else{
+            unsigned control_g2 = g2.controls().front().line();
+            if ( g1.targets().front() == control_g2 )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
 }
     
 }

@@ -25,7 +25,7 @@
  */
 
 /**
- * @file revtest.hpp
+ * @file clifford2IBMQ5.hpp
  *
  * @brief Reversible circuit test
  *
@@ -33,8 +33,8 @@
  * @since  2.3
  */
 
-#ifndef CLI_REVTEST_COMMAND_HPP
-#define CLI_REVTEST_COMMAND_HPP
+#ifndef CLI_CLIFFORD2IBMQ5_COMMAND_HPP
+#define CLI_CLIFFORD2IBMQ5_COMMAND_HPP
 
 #include <string>
 #include <reversible/circuit.hpp>
@@ -45,10 +45,10 @@ namespace cirkit
 circuit transform_to_IBM_Q5( const circuit& circ );
 void permute_lines( circuit& circ , int perm[]);
 
-class revtest_command : public cirkit_command
+class clifford2IBMQ5_command : public cirkit_command
 {
 public:
-  revtest_command( const environment::ptr& env );
+  clifford2IBMQ5_command( const environment::ptr& env );
 
 protected:
   rules_t validity_rules() const;
@@ -57,8 +57,6 @@ protected:
 public:
   log_opt_t log() const;
 
-private:
-  std::string methods = "mnaes";
 };
 
 }

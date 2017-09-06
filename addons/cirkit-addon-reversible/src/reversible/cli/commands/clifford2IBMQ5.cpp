@@ -24,7 +24,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "revtest.hpp"
+#include "clifford2IBMQ5.hpp"
 
 #include <fstream>
 #include <algorithm>
@@ -63,7 +63,7 @@ namespace cirkit
  * Public functions                                                           *
  ******************************************************************************/
 
-revtest_command::revtest_command( const environment::ptr& env )
+clifford2IBMQ5_command::clifford2IBMQ5_command( const environment::ptr& env )
   : cirkit_command( env, "Translate Clifford+T circuits to IBM Q" )
 {
 //  opts.add_options()
@@ -73,13 +73,13 @@ revtest_command::revtest_command( const environment::ptr& env )
 }
 
 
-command::rules_t revtest_command::validity_rules() const
+command::rules_t clifford2IBMQ5_command::validity_rules() const
 {
   return {has_store_element<circuit>( env )};
 }
 
     
-bool revtest_command::execute()
+bool clifford2IBMQ5_command::execute()
 {
 /*    auto& circ = env->store<circuit>();
 
@@ -218,7 +218,7 @@ bool revtest_command::execute()
     return true;
 }
 
-command::log_opt_t revtest_command::log() const
+command::log_opt_t clifford2IBMQ5_command::log() const
 {
   return log_opt_t({{"runtime", statistics->get<double>( "runtime" )}});
 }

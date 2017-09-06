@@ -79,7 +79,7 @@
 #include <reversible/cli/commands/required_lines.hpp>
 #include <reversible/cli/commands/reverse.hpp>
 #include <reversible/cli/commands/revgen.hpp>
-#include <reversible/cli/commands/revtest.hpp>
+#include <reversible/cli/commands/clifford2IBMQ5.hpp>
 #include <reversible/cli/commands/revsim.hpp>
 #include <reversible/cli/commands/revsimp.hpp>
 #include <reversible/cli/commands/rms.hpp>
@@ -186,7 +186,7 @@ ALICE_BEGIN(revkit)
 
     cli.set_category( "Test (Gerhard)" );
     
-    ADD_COMMAND( revtest );
+    ADD_COMMAND( clifford2IBMQ5 );
 
   cli.set_category( "Various" );
 
