@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,37 +25,35 @@
  */
 
 /**
- * @file clifford2IBMQ5.hpp
+ * @file permute_lines.hpp
  *
- * @brief Reversible circuit test
+ * @brief Permute the lies of a circuit
  *
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef CLI_CLIFFORD2IBMQ5_COMMAND_HPP
-#define CLI_CLIFFORD2IBMQ5_COMMAND_HPP
+#ifndef CLI_PERMUTE_LINES_COMMAND_HPP
+#define CLI_PERMUTE_LINES_COMMAND_HPP
 
-#include <string>
-#include <reversible/circuit.hpp>
 #include <core/cli/cirkit_command.hpp>
+#include <reversible/circuit.hpp>
 
 namespace cirkit
 {
-circuit transform_to_IBM_Q5( const circuit& circ );
-
-class clifford2IBMQ5_command : public cirkit_command
+void permute_lines( circuit& circ , int perm[]);
+    
+class permute_lines_command : public cirkit_command
 {
 public:
-  clifford2IBMQ5_command( const environment::ptr& env );
+  permute_lines_command( const environment::ptr& env );
 
 protected:
   rules_t validity_rules() const;
   bool execute();
 
-public:
-  log_opt_t log() const;
-
+private:
+  std::string permutation;
 };
 
 }

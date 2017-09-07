@@ -35,6 +35,7 @@
 #include <reversible/circuit.hpp>
 #include <reversible/gate.hpp>
 #include <reversible/cli/stores.hpp>
+#include <reversible/cli/commands/permute_lines.hpp>
 #include <reversible/optimization/simplify.hpp>
 #include <reversible/pauli_tags.hpp>
 #include <reversible/target_tags.hpp>
@@ -313,28 +314,6 @@ circuit transform_to_IBM_Q5( const circuit& circ )
     
     return circ_IBM;
 }
-
-    // permute the line in the circuit
-    // assume it is a qc circuit
-void permute_lines( circuit& circ , int perm[])
-    {
-        unsigned target, control;
-        for ( auto& gate : circ )
-        {
-            target = gate.targets().front();
-            gate.remove_target(target);
-            gate.add_target(perm[target]);
-            if( !gate.controls().empty() )
-            {
-                control = gate.controls().front().line();
-                gate.remove_control( make_var(control) );
-                gate.add_control( make_var(perm[control]) );
-                
-            }
-            
-        }
-
-    }
 
 }
 

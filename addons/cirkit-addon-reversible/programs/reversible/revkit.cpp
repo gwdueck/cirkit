@@ -71,6 +71,7 @@
 #include <reversible/cli/commands/mitm.hpp>
 #include <reversible/cli/commands/nct.hpp>
 #include <reversible/cli/commands/perm.hpp>
+#include <reversible/cli/commands/permute_lines.hpp>
 #include <reversible/cli/commands/pos.hpp>
 #include <reversible/cli/commands/qbs.hpp>
 #include <reversible/cli/commands/random_circuit.hpp>
@@ -184,9 +185,10 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( gen_reciprocal );
   ADD_COMMAND( revgen );
 
-    cli.set_category( "Test (Gerhard)" );
+  cli.set_category( "Dealing with IBM's Q5" );
     
     ADD_COMMAND( clifford2IBMQ5 );
+    ADD_COMMAND( permute_lines );
 
   cli.set_category( "Various" );
 
@@ -198,7 +200,7 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( print_io );
   ADD_COMMAND( random_circuit );
   ADD_COMMAND( tt );
-    ADD_COMMAND( alex );
+  ADD_COMMAND( alex );
 
 #ifdef USE_EXPERIMENTAL_REVERSIBLE_COMMANDS
   EXPERIMENTAL_REVERSIBLE_COMMANDS
