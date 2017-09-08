@@ -80,7 +80,7 @@
 #include <reversible/cli/commands/required_lines.hpp>
 #include <reversible/cli/commands/reverse.hpp>
 #include <reversible/cli/commands/revgen.hpp>
-#include <reversible/cli/commands/clifford2IBMQ5.hpp>
+#include <reversible/cli/commands/ibm.hpp>
 #include <reversible/cli/commands/revsim.hpp>
 #include <reversible/cli/commands/revsimp.hpp>
 #include <reversible/cli/commands/rms.hpp>
@@ -187,7 +187,7 @@ ALICE_BEGIN(revkit)
 
   cli.set_category( "Dealing with IBM's Q5" );
     
-    ADD_COMMAND( clifford2IBMQ5 );
+    ADD_COMMAND( ibm );
     ADD_COMMAND( permute_lines );
 
   cli.set_category( "Various" );

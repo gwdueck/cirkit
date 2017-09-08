@@ -24,7 +24,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "clifford2IBMQ5.hpp"
+#include "ibm.hpp"
 
 #include <fstream>
 #include <algorithm>
@@ -45,6 +45,7 @@
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
 #include <reversible/io/write_qc.hpp>
+#include <reversible/io/print_circuit.hpp>
 #include <reversible/variable.hpp>
 
 
@@ -64,23 +65,24 @@ namespace cirkit
  * Public functions                                                           *
  ******************************************************************************/
 
-clifford2IBMQ5_command::clifford2IBMQ5_command( const environment::ptr& env )
+ibm_command::ibm_command( const environment::ptr& env )
   : cirkit_command( env, "Translate Clifford+T circuits to IBM Q" )
 {
-//  opts.add_options()
-//    ;
-//  be_verbose();
+    opts.add_options()
+    ( "all_perm,a",  "Try all permutations" )
+    ( "rm_dup,r",  "Remove duplicate gates" )
+    ;
   add_new_option();
 }
 
 
-command::rules_t clifford2IBMQ5_command::validity_rules() const
+command::rules_t ibm_command::validity_rules() const
 {
   return {has_store_element<circuit>( env )};
 }
 
     
-bool clifford2IBMQ5_command::execute()
+bool ibm_command::execute()
 {
 /*    auto& circ = env->store<circuit>();
 
@@ -188,38 +190,69 @@ bool clifford2IBMQ5_command::execute()
     }
     
  */
+    
+    
     auto& circuits = env->store<circuit>();
     circuit circ_working = circuits.current();
+    circuit circ_IBM;
     unsigned start = circ_working.lines()+1;
     for(unsigned i = start ; i <= 5u; i++)
     {
         add_line_to_circuit( circ_working, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
     }
-    int perm[5] = {0, 1, 2, 3, 4};
-    circuit circ_copy = circ_working;
-    do
+    
+    if( !is_set( "all_perm" ) )
     {
-        circ_working = circ_copy;
-        permute_lines( circ_working , perm);
-        circuit circ_IBM = transform_to_IBM_Q5( circ_working );
+        circ_IBM = transform_to_IBM_Q5( circ_working );
         if ( is_set( "new" ) )
         {
             circuits.extend();
         }
-        
-        for(int i = 0; i < 5; i++)
+        if ( is_set( "rm_dup" ) )
         {
-            std::cout << perm[i] << " ";
+            circ_IBM = remove_dup_gates( circ_IBM);
         }
-        std::cout << "gates = " << circ_IBM.num_gates();
-        circ_IBM = remove_dup_gates( circ_IBM);
-        std::cout << " no dup = " << circ_IBM.num_gates() << std::endl;
         circuits.current() = circ_IBM;
-    } while ( std::next_permutation(perm,perm+5) );
+    }
+    else
+    {
+        int perm[5] = {0, 1, 2, 3, 4}, inv_perm[5];
+        do
+        {
+            permute_lines( circ_working , perm );
+            circ_IBM = transform_to_IBM_Q5( circ_working );
+            if ( is_set( "new" ) )
+            {
+                circuits.extend();
+            }
+            
+/*
+            for( int i = 0; i < 5; i++ )
+            {
+                std::cout << perm[i] << " ";
+            }
+            std::cout << "gates = " << circ_IBM.num_gates();
+            circ_IBM = remove_dup_gates( circ_IBM);
+            std::cout << " no dup = " << circ_IBM.num_gates() << std::endl;
+            print_circuit( circ_working );
+ */
+            if ( is_set( "rm_dup" ) )
+            {
+                circ_IBM = remove_dup_gates( circ_IBM);
+            }
+            circuits.current() = circ_IBM;
+            // undo the permutation
+            for( int i = 0; i < 5; i++ )
+            {
+                inv_perm[perm[i]] = i;
+            }
+            permute_lines( circ_working , inv_perm );
+        } while ( std::next_permutation(perm,perm+5) );
+    }
     return true;
 }
 
-command::log_opt_t clifford2IBMQ5_command::log() const
+command::log_opt_t ibm_command::log() const
 {
   return log_opt_t({{"runtime", statistics->get<double>( "runtime" )}});
 }
@@ -280,14 +313,14 @@ circuit transform_to_IBM_Q5( const circuit& circ )
                     append_hadamard( circ_IBM, target );
                     append_toffoli( circ_IBM, new_controls, 2u );
                     append_hadamard( circ_IBM, 2u );
-                    append_hadamard( circ_IBM, target );
+                  // append_hadamard( circ_IBM, target );
                   //  append_toffoli( circ_IBM, new_controls, 2u );
                     
                     append_toffoli( circ_IBM, gate.controls(), 2u );
                     
                   //  append_toffoli( circ_IBM, new_controls, 2u );
                     append_hadamard( circ_IBM, 2u );
-                    append_hadamard( circ_IBM, target );
+                  //  append_hadamard( circ_IBM, target );
                     append_toffoli( circ_IBM, new_controls, 2u );
                     append_hadamard( circ_IBM, 2u );
                     append_hadamard( circ_IBM, target );

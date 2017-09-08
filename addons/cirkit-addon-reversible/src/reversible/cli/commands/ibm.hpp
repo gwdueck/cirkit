@@ -25,7 +25,7 @@
  */
 
 /**
- * @file clifford2IBMQ5.hpp
+ * @file ibm.hpp
  *
  * @brief Reversible circuit test
  *
@@ -33,8 +33,8 @@
  * @since  2.3
  */
 
-#ifndef CLI_CLIFFORD2IBMQ5_COMMAND_HPP
-#define CLI_CLIFFORD2IBMQ5_COMMAND_HPP
+#ifndef CLI_IBM_COMMAND_HPP
+#define CLI_IBM_COMMAND_HPP
 
 #include <string>
 #include <reversible/circuit.hpp>
@@ -44,10 +44,10 @@ namespace cirkit
 {
 circuit transform_to_IBM_Q5( const circuit& circ );
 
-class clifford2IBMQ5_command : public cirkit_command
+class ibm_command : public cirkit_command
 {
 public:
-  clifford2IBMQ5_command( const environment::ptr& env );
+  ibm_command( const environment::ptr& env );
 
 protected:
   rules_t validity_rules() const;
