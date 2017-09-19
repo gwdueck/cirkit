@@ -71,6 +71,7 @@ ibm_command::ibm_command( const environment::ptr& env )
     opts.add_options()
     ( "all_perm,a",  "Try all permutations" )
     ( "rm_dup,r",  "Remove duplicate gates" )
+    ( "verbose,v",  "verbose" )
     ;
   add_new_option();
 }
@@ -226,21 +227,20 @@ bool ibm_command::execute()
                 circuits.extend();
             }
             
-/*
-            for( int i = 0; i < 5; i++ )
-            {
-                std::cout << perm[i] << " ";
-            }
-            std::cout << "gates = " << circ_IBM.num_gates();
-            circ_IBM = remove_dup_gates( circ_IBM);
-            std::cout << " no dup = " << circ_IBM.num_gates() << std::endl;
-            print_circuit( circ_working );
- */
             if ( is_set( "rm_dup" ) )
             {
                 circ_IBM = remove_dup_gates( circ_IBM);
             }
             circuits.current() = circ_IBM;
+            if( is_set( "verbose" ) )
+            {
+                for( int i = 0; i < 5; i++ )
+                {
+                    std::cout << perm[i] << " ";
+                }
+                std::cout << "gates = " << circ_IBM.num_gates() << std::endl;
+            }
+
             // undo the permutation
             for( int i = 0; i < 5; i++ )
             {
@@ -288,7 +288,6 @@ circuit transform_to_IBM_Q5( const circuit& circ )
         {
             if( gate.controls().empty() ) // a NOT gate
             {
-                std::cout << "NOT ";
                 append_toffoli( circ_IBM, gate.controls(), target );
             }
             else // CNOT gate
