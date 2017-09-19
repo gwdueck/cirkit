@@ -76,7 +76,7 @@ void write_qasm( const circuit& circ, std::ostream& os, bool iqc_compliant )
       }
       else
       {
-         os << "cx q[" <<  gate.controls().front() << "],[";
+         os << "cx q[" <<  gate.controls().front() << "],q[";
          os << gate.targets().front() << "];" << std::endl;
       }
     }
