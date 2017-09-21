@@ -94,6 +94,7 @@ namespace cirkit
 {
 
 class xmg_cover;
+class xmg_bitmarks;
 
 class xmg_graph
 {
@@ -171,9 +172,8 @@ public:
   void inc_output_refs();
 
   /* marking */
-  void init_marks();
-  bool is_marked( xmg_node n) const;
-  void mark( xmg_node n );
+  xmg_bitmarks& bitmarks();
+  const xmg_bitmarks& bitmarks() const;
 
   void mark_as_modified();
 
@@ -218,9 +218,11 @@ private:
   /* cover */
   std::shared_ptr<xmg_cover>              _cover = nullptr;
 
+  /* bitmarks */
+  std::shared_ptr<xmg_bitmarks>           _bitmarks;
+
   /* utilities */
   std::vector<unsigned>                   ref_count;
-  boost::dynamic_bitset<>                 marks;
 };
 
 }

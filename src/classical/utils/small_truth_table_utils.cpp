@@ -96,9 +96,9 @@ std::pair<uint64_t, uint64_t> stt_compute_mask_pair( std::vector<unsigned>& left
           auto& n2 = nodes[idx2];
 
           /* connect graph */
-               if ( *n1.a == *n2.a ) { n1.lf = idx2; n2.lf = idx1; }
+          if      ( *n1.a == *n2.a ) { n1.lf = idx2; n2.lf = idx1; }
           else if ( *n1.a == *n2.b ) { n1.lf = idx2; n2.rf = idx1; }
-               if ( *n1.b == *n2.a ) { n1.rf = idx2; n2.lf = idx1; }
+          if      ( *n1.b == *n2.a ) { n1.rf = idx2; n2.lf = idx1; }
           else if ( *n1.b == *n2.b ) { n1.rf = idx2; n2.rf = idx1; }
 
           ++it2; ++idx2;
@@ -190,7 +190,7 @@ std::vector<uint64_t> stt_compute_mask_sequence( const std::vector<unsigned>& pe
   //           << "[i] right = " << any_join( right, " " ) << std::endl;
 
   /* compute middle mask */
-  for ( auto i = 0u; i < ( 1 << ( n - 1 ) ); ++i )
+  for ( auto i = 0u; i < ( 1u << ( n - 1 ) ); ++i )
   {
     if ( left[i] != right[i] )
     {

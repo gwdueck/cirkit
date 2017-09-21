@@ -37,13 +37,18 @@
 
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
+#include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
+#include <boost/program_options.hpp>
 
 #include <alice/command.hpp>
 
 namespace alice
 {
+
+using boost::program_options::value;
 
 class help_command : public command
 {
@@ -51,12 +56,75 @@ public:
   help_command( const environment::ptr& env )  : command( env, "Shows help" )
   {
     opts.add_options()
-      ( "detailed,d", "show command descriptions" )
+      ( "detailed,d",                   "show command descriptions" )
+      ( "search,s",   value( &search ), "search for commands in help descriptions" )
       ;
   }
 
 protected:
   bool execute()
+  {
+    if ( is_set( "search" ) )
+    {
+      search_command();
+    }
+    else
+    {
+      print_commands();
+    }
+
+    return true;
+  }
+
+private:
+  void search_command()
+  {
+    for ( const auto& command : env->commands )
+    {
+      std::stringstream ss;
+      ss << command.second->opts;
+
+      auto text = ss.str();
+      std::string::iterator it;
+      std::string::size_type pos = 0;
+
+      /* split text */
+      std::vector<std::string> lines;
+      boost::split( lines, text, boost::is_any_of( "\n" ), boost::algorithm::token_compress_on );
+
+      const auto pred = []( char ch1, char ch2 ) {
+        return std::toupper( ch1 ) == std::toupper( ch2 );
+      };
+
+      std::string output;
+      for ( auto& line : lines )
+      {
+        auto matched = false;
+        while ( ( it = std::search( line.begin() + pos, line.end(), search.begin(), search.end(), pred ) ) != line.end() )
+        {
+          matched = true;
+          pos = std::distance( line.begin(), it );
+
+          std::string found( it, it + search.size() );
+
+          line.replace( pos, search.size(), "\033[1;32m" + found + "\033[0m" );
+          pos += 15 + search.size();
+        }
+
+        if ( matched )
+        {
+          output += line + "\n";
+        }
+      }
+
+      if ( !output.empty() )
+      {
+        std::cout << "[i] found match in command \033[1;34m" << command.first << "\033[0m" << std::endl << output << std::endl << std::endl;
+      }
+    }
+  }
+
+  void print_commands()
   {
     for ( auto& p : env->categories )
     {
@@ -89,9 +157,10 @@ protected:
         std::cout << std::endl << std::endl;
       }
     }
-
-    return true;
   }
+
+private:
+  std::string search;
 };
 
 }

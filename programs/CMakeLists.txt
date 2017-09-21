@@ -36,7 +36,10 @@ add_cirkit_program(
     core/abc_cli.cpp
   USE
     ${abc_LIBRARIES}
-    lscli
+    ${Boost_SYSTEM_LIBRARIES}
+    ${Boost_FILESYSTEM_LIBRARIES}
+    ${Boost_PROGRAM_OPTIONS_LIBRARIES}
+    ${READLINE_LIBRARY}
   INCLUDE
    PUBLIC ${CMAKE_BINARY_DIR}/ext/abc-prefix/src/abc/src
 )
@@ -52,7 +55,7 @@ add_cirkit_program(
 )
 
 target_compile_definitions( cirkit PUBLIC USE_LINENOISE )
-target_link_libraries( cirkit ${cirkit_addon_command_libraries} )
+target_link_libraries( cirkit cirkit_cli ${cirkit_addon_command_libraries} )
 
 file( WRITE ${CMAKE_BINARY_DIR}/programs/addon_commands.hpp "" )
 foreach( inc ${cirkit_addon_command_includes} )
@@ -66,15 +69,13 @@ endforeach()
 target_include_directories( cirkit PUBLIC ${CMAKE_BINARY_DIR}/programs )
 
 # Python API
-find_package( PythonLibs 3 )
-if( PYTHONLIBS_FOUND AND cirkit_ENABLE_PYTHON_API )
+if( cirkit_ENABLE_PYTHON_API )
   find_package(pybind11 REQUIRED)
-  add_library( cirkit_python SHARED core/cirkit.cpp )
+  add_library( cirkit_python MODULE core/cirkit.cpp )
   target_compile_definitions( cirkit_python PUBLIC ALICE_PYTHON )
-  set_target_properties( cirkit_python PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES )
-  set_target_properties( cirkit_python PROPERTIES PREFIX "" )
-  set_target_properties( cirkit_python PROPERTIES SUFFIX "" )
-  set_target_properties( cirkit_python PROPERTIES OUTPUT_NAME "cirkit.so" )
-  target_include_directories( cirkit_python PUBLIC ${PYTHON_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/programs )
-  target_link_libraries( cirkit_python cirkit_core cirkit_classical ${cirkit_addon_command_libraries} ${PYTHON_LIBRARIES} )
+  set_target_properties(cirkit_python PROPERTIES PREFIX ""
+                                                 SUFFIX ""
+                                                 OUTPUT_NAME "cirkit.so")
+  target_include_directories( cirkit_python PUBLIC ${CMAKE_BINARY_DIR}/programs )
+  target_link_libraries( cirkit_python PUBLIC cirkit_cli ${cirkit_addon_command_libraries} PRIVATE pybind11::module )
 endif()

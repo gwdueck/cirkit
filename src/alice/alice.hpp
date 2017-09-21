@@ -37,6 +37,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -548,9 +549,9 @@ private:
 
 #ifdef ALICE_PYTHON
 public:
-  py::module pymodule()
+  void pymodule( py::module& m )
   {
-    py::module m( prefix.c_str(), "Python bindings" );
+    m.doc() = "Python bindings";
 
     py::class_<return_value_dict> representer( m, "ReturnValueDict" );
     representer
@@ -567,27 +568,27 @@ public:
 
           for ( const auto& kp : kwargs )
           {
-            auto key = kp.first.ptr();
-            auto value = kp.second.ptr();
+            // get the key as string
+            const auto skey = kp.first.cast<std::string>();
+            const auto value = kp.second;
 
-            const auto skey = std::string( PyUnicode_AsUTF8( key ) );
-
-            if ( PyBool_Check( value ) )
+            // TODO cast float to string?
+            if ( py::isinstance<py::bool_>( value ) )
             {
-              if ( value == Py_True )
+              if ( value.cast<bool>() )
               {
                 pargs.push_back( "--" + skey );
               }
             }
-            else if ( PyLong_Check( value ) )
+            else if ( py::isinstance<py::int_>( value ) )
             {
               pargs.push_back( "--" + skey );
-              pargs.push_back( std::to_string( PyLong_AsLong( value ) ) );
+              pargs.push_back( std::to_string( value.cast<int>() ) );
             }
             else
             {
               pargs.push_back( "--" + skey );
-              pargs.push_back( std::string( PyUnicode_AsUTF8( value ) ) );
+              pargs.push_back( value.cast<std::string>() );
             }
           }
           p.second->run( pargs );
@@ -602,34 +603,8 @@ public:
           {
             return py::none();
           }
-
-//             log_var_python_visitor vis;
-
-//             /* Python API */
-// #ifdef ALICE_PYTHON
-//             const auto it = log->find( "__repr__" );
-//             if ( it != log->end() )
-//             {
-//               std::string repr = boost::get<std::string>( it->second );
-//               std::string repr_html;
-//               const auto it2 = log->find( "_repr_html_" );
-//               if ( it2 != log->end() )
-//               {
-//                 repr_html = boost::get<std::string>( it2->second );
-//               }
-//               return py::cast( python_representer( repr, repr_html ) );
-//             }
-// #endif
-
-//             for ( const auto& lp : *log )
-//             {
-//               const auto value = boost::apply_visitor( vis, lp.second );
-//               dict[py::str( lp.first )] = value;
-//             }
         }, p.second->caption().c_str() );
     }
-
-    return m;
   }
 #endif
 
@@ -746,8 +721,8 @@ private:
 #define ALICE_BEGIN(name) int main( int argc, char ** argv ) {
 #define ALICE_END return cli.run( argc, argv ); }
 #else
-#define ALICE_BEGIN(name) PYBIND11_PLUGIN(name) {
-#define ALICE_END return cli.pymodule().ptr(); }
+#define ALICE_BEGIN(name) PYBIND11_MODULE(name, m) {
+#define ALICE_END cli.pymodule( m ); }
 #endif
 
 }
