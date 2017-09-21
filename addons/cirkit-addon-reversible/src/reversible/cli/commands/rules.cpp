@@ -170,9 +170,7 @@ void apply_rule_Dthree( circuit& circ, circuit::const_iterator& itGate, circuit:
 
 //Merge rule
 bool verify_rule_Dfour( const gate& ga, const gate& gb )
-{
-	gate gc, gd;
-	
+{	
 	if( targets_same_line( ga, gb ) && !different_polarity_controls ( ga, gb ) )
 		if( single_control( ga, gb ) )
 				return true;	

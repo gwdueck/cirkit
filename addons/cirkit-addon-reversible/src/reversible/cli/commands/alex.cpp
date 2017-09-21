@@ -34,6 +34,7 @@
 #include <reversible/functions/add_circuit.hpp>
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/clear_circuit.hpp>
 #include <reversible/functions/is_identity.hpp>
 #include <reversible/functions/reverse_circuit.hpp>
 
@@ -43,7 +44,7 @@
 
 using boost::program_options::value;
 
-//bool selectRandom = false;
+bool selectRandom = false;
 //unsigned iteration;
 
 namespace cirkit
@@ -54,10 +55,10 @@ namespace cirkit
 alex_command::alex_command( const environment::ptr& env )
     : cirkit_command( env, "Alex test" )
 {
-	/*opts.add_options()
-    ( "random,r",          					"Select rules randomly" )
+	opts.add_options()
+    ( "random,r",          					"Select random rules automatically" )
     //( "iterations,t", value(&iteration),	"Select number of iterations" )
-    ;*/
+    ;
 
 }
 
@@ -72,7 +73,7 @@ void circuit_is_the_same( circuit circ, circuit orig )
 	}
 }
 
-void applying_rules( circuit& circ, unsigned x[][4], unsigned y )
+void applying_rules( circuit& circ, std::vector<std::vector<int>> x, unsigned y )
 {
 	circuit::const_iterator itGate = circ.begin(), nextGate = circ.begin();
 	switch( x[y][0] )
@@ -119,13 +120,13 @@ void applying_rules( circuit& circ, unsigned x[][4], unsigned y )
 //Choose the rule to be applied
 void choose_rule( unsigned& y, const unsigned i )
 {
-	/*if ( selectRandom )
+	if ( selectRandom )
 	{
 		y = 1 + rand() % i;
-		//std::cout << "Sorteio: " << y << std::endl;
+		std::cout << "Sorteio: " << y << std::endl;
 	}
 	else
-	{*/
+	{
 		while( true )
 		{
 			std::cout << "\nWich rule will be applied? 0 to exit. ";
@@ -140,22 +141,41 @@ void choose_rule( unsigned& y, const unsigned i )
 			else
 				break;
 		}
-	//}
+	}
 }
 
 void testing( circuit& circ, const circuit orig )
 {
 	gate ga, gb;
 	unsigned y = 0, i = 0;
-	unsigned x[100][4];
+	//unsigned x[10000][4];
 	unsigned stop = 0;
-	unsigned start, min;
+	unsigned start, min, max;
+	circuit mc;
 
-	start = min = circ.num_gates();
+	std::vector <std::vector<int>> x(10000, std::vector<int>(4));
+	
+	start = min = max = circ.num_gates();
+	copy_circuit( circ, mc );
  	//while( true )
 	while( stop < 1000 )
 	{ 
 		i = 0;
+		
+		if( circ.num_gates() < min )
+		{
+			min = circ.num_gates();
+			clear_circuit( mc );
+			copy_circuit( circ, mc );
+		}	
+		if( circ.num_gates() > max )
+			max = circ.num_gates();
+		if( circ.num_gates() > min*1.5)
+		{
+			clear_circuit( circ );	
+			copy_circuit( mc, circ );
+			
+		}
 		
 		//Printing the circuit
 		std::cout << std::endl << circ << std::endl;
@@ -163,9 +183,6 @@ void testing( circuit& circ, const circuit orig )
 		std::cout << "Number of gates: " << circ.num_gates() << std::endl;
 		std::cout << "Iteration: " << stop << std::endl;
 		std::cout << "Iterating through the circuit..." << std::endl;
-		
-		if( circ.num_gates() < min )
-			min = circ.num_gates();
 		
 		for( circuit::const_iterator itGate = circ.begin(), nextGate = ++circ.begin();  nextGate != circ.end(); ++itGate, ++nextGate )
 		{
@@ -261,6 +278,7 @@ void testing( circuit& circ, const circuit orig )
 		}
 		else
 		{
+			//x.erase( x.begin()+10 );
 			choose_rule( y, i );
 			if( y == 0 )
 				break;
@@ -268,14 +286,15 @@ void testing( circuit& circ, const circuit orig )
 			++stop;
 		}
 	}
-	std::cout << "Number of gates-> Start: " << start << " Min: " << min << std::endl;
+	if( selectRandom )
+		std::cout << "Number of gates-> Start: " << start << " Min: " << min << " Max: " << max << std::endl;
 }
 
 bool alex_command::execute()
 {
 	auto& circuits = env->store<circuit>();
-	/*if ( is_set( "random" ) )
-		selectRandom = true;*/
+	if ( is_set( "random" ) )
+		selectRandom = true;
 	if( env->store<circuit>().current_index() >= 0 )
 	{
 	 	circuit circ, orig;
