@@ -96,10 +96,9 @@
 #include <reversible/truth_table.hpp>
 
 
-#include <reversible/cli/commands/ibm.hpp>
-#include <reversible/cli/commands/alex.hpp>
-
->>>>>>> upstream/master
+#include <cli/commands/ibm.hpp>
+#include <cli/commands/alex.hpp>
+#include <cli/commands/permute_lines.hpp>
 
 using namespace cirkit;
 
