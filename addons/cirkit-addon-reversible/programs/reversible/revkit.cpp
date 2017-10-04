@@ -57,6 +57,7 @@
 #include <cli/commands/gen_reciprocal.hpp>
 #include <cli/commands/hdbs.hpp>
 #include <cli/commands/is_identity.hpp>
+#include <cli/commands/levels.hpp>
 #include <cli/commands/lhrs.hpp>
 #include <cli/commands/mitm.hpp>
 #include <cli/commands/nct.hpp>
@@ -195,6 +196,7 @@ ALICE_BEGIN(revkit)
     
     ADD_COMMAND( ibm );
     ADD_COMMAND( permute_lines );
+    ADD_COMMAND( levels );
 
   cli.set_category( "Various" );
 
