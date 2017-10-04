@@ -161,6 +161,22 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     }
     return target_g1 != target_g2;
 }
+
+// no controls or target intersect
+bool gates_do_not_intersect( const gate& g1, const gate& g2 )
+{
+    unsigned target_g2 = g2.targets().front();
+    unsigned target_g1 = g1.targets().front();
+    if ( !g1.controls().empty() && ( target_g2 == g1.controls().front().line() ) )
+    {
+        return false;
+    }
+    if ( !g2.controls().empty() && ( target_g1 == g2.controls().front().line() ) )
+    {
+        return false;
+    }
+    return target_g1 != target_g2;
+}
     
 }
 
