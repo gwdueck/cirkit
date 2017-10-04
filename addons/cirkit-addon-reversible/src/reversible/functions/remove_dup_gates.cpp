@@ -103,10 +103,11 @@ bool equal(const gate& g1, const gate& g2 )
 bool gates_can_move( const gate& g1, const gate& g2 )
 {
     unsigned target_g2 = g2.targets().front();
+    unsigned target_g1 = g1.targets().front();
     // only move hadamard if it does not intersect with control nor target
     if ( is_hadamard( g1 ) )
     {
-        if ( target_g2 == g1.targets().front() ){
+        if ( target_g2 == target_g1 ){
             return false;
         }
         if ( g2.controls().empty() )
@@ -122,7 +123,43 @@ bool gates_can_move( const gate& g1, const gate& g2 )
         }
         return true;
     }
-    return false;
+    // g1 is a NOT gate
+    else if ( is_toffoli( g1 ) && g1.controls().empty() )
+    {
+        if ( is_toffoli( g2 ) )
+        {
+            // g2 is a CNOT
+            if( !g2.controls().empty() )
+            {
+                return g2.controls().front().line() != target_g1;
+            }
+            return true;
+        }
+        assert ( g2.controls().empty() ); // only controlled gates are CNOTs
+        return ( target_g2 != target_g1 );
+    }
+    // g1 is CNOT gate
+    else if ( is_toffoli( g1 ) )
+    {
+        if ( !is_toffoli( g2 ) )
+        {
+            return ( g1.controls().front().line() != target_g2 ) && (target_g1 != target_g2 );
+        }
+        else if ( g2.controls().empty() )
+        {
+            return g1.controls().front().line() != target_g2;
+        }
+        else
+        {
+            return g2.controls().front().line() != target_g1;
+        }
+    }
+    // g2 CNOT; g1 is not a Toffoli
+    else if ( is_toffoli( g2 ) && !g2.controls().empty())
+    {
+        return ( target_g1 != g2.controls().front().line() ) && (target_g1 != target_g2 );
+    }
+    return target_g1 != target_g2;
 }
     
 }
