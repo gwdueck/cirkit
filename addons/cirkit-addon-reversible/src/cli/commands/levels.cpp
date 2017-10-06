@@ -27,11 +27,13 @@
 #include "levels.hpp"
 
 #include <vector>
+#include <algorithm>
 
 #include <boost/format.hpp>
 
 #include <alice/rules.hpp>
 #include <cli/reversible_stores.hpp>
+#include <reversible/gate.hpp>
 #include <reversible/pauli_tags.hpp>
 #include <reversible/target_tags.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
@@ -40,33 +42,98 @@ namespace cirkit
 {
 
 levels_command::levels_command( const environment::ptr& env )
-  : cirkit_command( env, "Prints the number of levels/nRearranges the gates accordingly." )
+  : cirkit_command( env, "Prints the number of levels\nRearranges the gates accordingly." )
 {
+    add_new_option();
 }
 
 command::rules_t levels_command::validity_rules() const
 {
   return {has_store_element<circuit>( env )};
 }
-
+/* This function will calculate the number of levels in the circuit.
+ The algorithm is as follows:
+ for each gate
+     do
+         if the gate can join the level to the left
+             remember the position
+         move gate to the left
+     until gate cannot be moved
+     put gate in pos (added to that level)
+ 
+ */
+    
 bool levels_command::execute()
 {
-  const auto& circuits = env->store<circuit>();
-  const auto& circ = circuits.current();
-
-    circuit result = circ;
-    unsigned i = 0, j;
-    while(i < result.num_gates() - 1 )
+  auto& circuits = env->store<circuit>();
+    
+  std::vector<int> glevel; /* level of the gates */
+    
+    circuit result = circuits.current();
+    unsigned i = 1, max_lev = 1;
+    int pos, k, j;
+    glevel.push_back( max_lev );
+    bool blocked = false;
+    while (i < result.num_gates() - 1 )
     {
-       if( gates_can_move( result[i], result[i+1]))
-       {
-           std::cout << i << " can move\n";
-       }
-       else{
-           std::cout << i << " can NOT move\n";
-       }
+       // std::cout << " i = " << i << " ";
+        pos = -1;
+        j = i - 1; /* index of the end of a level */
+        do
+        {
+            //std::cout << " j = " << j << std::endl;
+            bool can_join = true; /* can i join the previous level? */
+            k = j; /* iterate over the level */
+            while( ( k >= 0 ) && ( glevel[k] == glevel[j] ) && can_join )
+            {
+                can_join = gates_do_not_intersect( result[k], result[i] );
+                k--;
+            }
+            if( can_join )
+            {
+                pos = j + 1;
+            }
+            k = j; /* iterate over the level */
+            while ( ( k >= 0 ) && ( glevel[k] == glevel[j] ) )
+            {
+                blocked = !gates_can_move( result[k], result[i] );
+                k--;
+            }
+            j = k;
+            
+        } while ( !blocked && ( j >= 0 ) );
+    
+        if ( pos >= 0 )
+        {
+            if ( pos < (int) i )
+            {
+                //std::cout << "move to " << pos << "\n";
+                result.insert_gate( pos ) = result[i];
+                result.remove_gate_at( i + 1 );
+                glevel.insert( glevel.begin()+pos , glevel[pos-1] );
+            }
+            else
+            {
+                glevel.push_back( max_lev );
+            }
+        }
+        else
+        {
+            max_lev++;
+            glevel.push_back( max_lev );
+        }
+/*for(int tt = 0; tt < (int) glevel.size(); tt++ )
+            std::cout << glevel[tt] << " ";
+        std::cout << std::endl;
+ */
         i++;
     }
+    std::cout << "The circuit has " << max_lev << " levels" << std::endl;
+    if ( is_set( "new" ) )
+    {
+        circuits.extend();
+    }
+    circuits.current() = result;
 /*
   for ( const auto& g : circ )
   {
