@@ -49,7 +49,7 @@
 #include <reversible/variable.hpp>
 
 
-bool valid_CNOT[5][5] = {{0,1,1,0,0}, {0,0,1,0,0}, {0,0,0,0,0}, {0,0,1,0,1}, {0,0,1,0,0}};
+bool valid_CNOT_qx2[5][5] = {{0,1,1,0,0}, {0,0,1,0,0}, {0,0,0,0,0}, {0,0,1,0,1}, {0,0,1,0,0}};
 namespace cirkit
 {
 
@@ -104,11 +104,11 @@ bool ibm_command::execute()
             {
                 unsigned control = gate.controls().front().line();
                 
-                if( valid_CNOT[control][target] )
+                if( valid_CNOT_qx2[control][target] )
                 {
                     std::cout << "cx q[" << control << "],q[" << target << "];" << std::endl;
                 }
-                else if( valid_CNOT[target][control] ) // invert CNOT
+                else if( valid_CNOT_qx2[target][control] ) // invert CNOT
                 {
                     std::cout << "h q[" << control << "];"  << std::endl;
                     std::cout << "h q[" << target << "];"  << std::endl;
@@ -265,7 +265,7 @@ circuit transform_to_IBM_Q5( const circuit& circ )
     std::vector<unsigned int> new_controls;
     copy_metadata( circ, circ_IBM );
     
-    // all IBM circuits have exactly 5 line
+    // all IBM circuits have exactly 5 lines
     for(unsigned i = circ.lines()+1 ; i <= 5u; i++)
     {
         add_line_to_circuit( circ_IBM, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
@@ -293,11 +293,11 @@ circuit transform_to_IBM_Q5( const circuit& circ )
             else // CNOT gate
             {
                 
-                if( valid_CNOT[control][target] )
+                if( valid_CNOT_qx2[control][target] )
                 {
                     append_toffoli( circ_IBM, gate.controls(), target );
                 }
-                else if( valid_CNOT[target][control] ) // invert CNOT
+                else if( valid_CNOT_qx2[target][control] ) // invert CNOT
                 {
                     append_hadamard( circ_IBM, control );
                     append_hadamard( circ_IBM, target );

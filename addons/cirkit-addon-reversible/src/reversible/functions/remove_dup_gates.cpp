@@ -33,9 +33,13 @@
 namespace cirkit
 {
 
+    
+/* Also join adjacent T or T* gates
+ */
 circuit remove_dup_gates( const circuit& circ )
 {
     circuit result = circ;
+    gate g;
     unsigned i = 0, j;
     while(i < result.num_gates() - 1 )
     {
@@ -49,7 +53,15 @@ circuit remove_dup_gates( const circuit& circ )
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
-                i = 0; // overkill, but to safe 
+                i = 0; // overkill, but to be safe
+                incr_i = false;
+            }
+            if ( !done && gates_can_merge( result[i], result[j], g) )
+            {
+                result.remove_gate_at(j);
+                result[i] = g;
+                done = true;
+                i = 0; // overkill, but to be safe
                 incr_i = false;
             }
             if(!done && gates_can_move( result[i], result[j]) )
@@ -177,7 +189,54 @@ bool gates_do_not_intersect( const gate& g1, const gate& g2 )
     }
     return target_g1 != target_g2;
 }
+
+/* Check if both are T gates. Merge them if possible
+ */
+bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
+{
+    if ( g1.targets().front() == g2.targets().front() )
+    {
+        if ( is_T_gate( g1 ) && ( is_T_gate( g2 ) ) )
+        {
+            res = g1;
+            res.set_type( pauli_tag( pauli_axis::Z, 2u, false ) );
+            return true;
+        }
+       if ( is_T_star_gate( g1 ) && ( is_T_star_gate( g2 ) ) )
+            {
+                res = g1;
+                res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
+                return true;
+            }
+
+    }
+    return false;
+}
+   
+bool is_T_gate( const gate& g )
+{
+    if ( is_pauli( g ) )
+    {
+        const auto& tag = boost::any_cast<pauli_tag>( g.type() );
+        return ( ( tag.axis == pauli_axis::Z ) &&
+                ( tag.root == 4u ) &&
+                !tag.adjoint );
+    }
+    return false;
+}
     
+bool is_T_star_gate( const gate& g )
+{
+    if ( is_pauli( g ) )
+    {
+        const auto& tag = boost::any_cast<pauli_tag>( g.type() );
+        return ( ( tag.axis == pauli_axis::Z ) &&
+                ( tag.root == 4u ) &&
+                tag.adjoint );
+    }
+    return false;
+}
+
 }
 
 // Local Variables:
