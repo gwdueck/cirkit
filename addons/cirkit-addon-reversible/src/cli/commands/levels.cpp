@@ -74,14 +74,14 @@ bool levels_command::execute()
     int pos, k, j;
     glevel.push_back( max_lev );
     bool blocked = false;
-    while (i < result.num_gates() - 1 )
+    while (i < result.num_gates() )
     {
-       // std::cout << " i = " << i << " ";
+        // std::cout << " i = " << i << " ";
         pos = -1;
         j = i - 1; /* index of the end of a level */
         do
         {
-            //std::cout << " j = " << j << std::endl;
+            // std::cout << " j = " << j << std::endl;
             bool can_join = true; /* can i join the previous level? */
             k = j; /* iterate over the level */
             while( ( k >= 0 ) && ( glevel[k] == glevel[j] ) && can_join )
@@ -122,10 +122,11 @@ bool levels_command::execute()
             max_lev++;
             glevel.push_back( max_lev );
         }
-/*for(int tt = 0; tt < (int) glevel.size(); tt++ )
+/*
+        for(int tt = 0; tt < (int) glevel.size(); tt++ )
             std::cout << glevel[tt] << " ";
         std::cout << std::endl;
- */
+*/
         i++;
     }
     std::cout << "The circuit has " << max_lev << " levels" << std::endl;
@@ -134,49 +135,7 @@ bool levels_command::execute()
         circuits.extend();
     }
     circuits.current() = result;
-/*
-  for ( const auto& g : circ )
-  {
-      
-    auto key = gate_controls.size() - 1u;
 
-
-    if ( is_toffoli( g ) )
-    {
-      key = 0u;
-    }
-    else if ( is_fredkin( g ) )
-    {
-      key = 1u;
-    }
-    else if ( is_stg( g ) )
-    {
-      key = 2u;
-    }
-    else if ( is_pauli( g ) )
-    {
-      key = 3u;
-    }
-    else if ( is_hadamard( g ) )
-    {
-      key = 4u;
-    }
-
-    auto& v = gate_controls[key];
-    const auto num_controls = g.controls().size();
-    if ( v.size() <= num_controls )
-    {
-      v.resize( num_controls + 1u );
-    }
-    v[num_controls]++;
-
-    if ( max_controls < num_controls )
-    {
-      max_controls = num_controls;
-    }
-
-  }
-*/
   return true;
 }
 

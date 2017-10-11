@@ -48,8 +48,16 @@
 #include <reversible/io/print_circuit.hpp>
 #include <reversible/variable.hpp>
 
-
-bool valid_CNOT_qx2[5][5] = {{0,1,1,0,0}, {0,0,1,0,0}, {0,0,0,0,0}, {0,0,1,0,1}, {0,0,1,0,0}};
+/* map methods for CNOT gates are as follows:
+ 0 - no papping possible (eg CNOT(1,1)
+ 1 - CNOT gate Exists
+ 2 - target and controls must be interchanged
+ 3 - map target to qubit 2
+ 4 - map control to qubit 2
+ 5 - map target to qubit 2 and interchange control and qubit 2
+ */
+int static const map_method_qx2[5][5] = {{0,1,1,3,3}, {2,0,1,3,3}, {2,2,0,2,2}, {3,3,1,0,1}, {3,3,1,2,0}};
+int static const map_method_qx4[5][5] = {{0,2,2,5,4}, {1,0,2,5,4}, {1,1,0,2,1}, {4,4,1,0,1}, {4,4,2,2,0}};
 namespace cirkit
 {
 
@@ -66,12 +74,14 @@ namespace cirkit
  ******************************************************************************/
 
 ibm_command::ibm_command( const environment::ptr& env )
-  : cirkit_command( env, "Translate Clifford+T circuits to IBM Q" )
+    : cirkit_command( env, "Translate Clifford+T circuits to IBM Q\nArchitecture: qx2 (default) or qx4" )
 {
     opts.add_options()
     ( "all_perm,a",  "Try all permutations" )
     ( "rm_dup,r",  "Remove duplicate gates" )
+    ( "ibm_qx4,4", "The IBM Qx4 is the target")
     ( "verbose,v",  "verbose" )
+    
     ;
   add_new_option();
 }
@@ -85,113 +95,6 @@ command::rules_t ibm_command::validity_rules() const
     
 bool ibm_command::execute()
 {
-/*    auto& circ = env->store<circuit>();
-
-//    const auto vars = create_name_list( "v%d", circ.lines() );
-    const auto vars = create_name_list( "v%d", 5u );
-    
-    // iterate through the gates
-    for ( const auto& gate : *circ )
-    {
-        unsigned target = gate.targets().front();
-        if ( is_toffoli( gate ) )
-        {
-            if( gate.controls().empty() ) // a NOT gate
-            {
-                std::cout << "x q[" << target << "];" << std::endl;
-            }
-            else // CNOT gate
-            {
-                unsigned control = gate.controls().front().line();
-                
-                if( valid_CNOT_qx2[control][target] )
-                {
-                    std::cout << "cx q[" << control << "],q[" << target << "];" << std::endl;
-                }
-                else if( valid_CNOT_qx2[target][control] ) // invert CNOT
-                {
-                    std::cout << "h q[" << control << "];"  << std::endl;
-                    std::cout << "h q[" << target << "];"  << std::endl;
-                    std::cout << "cx q[" << target << "],q[" << control << "];" << std::endl;
-                    std::cout << "h q[" << control << "];"  << std::endl;
-                    std::cout << "h q[" << target << "];"  << std::endl;
-                }
-                else // swap target with 2
-                {
-                    std::cout << "cx q[" << target << "],q[" << 2 << "];" << std::endl;
-                    std::cout << "h q[" << 2 << "];"  << std::endl;
-                    std::cout << "h q[" << target << "];"  << std::endl;
-                    std::cout << "cx q[" << target << "],q[" << 2 << "];" << std::endl;
-                    std::cout << "h q[" << 2 << "];"  << std::endl;
-                    std::cout << "h q[" << target << "];"  << std::endl;
-                    std::cout << "cx q[" << target << "],q[" << 2 << "];" << std::endl;
-                    
-                    std::cout << "cx q[" << control << "],q[" << 2 << "];" << std::endl;
-                    
-                    std::cout << "cx q[" << target << "],q[" << 2 << "];" << std::endl;
-                    std::cout << "h q[" << 2 << "];"  << std::endl;
-                    std::cout << "h q[" << target << "];"  << std::endl;
-                    std::cout << "cx q[" << target << "],q[" << 2 << "];" << std::endl;
-                    std::cout << "h q[" << 2 << "];"  << std::endl;
-                    std::cout << "h q[" << target << "];"  << std::endl;
-                    std::cout << "cx q[" << target << "],q[" << 2 << "];" << std::endl;
-                    
-                }
-            }
-        }
-        else if ( is_pauli( gate ) )
-        {
-            const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
-            
-            switch ( tag.axis )
-            {
-                case pauli_axis::X:
-                    assert( tag.root == 1u );
-                    std::cout << "x";
-                    break;
-                    
-                case pauli_axis::Y:
-                    assert( tag.root == 1u );
-                     std::cout << "y";
-                    break;
-                    
-                case pauli_axis::Z:
-                    switch ( tag.root )
-                {
-                    case 1u:
-                        std::cout << "z";
-                        break;
-                    case 2u:
-                        std::cout << "s";
-                        break;
-                    case 4u:
-                        std::cout << "t";
-                        break;
-                    default:
-                        assert( false );
-                }
-                    break;
-            }
-            
-            if ( tag.adjoint )
-            {
-                std::cout << "dg";
-            }
-            
-             std::cout << " q[" << target << "];" << std::endl;
-        }
-        else if ( is_hadamard( gate ) )
-        {
-             std::cout << "h q[" << target << "];" << std::endl;
-        }
-        else
-        {
-            assert( false );
-        }
-    }
-    
- */
-    
     
     auto& circuits = env->store<circuit>();
     circuit circ_working = circuits.current();
@@ -204,7 +107,15 @@ bool ibm_command::execute()
     
     if( !is_set( "all_perm" ) )
     {
-        circ_IBM = transform_to_IBM_Q5( circ_working );
+        if ( is_set( "ibm_qx4" ) )
+        {
+            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4 );
+        }
+        else
+        {
+            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2 );
+        }
+        
         if ( is_set( "new" ) )
         {
             circuits.extend();
@@ -221,7 +132,14 @@ bool ibm_command::execute()
         do
         {
             permute_lines( circ_working , perm );
-            circ_IBM = transform_to_IBM_Q5( circ_working );
+            if ( is_set( "ibm_qx4" ) )
+            {
+                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4 );
+            }
+            else
+            {
+                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2 );
+            }
             if ( is_set( "new" ) )
             {
                 circuits.extend();
@@ -258,11 +176,13 @@ command::log_opt_t ibm_command::log() const
 }
 
 // transform a Clifford+T circuit to be IBM compliant
-circuit transform_to_IBM_Q5( const circuit& circ )
+circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
 {
     circuit circ_IBM;
     unsigned target, control;
-    std::vector<unsigned int> new_controls;
+    std::vector<unsigned int> new_controls, control2;
+    control2.push_back( 2u ); /* use line 2 as control */
+    
     copy_metadata( circ, circ_IBM );
     
     // all IBM circuits have exactly 5 lines
@@ -293,38 +213,68 @@ circuit transform_to_IBM_Q5( const circuit& circ )
             else // CNOT gate
             {
                 
-                if( valid_CNOT_qx2[control][target] )
+                
+                switch ( map_method[control][target] )
                 {
-                    append_toffoli( circ_IBM, gate.controls(), target );
-                }
-                else if( valid_CNOT_qx2[target][control] ) // invert CNOT
-                {
-                    append_hadamard( circ_IBM, control );
-                    append_hadamard( circ_IBM, target );
-                    append_toffoli( circ_IBM, new_controls, control );
-                    append_hadamard( circ_IBM, control );
-                    append_hadamard( circ_IBM, target );
-                                    }
-                else // swap target with 2
-                {
-                    append_toffoli( circ_IBM, new_controls, 2u );
-                    append_hadamard( circ_IBM, 2u );
-                    append_hadamard( circ_IBM, target );
-                    append_toffoli( circ_IBM, new_controls, 2u );
-                    append_hadamard( circ_IBM, 2u );
-                  // append_hadamard( circ_IBM, target );
-                  //  append_toffoli( circ_IBM, new_controls, 2u );
-                    
-                    append_toffoli( circ_IBM, gate.controls(), 2u );
-                    
-                  //  append_toffoli( circ_IBM, new_controls, 2u );
-                    append_hadamard( circ_IBM, 2u );
-                  //  append_hadamard( circ_IBM, target );
-                    append_toffoli( circ_IBM, new_controls, 2u );
-                    append_hadamard( circ_IBM, 2u );
-                    append_hadamard( circ_IBM, target );
-                    append_toffoli( circ_IBM, new_controls, 2u );
-                    
+                    case 1:
+                        append_toffoli( circ_IBM, gate.controls(), target );
+                        break;
+                        
+                    case 2 : // invert CNOT
+                        
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, control );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        break;
+                    case 3 : // swap target with 2
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        
+                        append_toffoli( circ_IBM, gate.controls(), 2u );
+                        
+                        append_hadamard( circ_IBM, 2u );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        break;
+                    case 4 : // swap control with 2
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, control );
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, 2u );
+                        
+                        append_toffoli( circ_IBM, control2, target );
+                        
+                        append_hadamard( circ_IBM, 2u );
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, 2u );
+                        append_toffoli( circ_IBM, control2, control );
+                        break;
+                    case 5: // swap target with qubit 2 and interchange control and qubit 2
+                        std::cout << "case 5\n";
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        
+                        append_hadamard( circ_IBM, control );
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, control );
+                        
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        break;
+                        
                 }
             }
         }
