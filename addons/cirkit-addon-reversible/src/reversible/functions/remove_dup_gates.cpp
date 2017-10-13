@@ -174,7 +174,7 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     return target_g1 != target_g2;
 }
 
-// no controls or target intersect
+// no controls or targets intersect
 bool gates_do_not_intersect( const gate& g1, const gate& g2 )
 {
     unsigned target_g2 = g2.targets().front();
@@ -184,6 +184,11 @@ bool gates_do_not_intersect( const gate& g1, const gate& g2 )
         return false;
     }
     if ( !g2.controls().empty() && ( target_g1 == g2.controls().front().line() ) )
+    {
+        return false;
+    }
+    if ( !g1.controls().empty() && !g2.controls().empty() &&
+        g1.controls().front().line() == g2.controls().front().line() )
     {
         return false;
     }

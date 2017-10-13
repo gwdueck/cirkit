@@ -49,7 +49,7 @@
 #include <reversible/variable.hpp>
 
 /* map methods for CNOT gates are as follows:
- 0 - no papping possible (eg CNOT(1,1)
+ 0 - no mapping possible (eg CNOT(1,1)
  1 - CNOT gate Exists
  2 - target and controls must be interchanged
  3 - map target to qubit 2
@@ -212,7 +212,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
             }
             else // CNOT gate
             {
-                
+                //std::cout << "CNOT case " << map_method[control][target] << "\n";
                 
                 switch ( map_method[control][target] )
                 {
@@ -259,7 +259,6 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
                         append_toffoli( circ_IBM, control2, control );
                         break;
                     case 5: // swap target with qubit 2 and interchange control and qubit 2
-                        std::cout << "case 5\n";
                         append_toffoli( circ_IBM, new_controls, 2u );
                         append_hadamard( circ_IBM, 2u );
                         append_hadamard( circ_IBM, target );

@@ -37,6 +37,7 @@
 #include <reversible/pauli_tags.hpp>
 #include <reversible/target_tags.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
+#include <reversible/io/print_circuit.hpp>
 
 namespace cirkit
 {
@@ -76,12 +77,12 @@ bool levels_command::execute()
     bool blocked = false;
     while (i < result.num_gates() )
     {
-        // std::cout << " i = " << i << " ";
+        //std::cout << " i = " << i << " ";
         pos = -1;
         j = i - 1; /* index of the end of a level */
         do
         {
-            // std::cout << " j = " << j << std::endl;
+            //std::cout << " j = " << j << std::endl;
             bool can_join = true; /* can i join the previous level? */
             k = j; /* iterate over the level */
             while( ( k >= 0 ) && ( glevel[k] == glevel[j] ) && can_join )
@@ -126,7 +127,8 @@ bool levels_command::execute()
         for(int tt = 0; tt < (int) glevel.size(); tt++ )
             std::cout << glevel[tt] << " ";
         std::cout << std::endl;
-*/
+        print_circuit( subcircuit( result, 0, i + 1 ) );
+  */
         i++;
     }
     std::cout << "The circuit has " << max_lev << " levels" << std::endl;
