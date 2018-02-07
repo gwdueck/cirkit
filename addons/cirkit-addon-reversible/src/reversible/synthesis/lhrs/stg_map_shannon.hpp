@@ -38,7 +38,7 @@
 
 #include <vector>
 
-#include <classical/abc/gia/gia.hpp>
+#include <classical/xmg/xmg.hpp>
 #include <reversible/circuit.hpp>
 #include <reversible/synthesis/lhrs/stg_map_luts.hpp>
 
@@ -99,7 +99,7 @@ struct stg_map_shannon_stats
   stg_map_luts_stats* map_luts_stats = nullptr;
 };
 
-void stg_map_shannon( circuit& circ, const gia_graph& function,
+void stg_map_shannon( circuit& circ, const xmg_graph& function,
                       const std::vector<unsigned>& line_map,
                       const std::vector<unsigned>& ancillas,
                       const stg_map_shannon_params& params,

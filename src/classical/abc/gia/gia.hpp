@@ -42,9 +42,9 @@
 
 #include <core/properties.hpp>
 #include <classical/aig.hpp>
-#include <classical/utils/truth_table_utils.hpp>
 
-#define LIN64
+#include <kitty/kitty.hpp>
+
 #include <base/main/main.h>
 #include <aig/gia/gia.h>
 #include <misc/vec/vecWec.h>
@@ -97,10 +97,12 @@ public:
   gia_graph select_outputs( const std::vector<int>& indexes ) const;
   gia_graph syn3() const;
   gia_graph syn4() const;
+  gia_graph detect_xors() const;
 
   /// MAPPING
 
   gia_graph if_mapping( const properties::ptr& settings = properties::ptr(), const properties::ptr& statistics = properties::ptr() ) const;
+  gia_graph mf_mapping( const properties::ptr& settings = properties::ptr(), const properties::ptr& statistics = properties::ptr() ) const;
   void satlut_mapping( const properties::ptr& settings = properties::ptr(), const properties::ptr& statistics = properties::ptr() ) const;
 
   inline bool has_mapping() const { return abc::Gia_ManHasMapping( p_gia.get() ) == 1; }
@@ -118,7 +120,7 @@ public:
   void init_truth_tables() const;
   uint64_t lut_truth_table( int index ) const;
 
-  tt truth_table( int output_index ) const;
+  kitty::dynamic_truth_table truth_table( int output_index ) const;
 
   /// PRINTING
 

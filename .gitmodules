@@ -1,0 +1,19 @@
+[submodule "lib/abc"]
+	path = lib/abc
+	url = https://github.com/msoeken/abc.git
+[submodule "lib/kitty"]
+	path = lib/kitty
+	url = https://github.com/msoeken/kitty
+[submodule "lib/cudd"]
+	path = lib/cudd
+	url = https://github.com/msoeken/cudd-1.git
+	branch = cmake
+[submodule "lib/fmt"]
+	path = lib/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "lib/minisat"]
+	path = lib/minisat
+	url = https://github.com/msoeken/minisat.git
+[submodule "lib/z3"]
+	path = lib/z3
+	url = https://github.com/msoeken/z3.git

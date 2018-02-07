@@ -36,8 +36,10 @@
 #ifndef CLI_LHRS_COMMAND_HPP
 #define CLI_LHRS_COMMAND_HPP
 
+#include <memory>
+
 #include <cli/aig_command.hpp>
-#include <reversible/synthesis/lhrs/lhrs_params.hpp>
+#include <reversible/synthesis/lhrs/legacy/lhrs_params.hpp>
 
 namespace cirkit
 {
@@ -55,8 +57,8 @@ public:
   log_opt_t log() const;
 
 private:
-  lhrs_params params;
-  lhrs_stats  stats;
+  legacy::lhrs_params params;
+  std::shared_ptr<legacy::lhrs_stats> stats;
 
   unsigned cut_size = 16u;
   unsigned lut_count = 0u;

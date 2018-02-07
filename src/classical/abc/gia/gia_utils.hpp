@@ -38,12 +38,17 @@
 
 #include <classical/abc/abc_api.hpp>
 #include <aig/gia/gia.h>
+#include <map/if/if.h>
+
+#include <cudd.h>
 
 namespace abc
 {
 
 int Gia_ManMergeTopLuts( Gia_Man_t * p );
 int Gia_LutTFISize( Gia_Man_t * p, int index );
+
+DdNode* If_CutComputeBDD( DdManager * cudd, abc::If_Obj_t * pRoot, abc::If_Cut_t * pCut );
 
 }
 

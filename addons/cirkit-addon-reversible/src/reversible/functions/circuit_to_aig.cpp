@@ -28,6 +28,7 @@
 
 #include <classical/functions/aig_from_truth_table.hpp>
 #include <classical/utils/aig_utils.hpp>
+#include <classical/utils/truth_table_utils.hpp>
 #include <reversible/target_tags.hpp>
 
 namespace cirkit
@@ -82,7 +83,7 @@ aig_graph circuit_to_aig( const circuit& circ )
         std::vector<aig_function> operands;
         for ( const auto& c : g.controls() )
         {
-          operands += make_function( fs[c.line()], !c.polarity() );
+          operands.push_back( make_function( fs[c.line()], !c.polarity() ) );
         }
         fs[target] = aig_create_xor( aig, fs[target], aig_create_nary_and( aig, operands ) );
       }
@@ -101,7 +102,7 @@ aig_graph circuit_to_aig( const circuit& circ )
         std::vector<aig_function> operands;
         for ( const auto& c : g.controls() )
         {
-          operands += make_function( fs[c.line()], !c.polarity() );
+          operands.push_back( make_function( fs[c.line()], !c.polarity() ) );
         }
         const auto cond = aig_create_nary_and( aig, operands );
         fs[target1] = aig_create_ite( aig, cond, fs[target2], fs[target1] );
@@ -114,10 +115,10 @@ aig_graph circuit_to_aig( const circuit& circ )
       std::vector<aig_function> operands;
       for ( const auto& c : g.controls() )
       {
-        operands += make_function( fs[c.line()], false );
+        operands.push_back( make_function( fs[c.line()], false ) );
       }
       const auto target = g.targets().front();
-      fs[target] = aig_create_xor( aig, fs[target], aig_from_truth_table_naive( aig, stg.function, operands ) );
+      fs[target] = aig_create_xor( aig, fs[target], aig_from_truth_table_naive( aig, to_kitty( stg.function ), operands ) );
     }
     else
     {

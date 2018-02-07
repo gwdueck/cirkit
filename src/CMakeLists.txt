@@ -5,22 +5,22 @@ add_cirkit_library(
   NAME cirkit_core
   AUTO_DIRS core
   USE
-    ${Boost_TIMER_LIBRARIES}
-    ${CUDD_LIBRARIES}
+    cudd
+    obj
+    fmt::fmt-header-only
     ${Boost_PROGRAM_OPTIONS_LIBRARIES}
     ${Boost_SYSTEM_LIBRARIES}
-    ${Boost_FILESYSTEM_LIBRARIES}
 )
 
 add_cirkit_library(
   NAME cirkit_classical
   AUTO_DIRS classical
   USE
+    ${Boost_FILESYSTEM_LIBRARIES}  
     cirkit_core
-    ${abc_LIBRARIES}
-    ${MINISAT_LIBRARIES}
-  INCLUDE
-    SYSTEM PUBLIC ${CMAKE_BINARY_DIR}/ext/abc-prefix/src/abc/src
+    libabc-pic
+    kitty
+    minisat-lib-static
 )
 
 add_cirkit_library(

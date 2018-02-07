@@ -256,7 +256,7 @@ command::log_opt_t log_store_entry_statistics<aig_graph>( const aig_graph& aig )
   std::vector<aig_node> outputs;
   for ( const auto& output : info.outputs )
   {
-    outputs += output.first.node;
+    outputs.push_back( output.first.node );
   }
 
   std::vector<unsigned> depths;
@@ -272,7 +272,7 @@ command::log_opt_t log_store_entry_statistics<aig_graph>( const aig_graph& aig )
 template<>
 aig_graph store_convert<tt, aig_graph>( const tt& t )
 {
-  return aig_from_truth_table( t );
+  return aig_from_truth_table( to_kitty( t ) );
 }
 
 template<>
@@ -444,7 +444,7 @@ command::log_opt_t log_store_entry_statistics<mig_graph>( const mig_graph& mig )
   std::vector<mig_node> outputs;
   for ( const auto& output : info.outputs )
   {
-    outputs += output.first.node;
+    outputs.push_back( output.first.node );
   }
 
   std::vector<unsigned> depths;
@@ -645,24 +645,6 @@ command::log_opt_t log_store_entry_statistics<xmg_graph>( const xmg_graph& xmg )
       {"xor", xmg.num_xor()},
       {"depth", compute_depth( xmg )},
     });
-
-  if ( false )
-  {
-    xmg_graph xmg_copy = xmg;
-    xmg_copy.compute_fanout();
-    xmg_copy.compute_levels();
-
-    std::vector<unsigned> fanouts( xmg.size() );
-    ranges::transform( xmg_copy.nodes(), fanouts.begin(), [&xmg_copy]( xmg_node n ) { return xmg_copy.fanout_count( n ); } );
-
-    std::vector<unsigned> level_diffs( ranges::size( xmg_copy.edges() ) );
-    ranges::transform( xmg_copy.edges(), level_diffs.begin(), [&xmg_copy]( const xmg_edge& e ) {
-        return xmg_copy.level( boost::source( e, xmg_copy.graph() ) ) - xmg_copy.level( boost::target( e, xmg_copy.graph() ) );
-      } );
-
-    log["fanouts"] = fanouts;
-    log["level_diffs"] = level_diffs;
-  }
 
   return log;
 }

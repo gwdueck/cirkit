@@ -38,9 +38,8 @@
 
 #include <vector>
 
-#include <classical/abc/gia/gia.hpp>
-#include <classical/abc/gia/gia_esop.hpp>
 #include <classical/optimization/exorcism_minimization.hpp>
+#include <classical/xmg/xmg.hpp>
 #include <reversible/circuit.hpp>
 
 namespace cirkit
@@ -48,7 +47,6 @@ namespace cirkit
 
 struct stg_map_esop_params
 {
-  gia_graph::esop_cover_method cover_method      = gia_graph::esop_cover_method::aig_threshold; /* method to extract initial ESOP cover */
   bool                         optimize_postesop = false;                                       /* post-optimize ESOP cover */
   exorcism_script              script            = exorcism_script::def_wo4;                    /* optimize ESOP synthesized circuit */
 
@@ -65,7 +63,7 @@ struct stg_map_esop_stats
   unsigned dumpfile_counter = 0u;
 };
 
-void stg_map_esop( circuit& circ, const gia_graph& function,
+void stg_map_esop( circuit& circ, const xmg_graph& function,
                    const std::vector<unsigned>& line_map,
                    const stg_map_esop_params& params,
                    stg_map_esop_stats& stats );

@@ -9,10 +9,18 @@ ext/bin
 ext/share
 tmp
 
+docs/_build
+
 scripts/
 .tags
 .idea/
+.dir-locals.el
+.vscode/
 
+jupyter/lhrs-notebooks/
+
+abc.rc
+debug.cs
 xmgmin.txt
 
 **/.DS_Store

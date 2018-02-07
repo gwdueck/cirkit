@@ -38,7 +38,7 @@
 
 #include <vector>
 
-#include <classical/abc/gia/gia.hpp>
+#include <classical/xmg/xmg.hpp>
 #include <reversible/circuit.hpp>
 #include <reversible/synthesis/lhrs/stg_map_esop.hpp>
 #include <reversible/synthesis/lhrs/stg_map_precomp.hpp>
@@ -120,7 +120,7 @@ struct stg_map_luts_stats
   stg_map_precomp_stats * map_precomp_stats = nullptr;
 };
 
-void stg_map_luts( circuit& circ, const gia_graph& function,
+void stg_map_luts( circuit& circ, const xmg_graph& function,
                    const std::vector<unsigned>& line_map,
                    const std::vector<unsigned>& ancillas,
                    const stg_map_luts_params& params,

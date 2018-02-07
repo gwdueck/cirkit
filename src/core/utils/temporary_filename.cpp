@@ -26,23 +26,23 @@
 
 #include "temporary_filename.hpp"
 
+#include <cstdio>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
+#include <fmt/printf.h>
 
 namespace cirkit
 {
 
 temporary_filename::temporary_filename( const std::string& name_pattern )
 {
-  filename = boost::str( boost::format( name_pattern ) % getpid() );
+  filename = fmt::sprintf( name_pattern, getpid() );
 }
 
 temporary_filename::~temporary_filename()
 {
-  boost::filesystem::remove( filename );
+  remove( filename.c_str() );
 }
 
 const std::string& temporary_filename::name() const

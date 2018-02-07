@@ -49,6 +49,7 @@
 #include <cli/commands/enumerate.hpp>
 #include <cli/commands/esop.hpp>
 #include <cli/commands/esopbs.hpp>
+#include <cli/commands/esopps.hpp>
 #include <cli/commands/exorcism.hpp>
 #include <cli/commands/expr.hpp>
 #include <cli/commands/exs.hpp>
@@ -125,6 +126,7 @@ ALICE_BEGIN(revkit)
   ADD_WRITE_COMMAND( qasm, "QASM" );
   ADD_WRITE_COMMAND( qcode, "QCode" );
   ADD_WRITE_COMMAND( qpic, "qpic" );
+  ADD_WRITE_COMMAND( qsharp, "Q#" );
   ADD_WRITE_COMMAND( quipper, "Quipper" );
   ADD_WRITE_COMMAND( real, "realization" );
   ADD_WRITE_COMMAND( spec, "specification" );
@@ -143,6 +145,7 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( dbs );
   ADD_COMMAND( dxs );
   ADD_COMMAND( esopbs );
+  ADD_COMMAND( esopps );
   ADD_COMMAND( exs );
   ADD_COMMAND( hdbs );
   ADD_COMMAND( lhrs );
