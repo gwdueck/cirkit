@@ -28,6 +28,7 @@
 
 #include <fstream>
 #include <algorithm>
+#include <limits>
 
 #include <alice/rules.hpp>
 #include <core/utils/range_utils.hpp>
@@ -81,7 +82,7 @@ ibm_command::ibm_command( const environment::ptr& env )
     ( "rm_dup,r",  "Remove duplicate gates" )
     ( "ibm_qx4,4", "The IBM Qx4 is the target")
     ( "verbose,v",  "verbose" )
-    
+
     ;
   add_new_option();
 }
@@ -126,9 +127,11 @@ bool ibm_command::execute()
         }
         circuits.current() = circ_IBM;
     }
-    else
+    else // go through all permutations
     {
-        int perm[5] = {0, 1, 2, 3, 4}, inv_perm[5];
+        int perm[5] = {0, 1, 2, 3, 4}, inv_perm[5], best_perm[5] = {0, 1, 2, 3, 4};
+        unsigned best_cost = UINT_MAX;
+        circuit circ_best;
         do
         {
             permute_lines( circ_working , perm );
@@ -147,7 +150,7 @@ bool ibm_command::execute()
             
             if ( is_set( "rm_dup" ) )
             {
-                circ_IBM = remove_dup_gates( circ_IBM);
+                circ_IBM = remove_dup_gates( circ_IBM );
             }
             circuits.current() = circ_IBM;
             if( is_set( "verbose" ) )
@@ -158,6 +161,17 @@ bool ibm_command::execute()
                 }
                 std::cout << "gates = " << circ_IBM.num_gates() << std::endl;
             }
+            
+            if( best_cost > circ_IBM.num_gates() )
+            {
+  //              std::cout << "new best_cost = " << circ_IBM.num_gates() << "\n";
+                best_cost = circ_IBM.num_gates();
+                circ_best = circ_IBM;
+                for( int i = 0; i < 5; i++ )
+                {
+                    best_perm[i] = perm[i];
+                }
+            }
 
             // undo the permutation
             for( int i = 0; i < 5; i++ )
@@ -166,6 +180,17 @@ bool ibm_command::execute()
             }
             permute_lines( circ_working , inv_perm );
         } while ( std::next_permutation(perm,perm+5) );
+        if ( is_set( "new" ) )
+        {
+            circuits.extend();
+        }
+        circuits.current() = circ_best;
+        std::cout << "best permutation = ";
+        for( int i = 0; i < 5; i++ )
+        {
+            std::cout << best_perm[i] << " ";
+        }
+        std::cout << "gates = " << best_cost << std::endl;
     }
     return true;
 }
@@ -281,6 +306,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
         {
             const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
             append_pauli( circ_IBM, target, tag.axis, tag.root, tag.adjoint );
+//            std::cout << "Pauli " << target <<  std::endl;
+            
         }
         else if ( is_hadamard( gate ) )
         {
@@ -290,6 +317,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
         {
             assert( false );
         }
+//        std::cout << "size = " << circ_IBM.num_gates() << std::endl;
     }
 
     
