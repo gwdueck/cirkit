@@ -63,8 +63,8 @@ void write_qasm( const circuit& circ, std::ostream& os, bool iqc_compliant )
 */
     os << "OPENQASM 2.0;" << std::endl;
     os << "include \"qelib1.inc\";" << std::endl;
-    os << "qreg q[5];" << std::endl;
-    os << "creg c[5];" << std::endl;
+    os << "qreg q[" << circ.lines() << "];" << std::endl;
+    os << "creg c[" << circ.lines() << "];" << std::endl;
 
   for ( const auto& gate : circ )
   {
@@ -130,12 +130,10 @@ void write_qasm( const circuit& circ, std::ostream& os, bool iqc_compliant )
       assert( false );
     }
   }
-
-  os << "measure q[0] -> c[0];" << std::endl;
-  os << "measure q[1] -> c[1];" << std::endl;
-  os << "measure q[2] -> c[2];" << std::endl;
-  os << "measure q[3] -> c[3];" << std::endl;
-  os << "measure q[4] -> c[4];" << std::endl;
+    for ( int i = 0; i < circ.lines(); i++)
+    {
+        os << "measure q[" << circ.lines() << "] -> c[" << circ.lines() << "];" << std::endl;
+    }
 }
 
 /******************************************************************************
