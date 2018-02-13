@@ -142,6 +142,16 @@ circuit read_qc( const std::string& filename )
 
           append_pauli( circ, var2line[lines.back()], pauli_axis::Z );
         }},
+// added by Gerhard Dueck
+      {std::regex( "^Y *(.*)$" ), [&circ, &var2line]( const std::smatch& m ) {
+          std::vector<std::string> lines;
+          split_string( lines, m[1u], " " );
+          
+          assert( lines.size() == 1u );
+          
+          append_pauli( circ, var2line[lines.back()], pauli_axis::Y );
+      }},
+// end of addition
       {std::regex( "^(S|P)(\\*?) *(.*)$" ), [&circ, &var2line]( const std::smatch& m ) {
           std::vector<std::string> lines;
           split_string( lines, m[3u], " " );
