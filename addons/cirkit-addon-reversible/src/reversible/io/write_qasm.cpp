@@ -132,7 +132,7 @@ void write_qasm( const circuit& circ, std::ostream& os, bool iqc_compliant )
   }
     for ( int i = 0; i < circ.lines(); i++)
     {
-        os << "measure q[" << circ.lines() << "] -> c[" << circ.lines() << "];" << std::endl;
+        os << "measure q[" << i << "] -> c[" << i << "];" << std::endl;
     }
 }
 
