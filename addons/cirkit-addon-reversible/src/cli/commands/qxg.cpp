@@ -40,8 +40,10 @@
 #include <reversible/io/write_qc.hpp>
 #include <reversible/io/print_circuit.hpp>
 
-//Matrix with the cost of each possible cnot
-int static const map[5][5] = {{0,0,0,10,10}, {4,0,0,10,10}, {4,4,0,4,4}, {10,10,0,0,0}, {10,10,0,4,0}};
+//Matrix with the cost of each possible cnot (QX2)
+int static const map_qx2[5][5] = {{0,0,0,10,10}, {4,0,0,10,10}, {4,4,0,4,4}, {10,10,0,0,0}, {10,10,0,4,0}};
+//Matrix with the cost of each possible cnot (QX4)
+int static const map_qx4[5][5] = {{0,4,4,10,10}, {0,0,4,10,10}, {0,0,0,4,0}, {10,10,0,0,0}, {10,10,4,4,0}};
 
 namespace cirkit
 {
@@ -59,10 +61,10 @@ namespace cirkit
  ******************************************************************************/
 
 qxg_command::qxg_command( const environment::ptr& env )
-    : cirkit_command( env, "IBM QX mapping naive algorithm (only QX2 for now)" )
+    : cirkit_command( env, "IBM QX mapping algorithm" )
 {
     opts.add_options()
- 
+     ( "qx4,4", "IBM QX4 matrix")
     ;
   add_new_option();
 }
@@ -74,7 +76,7 @@ command::rules_t qxg_command::validity_rules() const
 }
 
 //Change two lines of the circuit
-void manipulate_matrix( int(& m1)[5][5], int x, int y, int(& m2)[5][5], int(& p)[5] )
+void manipulate_matrix( int(& m1)[5][5], int x, int y, int(& m2)[5][5], int(& p)[5], int map[5][5] )
 {
     int aux;
 
@@ -141,7 +143,7 @@ int higher_target_cost(int m1[5][5], int m2[5][5])
 }
 
 //Create cnots matrix and cost matrix
-unsigned initial_matrix(circuit circ, int(& cnots)[5][5], int(& map_cost)[5][5])
+unsigned initial_matrix(circuit circ, int(& cnots)[5][5], int(& map_cost)[5][5], int map[5][5])
 {
     unsigned target, control;
     unsigned cost = 0;
@@ -170,7 +172,7 @@ unsigned matrix_cost(int m[5][5])
 }
 
 //Search for the column in the matrix with the lowest cost to swap
-int find_column(int cnots[5][5], int h)
+int find_column(int cnots[5][5], int h, int map[5][5])
 {
     int cost, lower, column;
     bool first = true;
@@ -216,7 +218,10 @@ bool qxg_command::execute()
     int perm[5] = {0, 1, 2, 3, 4};
     int best_perm[5] = {0, 1, 2, 3, 4};
 
-    cost = initial_matrix(circ, cnots, map_cost);
+    if ( is_set( "qx4" ) )
+        cost = initial_matrix(circ, cnots, map_cost, map_qx4);
+    else
+        cost = initial_matrix(circ, cnots, map_cost, map_qx2);
     cost = cost + circ.num_gates();
     //std::cout << circ.num_gates() << std::endl;
     std::cout << "initial cost: " << cost << std::endl;
@@ -232,8 +237,17 @@ bool qxg_command::execute()
         //print_permutation(perm);
         h = higher_target_cost(map_cost, cnots);
         //std::cout << "column higher cost: " << h << std::endl;
-        c = find_column(cnots, h);
-        manipulate_matrix( cnots, h, c, map_cost, perm );
+        if ( is_set( "qx4" ) )
+        {
+            c = find_column(cnots, h, map_qx4);
+            manipulate_matrix( cnots, h, c, map_cost, perm, map_qx4 );
+        }
+        else
+        {
+            c = find_column(cnots, h, map_qx2);
+            manipulate_matrix( cnots, h, c, map_cost, perm, map_qx2 );
+        }
+        
         it++;
         cost = matrix_cost(map_cost) + circ.num_gates();
         //std::cout << "total cost: " << cost << std::endl;
@@ -246,7 +260,7 @@ bool qxg_command::execute()
 
     } while (it != 5); //five times was a test, because of the five qubits (it will change later)
     
-    std::cout << "Best permutation found (cost " << lower_cost << "):";
+    std::cout << "Best permutation found (gates =  " << lower_cost << "):";
     print_permutation(best_perm);
     
     //This print the permutation like the ibm command
