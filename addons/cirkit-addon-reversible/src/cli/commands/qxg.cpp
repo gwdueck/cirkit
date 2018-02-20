@@ -113,20 +113,20 @@ void print_matrix( int m[5][5])
     }
 }
 
-//Search rows for the higher target cost
-int higher_target_cost(int m1[5][5], int m2[5][5])
+//Search matrix for the higher cost
+int higher_cost(int m1[5][5], int m2[5][5])
 {
-    int cost, higher_cost = 0, index, higher_qtd_cnot = 0, qtd_cnot;
-    for(int j=0; j<5; ++j)
+    int cost, higher_cost = 0, index = 0, higher_qtd_cnot = 0, qtd_cnot;
+    
+    for(int i=0; i<5; ++i)
     {
         cost = 0;
         qtd_cnot = 0;
-        for(int i=0; i<5; ++i)
+        for(int j=0; j<5; ++j)
         {
-            cost += m1[i][j];
-            qtd_cnot += m2[i][j];
+            cost += m1[i][j] + m1[j][i];
+            qtd_cnot += m2[i][j] + m2[j][i];
         }
-
         if(cost > higher_cost)
         {
             higher_cost = cost;
@@ -243,7 +243,7 @@ bool qxg_command::execute()
     {
         //std::cout << "Perm: ";
         //print_permutation(perm);
-        h = higher_target_cost(map_cost, cnots);
+        h = higher_cost(map_cost, cnots);
         //std::cout << "column higher cost: " << h << std::endl;
         if ( is_set( "qx4" ) )
         {
