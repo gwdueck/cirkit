@@ -172,14 +172,17 @@ unsigned matrix_cost(int m[5][5])
 }
 
 //Search for the column in the matrix with the lowest cost to swap
-int find_column(int cnots[5][5], int h, int map[5][5])
+int find_column(int cnots[5][5], int h, int map[5][5], const std::vector<int>& p)
 {
-    int cost, lower, column;
+    int cost, lower, column = h, aux;
     bool first = true;
     for(int j=0; j<5; j++)
     {
-        if( j != h )
+        if( j != h && std::find(p.begin(), p.end(), j) == p.end() )
         {
+            aux = cnots[h][j];
+            cnots[h][j] = cnots[j][j];
+            cnots[j][j] = aux; 
             cost = 0;
             for(int i=0; i<5; i++)
             {
@@ -189,12 +192,16 @@ int find_column(int cnots[5][5], int h, int map[5][5])
             {
                 lower = cost;
                 first = false;
+                column = j;
             }
             if( cost < lower )
             {
                 lower = cost;
                 column = j;
             }
+            aux = cnots[h][j];
+            cnots[h][j] = cnots[j][j];
+            cnots[j][j] = aux; 
         }
     }
     return column;
@@ -217,6 +224,7 @@ bool qxg_command::execute()
     int h, c;
     int perm[5] = {0, 1, 2, 3, 4};
     int best_perm[5] = {0, 1, 2, 3, 4};
+    std::vector <int> p;
 
     if ( is_set( "qx4" ) )
         cost = initial_matrix(circ, cnots, map_cost, map_qx4);
@@ -224,13 +232,13 @@ bool qxg_command::execute()
         cost = initial_matrix(circ, cnots, map_cost, map_qx2);
     cost = cost + circ.num_gates();
     //std::cout << circ.num_gates() << std::endl;
-    std::cout << "initial cost: " << cost << std::endl;
+    //std::cout << "initial cost: " << cost << std::endl;
     lower_cost = cost;
     //std::cout << "cnots matrix: " << std::endl;
     //print_matrix(cnots);
     //std::cout << "cost matrix: " << std::endl;
     //print_matrix(map_cost);
-    int it;
+    int it = 0;
     do
     {
         //std::cout << "Perm: ";
@@ -239,12 +247,16 @@ bool qxg_command::execute()
         //std::cout << "column higher cost: " << h << std::endl;
         if ( is_set( "qx4" ) )
         {
-            c = find_column(cnots, h, map_qx4);
+            c = find_column(cnots, h, map_qx4, p);
+            p.push_back(c);
+            //std::cout << "column found: " << c << std::endl;
             manipulate_matrix( cnots, h, c, map_cost, perm, map_qx4 );
         }
         else
         {
-            c = find_column(cnots, h, map_qx2);
+            c = find_column(cnots, h, map_qx2, p);
+            p.push_back(c);
+            //std::cout << "column found: " << c << std::endl;
             manipulate_matrix( cnots, h, c, map_cost, perm, map_qx2 );
         }
         
@@ -258,7 +270,10 @@ bool qxg_command::execute()
                 best_perm[i] = perm[i];
         }
 
-    } while (it != 5); //five times was a test, because of the five qubits (it will change later)
+        // for( auto v : p)
+        //     std::cout << v << " ";
+        // std::cout << std::endl;
+    } while (it < 5); //five times was a test, because of the five qubits (it will change later)
     
     std::cout << "Best permutation found (gates =  " << lower_cost << "):";
     print_permutation(best_perm);
