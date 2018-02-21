@@ -114,7 +114,7 @@ void print_matrix( int m[5][5])
 }
 
 //Search matrix for the qubit with higher cost
-int higher_cost(int m1[5][5], int m2[5][5])
+int higher_cost(int m1[5][5], int m2[5][5], std::vector<int>& p)
 {
     int cost, higher_cost = 0, index = 0, higher_qtd_cnot = 0, qtd_cnot;
     
@@ -122,22 +122,26 @@ int higher_cost(int m1[5][5], int m2[5][5])
     {
         cost = 0;
         qtd_cnot = 0;
-        for(int j=0; j<5; ++j)
+        if (std::find(p.begin(), p.end(), i) == p.end())
         {
-            cost += m1[i][j] + m1[j][i];
-            qtd_cnot += m2[i][j] + m2[j][i];
+            for(int j=0; j<5; ++j)
+            {
+                cost += m1[i][j] + m1[j][i];
+                qtd_cnot += m2[i][j] + m2[j][i];
+            }
+            if(cost > higher_cost)
+            {
+                higher_cost = cost;
+                higher_qtd_cnot = qtd_cnot;
+                index = i;
+            }
+            else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
+            {
+                higher_qtd_cnot = qtd_cnot;
+                index = i;
+            }
         }
-        if(cost > higher_cost)
-        {
-            higher_cost = cost;
-            higher_qtd_cnot = qtd_cnot;
-            index = i;
-        }
-        else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
-        {
-            higher_qtd_cnot = qtd_cnot;
-            index = i;
-        }
+            
     }
     return index;
 }
@@ -244,14 +248,36 @@ bool qxg_command::execute()
     {
         //std::cout << "Perm: ";
         //print_permutation(perm);
-        h = higher_cost(map_cost, cnots);
+        h = higher_cost(map_cost, cnots, p);
         //std::cout << "qubit higher cost: " << h << std::endl;
         if ( is_set( "qx4" ) )
         {
-            c = find_qubit(cnots, h, map_qx4, p);
-            p.push_back(c);
+            q = h;
+            //print_permutation(perm);
+            for(int i=0; i<5; i++)
+            {
+                manipulate_matrix( cnots, h, i, map_cost, perm, map_qx4 );
+                //print_permutation(perm);
+                cost = matrix_cost(map_cost) + circ.num_gates();
+                //std::cout << " i: " << i << " " << cost << std::endl;
+                if(cost <= lower_cost)
+                {
+                    q = i;
+                    lower_cost = cost;
+                    for(int i=0; i<5; i++)
+                        best_perm[i] = perm[i];
+                }
+                manipulate_matrix( cnots, i, h, map_cost, perm, map_qx4 );
+            }
+            p.push_back(q);
+            //std::cout << " q: " << q << std::endl;
+            //print_permutation(perm);
+            manipulate_matrix( cnots, h, q, map_cost, perm, map_qx4 );
+           // print_permutation(perm);
+            //c = find_qubit(cnots, h, map_qx2, p);
+           // p.push_back(q);
             //std::cout << "column found: " << c << std::endl;
-            manipulate_matrix( cnots, h, c, map_cost, perm, map_qx4 );
+            
         }
         else
         {
@@ -272,6 +298,7 @@ bool qxg_command::execute()
                 }
                 manipulate_matrix( cnots, i, h, map_cost, perm, map_qx2 );
             }
+            p.push_back(q);
             //std::cout << " q: " << q << std::endl;
             //print_permutation(perm);
             manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );
