@@ -48,7 +48,7 @@ circuit remove_dup_gates( const circuit& circ )
         bool incr_i = true;
         while( ( !done ) && ( j < result.num_gates() ) )
         {
-            if( equal( result[i], result[j] ) )
+            if( is_inverse( result[i], result[j] ) )
             {
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
@@ -80,9 +80,9 @@ circuit remove_dup_gates( const circuit& circ )
     return result;
 }
 
-// check if two gates are equal
+// check if two gates are inverse of each other
 // only consderred a few self-inverse gates
-bool equal(const gate& g1, const gate& g2 )
+bool is_inverse(const gate& g1, const gate& g2 )
 {
     if( !same_type( g1, g2 )){
         return false;
