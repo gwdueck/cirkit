@@ -353,7 +353,6 @@ bool qxg_command::execute()
         //std::cout << "cost matrix: " << std::endl;
         //print_matrix(map_cost, 5);
 
-        //++++++++++++++++++++++++++++++++++++++++++++++++++++++
         unsigned int it = 0;
         do
         {
