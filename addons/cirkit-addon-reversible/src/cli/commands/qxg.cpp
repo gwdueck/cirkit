@@ -242,6 +242,27 @@ void print_permutation( const std::vector<int>& perm )
     std::cout << std::endl;
 }
 
+void print_results( const matrix& cnots, const std::vector<int>& perm, const unsigned cost)
+{
+    std::cout << "Best permutation found (gates =  " << cost << "):";
+    print_permutation(perm);
+    
+    //This print the permutation like the ibm command
+    std::cout << "ibm representation: ";
+    for(int i=0; i<cnots.size(); i++)
+    {
+        for(int j=0; j<cnots.size(); j++)
+        {
+            if(perm[j] == i)
+            {
+                std::cout << " " << j;
+                break;
+            }
+        }
+    }
+    std::cout << std::endl;  
+}
+
 bool qxg_command::execute()
 {
     auto& circuits = env->store<circuit>();
@@ -269,9 +290,9 @@ bool qxg_command::execute()
         //std::cout << "initial cost: " << cost << std::endl;
         lower_cost = cost;
         //std::cout << "cnots matrix: " << std::endl;
-        //print_matrix(cnots, 16);
+        //print_matrix(cnots);
         //std::cout << "cost matrix: " << std::endl;
-        //print_matrix(map_cost, 16);
+        //print_matrix(map_cost);
 
         unsigned int it = 0;
         do
@@ -280,7 +301,6 @@ bool qxg_command::execute()
             //print_permutation(perm);
             h = higher_cost(map_cost, cnots, p);
             //std::cout << "qubit higher cost: " << h << std::endl;
-
             q = h;
             //print_permutation(perm);
             for(int i=0; i<cnots.size(); i++)
@@ -299,33 +319,12 @@ bool qxg_command::execute()
                 manipulate_matrix( cnots, i, h, map_cost, perm, map_qx3 );
             }
             p.push_back(q);
-            //std::cout << " q: " << q << std::endl;
-            //print_permutation(perm);
             manipulate_matrix( cnots, h, q, map_cost, perm, map_qx3 );
-           // print_permutation(perm);
-            //c = find_qubit(cnots, h, map_qx2, p);
-           // p.push_back(q);
-            //std::cout << "column found: " << c << std::endl;
-            
             it++;
         } while (it < cnots.size());
-        std::cout << "Best permutation found (gates =  " << lower_cost << "):";
-        print_permutation(best_perm);
         
-        //This print the permutation like the ibm command
-        std::cout << "ibm representation: ";
-        for(int i=0; i<cnots.size(); i++)
-        {
-            for(int j=0; j<cnots.size(); j++)
-            {
-                if(best_perm[j] == i)
-                {
-                    std::cout << " " << j;
-                    break;
-                }
-            }
-        }
-        std::cout << std::endl;  
+        print_results(cnots, best_perm, lower_cost);
+        
     }
     else
     {
@@ -349,11 +348,10 @@ bool qxg_command::execute()
         //std::cout << "initial cost: " << cost << std::endl;
         lower_cost = cost;
         //std::cout << "cnots matrix: " << std::endl;
-        //print_matrix(cnots, 5);
+        //print_matrix(cnots);
         //std::cout << "cost matrix: " << std::endl;
-        //print_matrix(map_cost, 5);
+        //print_matrix(map_cost);
 
-        //++++++++++++++++++++++++++++++++++++++++++++++++++++++
         unsigned int it = 0;
         do
         {
@@ -381,14 +379,7 @@ bool qxg_command::execute()
                     manipulate_matrix( cnots, i, h, map_cost, perm, map_qx4 );
                 }
                 p.push_back(q);
-                //std::cout << " q: " << q << std::endl;
-                //print_permutation(perm);
                 manipulate_matrix( cnots, h, q, map_cost, perm, map_qx4 );
-               // print_permutation(perm);
-                //c = find_qubit(cnots, h, map_qx2, p);
-               // p.push_back(q);
-                //std::cout << "column found: " << c << std::endl;
-                
             }
             else
             {
@@ -410,48 +401,13 @@ bool qxg_command::execute()
                     manipulate_matrix( cnots, i, h, map_cost, perm, map_qx2 );
                 }
                 p.push_back(q);
-                //std::cout << " q: " << q << std::endl;
-                //print_permutation(perm);
-                manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );
-               // print_permutation(perm);
-                //c = find_qubit(cnots, h, map_qx2, p);
-               // p.push_back(q);
-                //std::cout << "column found: " << c << std::endl;
-                
+                manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );              
             }
             
             it++;
-            // cost = matrix_cost(map_cost) + circ.num_gates();
-            // //std::cout << "total cost: " << cost << std::endl;
-            // if(cost < lower_cost)
-            // {
-            //     lower_cost = cost;
-            //     for(int i=0; i<5; i++)
-            //         best_perm[i] = perm[i];
-            // }
-
-            // for( auto v : p)
-            //     std::cout << v << " ";
-            // std::cout << std::endl;
         } while (it < cnots.size()); //five times was a test, because of the five qubits (it will change later)
         
-        std::cout << "Best permutation found (gates =  " << lower_cost << "):";
-        print_permutation(best_perm);
-        
-        //This print the permutation like the ibm command
-        std::cout << "ibm representation: ";
-        for(int i=0; i<cnots.size(); i++)
-        {
-            for(int j=0; j<cnots.size(); j++)
-            {
-                if(best_perm[j] == i)
-                {
-                    std::cout << " " << j;
-                    break;
-                }
-            }
-        }
-        std::cout << std::endl;  
+        print_results(cnots, best_perm, lower_cost);
     }
 
     
