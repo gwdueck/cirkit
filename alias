@@ -15,3 +15,6 @@ alias "abc_read ([^\\s]+)" "abc -c \"%1%; strash; &get -n\""
 
 # An expression simulator
 alias "exprsim ([^\\s]+)" "expr %1%; expr > tt; print -t"
+
+# Path to qc circuits folder
+alias "readqc ([^\\s]+)" "read_qc /home/pc2/IBM_Q5_circuits/original/%1%"

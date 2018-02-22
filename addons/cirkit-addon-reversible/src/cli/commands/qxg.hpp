@@ -27,7 +27,7 @@
 /**
  * @file qxg.hpp
  *
- * @brief IBM QX mapping naive algorithm
+ * @brief IBM QX mapping algorithm
  *
  * @author Alexandre Amaral
  * @since  2.3
