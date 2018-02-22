@@ -48,6 +48,9 @@ bool gates_do_not_intersect( const gate& g1, const gate& g2 );
 bool gates_can_merge( const gate& g1, const gate& g2, gate& res);
 bool is_T_gate( const gate& g );
 bool is_T_star_gate( const gate& g );
+bool is_S_gate( const gate& g );
+bool is_S_star_gate( const gate& g );
+bool is_Z_gate( const gate& g );
     
 }
 
