@@ -250,7 +250,13 @@ bool qxg_command::execute()
         }
         cost = initial_matrix(circ, cnots, map_cost, map_qx3);
         cost = cost + circ.num_gates();
+        std::cout << circ.num_gates() << std::endl;
+        std::cout << "initial cost: " << cost << std::endl;
         lower_cost = cost;
+        std::cout << "cnots matrix: " << std::endl;
+        print_matrix(cnots);
+        std::cout << "cost matrix: " << std::endl;
+        print_matrix(map_cost);
 
         unsigned int it = 0;
         do
@@ -274,9 +280,7 @@ bool qxg_command::execute()
             manipulate_matrix( cnots, h, q, map_cost, perm, map_qx3 );
             it++;
         } while (it < cnots.size());
-        
         print_results(cnots, best_perm, lower_cost);
-        
     }
     else
     {
@@ -360,6 +364,7 @@ bool qxg_command::execute()
         print_results(cnots, best_perm, lower_cost);
     }
 
+    //piece of code from ibm.cpp
     unsigned start = circ.lines()+1;
     circuit circ_qx;
     for(unsigned i = start ; i <= 5u; i++)
