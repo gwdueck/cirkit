@@ -39,7 +39,10 @@
 #include <reversible/target_tags.hpp>
 #include <reversible/io/write_qc.hpp>
 #include <reversible/io/print_circuit.hpp>
-
+#include <cli/commands/ibm.hpp>
+#include <cli/commands/permute_lines.hpp>
+#include <reversible/functions/add_line_to_circuit.hpp>
+#include <reversible/functions/remove_dup_gates.hpp>
 
 typedef std::vector<std::vector<int>> matrix;
 
@@ -233,13 +236,13 @@ bool qxg_command::execute()
     unsigned cost, lower_cost;
     int h, c, q;
     std::vector <int> p;
+    std::vector<int> perm;
+    std::vector<int> best_perm;
 
     if ( is_set( "qx3" ) )
     {
         matrix cnots(16, std::vector<int>(16));
         matrix map_cost(16, std::vector<int>(16));
-        std::vector<int> perm;
-        std::vector<int> best_perm;
         for (int i = 0; i < cnots.size(); ++i)
         {           
             perm.push_back(i);
@@ -279,8 +282,6 @@ bool qxg_command::execute()
     {
         matrix cnots(5, std::vector<int>(5));
         matrix map_cost(5, std::vector<int>(5));
-        std::vector<int> perm;
-        std::vector<int> best_perm;
         for (int i = 0; i < cnots.size(); ++i)
         {           
             perm.push_back(i);
@@ -354,11 +355,35 @@ bool qxg_command::execute()
             }
             
             it++;
-        } while (it < cnots.size()); //five times was a test, because of the five qubits (it will change later)
+        } while (it < cnots.size()); 
         
         print_results(cnots, best_perm, lower_cost);
     }
 
+    unsigned start = circ.lines()+1;
+    circuit circ_qx;
+    for(unsigned i = start ; i <= 5u; i++)
+    {
+        add_line_to_circuit( circ, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
+    }
+    circuits.extend();
+    circuits.current() = circ;
+
+    if ( is_set( "qx4" ) )
+    {
+
+    }
+    else if ( is_set( "qx3" ) )
+    {
+
+    }
+    else 
+    { 
+        
+        //circ_qx = remove_dup_gates( circ_qx );
+        //circuits.extend();
+        //circuits.current() = circ_qx;
+    }
     
     
     return true;
