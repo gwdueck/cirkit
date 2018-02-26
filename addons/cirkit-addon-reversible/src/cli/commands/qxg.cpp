@@ -43,6 +43,8 @@
 #include <cli/commands/permute_lines.hpp>
 #include <reversible/functions/add_line_to_circuit.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
+#include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/copy_metadata.hpp>
 
 typedef std::vector<std::vector<int>> matrix;
 
@@ -211,10 +213,10 @@ void print_permutation( const std::vector<int>& perm )
 void print_results( const matrix& cnots, const std::vector<int>& perm, const unsigned cost)
 {
     std::cout << "Best permutation found (gates =  " << cost << "):";
-    print_permutation(perm);
+    //print_permutation(perm);
     
     //This print the permutation like the ibm command
-    std::cout << "ibm representation: ";
+    //std::cout << "ibm representation: ";
     for(int i=0; i<cnots.size(); ++i)
     {
         for(int j=0; j<cnots.size(); ++j)
@@ -229,10 +231,121 @@ void print_results( const matrix& cnots, const std::vector<int>& perm, const uns
     std::cout << std::endl;  
 }
 
+circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm)
+{
+    int* permute = &perm[0];
+    //piece of code from ibm.cpp
+    unsigned start = circ.lines() + 1;
+    circuit circ_qx;
+    for(unsigned i = start ; i <= cnots.size(); i++)
+    {
+        add_line_to_circuit( circ, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
+    }
+    
+    copy_metadata(circ, circ_qx);
+    permute_lines( circ_qx , permute );
+
+    unsigned target, control;
+    std::vector<unsigned int> new_controls, control2;
+    
+    // iterate through the gates
+    for ( const auto& gate : circ )
+    {
+        target = gate.targets().front();
+        new_controls.clear();
+        new_controls.push_back( target );
+        if( !gate.controls().empty() )
+        {
+            control = gate.controls().front().line();
+        }
+        
+        if ( is_toffoli( gate ) )
+        {
+            if( gate.controls().empty() ) // a NOT gate
+            {
+                append_toffoli( circ_IBM, gate.controls(), target );
+            }
+            else // CNOT gate
+            {
+                //std::cout << "CNOT case " << map_method[control][target] << "\n";
+                
+                switch ( cnots[control][target] )
+                {
+                    case 0:
+                        append_toffoli( circ_IBM, gate.controls(), target );
+                        break;
+                        
+                    case 4 : // invert CNOT
+                        
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, control );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        break;
+                    case 3 : // swap target with 2
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        
+                        append_toffoli( circ_IBM, gate.controls(), 2u );
+                        
+                        append_hadamard( circ_IBM, 2u );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        break;
+                    case 4 : // swap control with 2
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, control );
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, 2u );
+                        
+                        append_toffoli( circ_IBM, control2, target );
+                        
+                        append_hadamard( circ_IBM, 2u );
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, 2u );
+                        append_toffoli( circ_IBM, control2, control );
+                        break;
+                    case 5: // swap target with qubit 2 and interchange control and qubit 2
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        
+                        append_hadamard( circ_IBM, control );
+                        append_toffoli( circ_IBM, control2, control );
+                        append_hadamard( circ_IBM, control );
+                        
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        append_hadamard( circ_IBM, 2u );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, 2u );
+                        break;
+                        
+                }
+            }
+        }
+    }
+
+
+
+    return circ_qx;
+    //circuits.extend();
+    //circuits.current() = circ;
+}
+
 bool qxg_command::execute()
 {
     auto& circuits = env->store<circuit>();
     circuit circ = circuits.current();
+    circuit circ_qx;
     unsigned cost, lower_cost;
     int h, c, q;
     std::vector <int> p;
@@ -282,6 +395,7 @@ bool qxg_command::execute()
             it++;
         } while (it < cnots.size());
         print_results(cnots, best_perm, lower_cost);
+        circ_qx = matrix_to_circuit(circ, cnots, best_perm);
     }
     else
     {
@@ -365,33 +479,10 @@ bool qxg_command::execute()
         print_results(cnots, best_perm, lower_cost);
     }
 
-    //piece of code from ibm.cpp
-    unsigned start = circ.lines()+1;
-    circuit circ_qx;
-    for(unsigned i = start ; i <= 5u; i++)
-    {
-        add_line_to_circuit( circ, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
-    }
+     //circ_qx = remove_dup_gates( circ_qx );
     circuits.extend();
-    circuits.current() = circ;
+    circuits.current() = circ_qx;
 
-    if ( is_set( "qx4" ) )
-    {
-
-    }
-    else if ( is_set( "qx3" ) )
-    {
-
-    }
-    else 
-    { 
-        
-        //circ_qx = remove_dup_gates( circ_qx );
-        //circuits.extend();
-        //circuits.current() = circ_qx;
-    }
-    
-    
     return true;
 }
 
