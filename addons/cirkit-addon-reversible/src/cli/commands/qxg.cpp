@@ -250,13 +250,14 @@ bool qxg_command::execute()
         }
         cost = initial_matrix(circ, cnots, map_cost, map_qx3);
         cost = cost + circ.num_gates();
-        std::cout << circ.num_gates() << std::endl;
-        std::cout << "initial cost: " << cost << std::endl;
+        //std::cout << circ.num_gates() << std::endl;
+        //std::cout << "initial cost: " << cost << std::endl;
+        std::cout << "initial gates: " << circ.num_gates() << std::endl;
         lower_cost = cost;
-        std::cout << "cnots matrix: " << std::endl;
-        print_matrix(cnots);
-        std::cout << "cost matrix: " << std::endl;
-        print_matrix(map_cost);
+        //std::cout << "cnots matrix: " << std::endl;
+        //print_matrix(cnots);
+        //std::cout << "cost matrix: " << std::endl;
+        //print_matrix(map_cost);
 
         unsigned int it = 0;
         do
