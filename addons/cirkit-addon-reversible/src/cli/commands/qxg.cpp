@@ -51,24 +51,24 @@ typedef std::vector<std::vector<int>> matrix;
 //Matrix with the cost of each possible cnot (QX2)
 static const matrix map_qx2 = {{0,0,0,10,10}, {4,0,0,10,10}, {4,4,0,4,4}, {10,10,0,0,0}, {10,10,0,4,0}};
 //Matrix with the cost of each possible cnot (QX4)
-static const matrix map_qx4 = {{0,4,4,10,10}, {0,0,4,10,10}, {0,0,0,4,0}, {10,10,0,0,0}, {10,10,4,4,0}};
+static const matrix map_qx4 = {{0,4,4,14,10}, {0,0,4,14,10}, {0,0,0,4,0}, {10,10,0,0,0}, {10,10,4,4,0}};
 //Matrix with the cost of each possible cnot (QX3)
-static const matrix map_qx3 = {{0,0,10,10,10,10,10,10,10,10,10,10,10,10,10,4},
-                    {4,0,0,10,10,10,10,10,10,10,10,10,10,10,10,10},
-                    {10,4,0,0,10,10,10,10,10,10,10,10,10,10,10,10},
-                    {10,10,4,0,4,10,10,10,10,10,10,10,10,10,0,10},
-                    {10,10,10,0,0,0,10,10,10,10,10,10,10,4,10,10},
-                    {10,10,10,10,4,0,10,10,10,10,10,10,4,10,10,10},
-                    {10,10,10,10,10,10,0,0,10,10,10,0,10,10,10,10},
-                    {10,10,10,10,10,10,4,0,4,10,0,10,10,10,10,10},
-                    {10,10,10,10,10,10,10,0,0,4,10,10,10,10,10,10},
-                    {10,10,10,10,10,10,10,10,0,0,0,10,10,10,10,10},
-                    {10,10,10,10,10,10,10,4,10,4,0,4,10,10,10,10},
-                    {10,10,10,10,10,10,4,10,10,10,0,0,4,10,10,10},
-                    {10,10,10,10,10,0,10,10,10,10,10,0,0,0,10,10},
-                    {10,10,10,10,0,10,10,10,10,10,10,10,4,0,0,10},
-                    {10,10,4,10,10,10,10,10,10,10,10,10,10,4,0,4},
-                    {0,10,10,10,10,10,10,10,10,10,10,10,10,10,0,0}};
+static const matrix map_qx3 = {{0,0,10,10,10,10,14,10,10,14,10,10,14,10,10,4},
+                                {4,0,0,10,10,10,14,10,10,14,10,10,14,10,10,14},
+                                {10,4,0,0,10,10,14,10,10,14,10,10,14,10,10,14},
+                                {10,10,4,0,4,10,14,10,10,14,10,10,14,10,0,14},
+                                {10,10,10,0,0,0,14,10,10,14,10,10,14,4,10,14},
+                                {10,10,10,10,4,0,14,10,10,14,10,10,4,10,10,14},
+                                {10,10,10,10,10,10,0,0,10,14,10,0,14,10,10,14},
+                                {10,10,10,10,10,10,4,0,4,14,0,10,14,10,10,14},
+                                {10,10,10,10,10,10,14,0,0,4,10,10,14,10,10,14},
+                                {10,10,10,10,10,10,14,10,0,0,0,10,14,10,10,14},
+                                {10,10,10,10,10,10,14,4,10,4,0,4,14,10,10,14},
+                                {10,10,10,10,10,10,4,10,10,14,0,0,4,10,10,14},
+                                {10,10,10,10,10,0,14,10,10,14,10,0,0,0,10,14},
+                                {10,10,10,10,0,10,14,10,10,14,10,10,4,0,0,14},
+                                {10,10,10,4,10,10,14,10,10,14,10,10,14,4,0,4},
+                                {0,10,10,10,10,10,14,10,10,14,10,10,14,10,0,0}};
 
 
 
@@ -231,115 +231,115 @@ void print_results( const matrix& cnots, const std::vector<int>& perm, const uns
     std::cout << std::endl;  
 }
 
-circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm)
-{
-    int* permute = &perm[0];
-    //piece of code from ibm.cpp
-    unsigned start = circ.lines() + 1;
-    circuit circ_qx;
-    for(unsigned i = start ; i <= cnots.size(); i++)
-    {
-        add_line_to_circuit( circ, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
-    }
+// circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm)
+// {
+//     int* permute = &perm[0];
+//     //piece of code from ibm.cpp
+//     unsigned start = circ.lines() + 1;
+//     circuit circ_qx;
+//     for(unsigned i = start ; i <= cnots.size(); i++)
+//     {
+//         add_line_to_circuit( circ, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
+//     }
     
-    copy_metadata(circ, circ_qx);
-    permute_lines( circ_qx , permute );
+//     copy_metadata(circ, circ_qx);
+//     permute_lines( circ_qx , permute );
 
-    unsigned target, control;
-    std::vector<unsigned int> new_controls, control2;
+//     unsigned target, control;
+//     std::vector<unsigned int> new_controls, control2;
     
-    // iterate through the gates
-    for ( const auto& gate : circ )
-    {
-        target = gate.targets().front();
-        new_controls.clear();
-        new_controls.push_back( target );
-        if( !gate.controls().empty() )
-        {
-            control = gate.controls().front().line();
-        }
+//     // iterate through the gates
+//     for ( const auto& gate : circ )
+//     {
+//         target = gate.targets().front();
+//         new_controls.clear();
+//         new_controls.push_back( target );
+//         if( !gate.controls().empty() )
+//         {
+//             control = gate.controls().front().line();
+//         }
         
-        if ( is_toffoli( gate ) )
-        {
-            if( gate.controls().empty() ) // a NOT gate
-            {
-                append_toffoli( circ_IBM, gate.controls(), target );
-            }
-            else // CNOT gate
-            {
-                //std::cout << "CNOT case " << map_method[control][target] << "\n";
+//         if ( is_toffoli( gate ) )
+//         {
+//             if( gate.controls().empty() ) // a NOT gate
+//             {
+//                 append_toffoli( circ_IBM, gate.controls(), target );
+//             }
+//             else // CNOT gate
+//             {
+//                 //std::cout << "CNOT case " << map_method[control][target] << "\n";
                 
-                switch ( cnots[control][target] )
-                {
-                    case 0:
-                        append_toffoli( circ_IBM, gate.controls(), target );
-                        break;
+//                 switch ( cnots[control][target] )
+//                 {
+//                     case 0:
+//                         append_toffoli( circ_IBM, gate.controls(), target );
+//                         break;
                         
-                    case 4 : // invert CNOT
+//                     case 4 : // invert CNOT
                         
-                        append_hadamard( circ_IBM, control );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, control );
-                        append_hadamard( circ_IBM, control );
-                        append_hadamard( circ_IBM, target );
-                        break;
-                    case 3 : // swap target with 2
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
+//                         append_hadamard( circ_IBM, control );
+//                         append_hadamard( circ_IBM, target );
+//                         append_toffoli( circ_IBM, new_controls, control );
+//                         append_hadamard( circ_IBM, control );
+//                         append_hadamard( circ_IBM, target );
+//                         break;
+//                     case 3 : // swap target with 2
+//                         append_toffoli( circ_IBM, new_controls, 2u );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_hadamard( circ_IBM, target );
+//                         append_toffoli( circ_IBM, new_controls, 2u );
+//                         append_hadamard( circ_IBM, 2u );
                         
-                        append_toffoli( circ_IBM, gate.controls(), 2u );
+//                         append_toffoli( circ_IBM, gate.controls(), 2u );
                         
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        break;
-                    case 4 : // swap control with 2
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, control );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, 2u );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_toffoli( circ_IBM, new_controls, 2u );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_hadamard( circ_IBM, target );
+//                         append_toffoli( circ_IBM, new_controls, 2u );
+//                         break;
+//                     case 4 : // swap control with 2
+//                         append_toffoli( circ_IBM, control2, control );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_hadamard( circ_IBM, control );
+//                         append_toffoli( circ_IBM, control2, control );
+//                         append_hadamard( circ_IBM, 2u );
                         
-                        append_toffoli( circ_IBM, control2, target );
+//                         append_toffoli( circ_IBM, control2, target );
                         
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, control );
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, control2, control );
-                        break;
-                    case 5: // swap target with qubit 2 and interchange control and qubit 2
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_toffoli( circ_IBM, control2, control );
+//                         append_hadamard( circ_IBM, control );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_toffoli( circ_IBM, control2, control );
+//                         break;
+//                     case 5: // swap target with qubit 2 and interchange control and qubit 2
+//                         append_toffoli( circ_IBM, new_controls, 2u );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_hadamard( circ_IBM, target );
+//                         append_toffoli( circ_IBM, new_controls, 2u );
                         
-                        append_hadamard( circ_IBM, control );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, control );
+//                         append_hadamard( circ_IBM, control );
+//                         append_toffoli( circ_IBM, control2, control );
+//                         append_hadamard( circ_IBM, control );
                         
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        break;
+//                         append_toffoli( circ_IBM, new_controls, 2u );
+//                         append_hadamard( circ_IBM, 2u );
+//                         append_hadamard( circ_IBM, target );
+//                         append_toffoli( circ_IBM, new_controls, 2u );
+//                         break;
                         
-                }
-            }
-        }
-    }
+//                 }
+//             }
+//         }
+//     }
 
 
 
-    return circ_qx;
-    //circuits.extend();
-    //circuits.current() = circ;
-}
+//     return circ_qx;
+//     //circuits.extend();
+//     //circuits.current() = circ;
+// }
 
 bool qxg_command::execute()
 {
@@ -395,7 +395,7 @@ bool qxg_command::execute()
             it++;
         } while (it < cnots.size());
         print_results(cnots, best_perm, lower_cost);
-        circ_qx = matrix_to_circuit(circ, cnots, best_perm);
+        //circ_qx = matrix_to_circuit(circ, cnots, best_perm);
     }
     else
     {
