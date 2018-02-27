@@ -41,6 +41,7 @@
 #include <reversible/io/print_circuit.hpp>
 #include <cli/commands/ibm.hpp>
 #include <cli/commands/permute_lines.hpp>
+#include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/add_line_to_circuit.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
@@ -53,22 +54,40 @@ static const matrix map_qx2 = {{0,0,0,10,10}, {4,0,0,10,10}, {4,4,0,4,4}, {10,10
 //Matrix with the cost of each possible cnot (QX4)
 static const matrix map_qx4 = {{0,4,4,14,10}, {0,0,4,14,10}, {0,0,0,4,0}, {10,10,0,0,0}, {10,10,4,4,0}};
 //Matrix with the cost of each possible cnot (QX3)
-static const matrix map_qx3 = {{0,0,10,10,10,10,14,10,10,14,10,10,14,10,10,4},
-                                {4,0,0,10,10,10,14,10,10,14,10,10,14,10,10,14},
-                                {10,4,0,0,10,10,14,10,10,14,10,10,14,10,10,14},
-                                {10,10,4,0,4,10,14,10,10,14,10,10,14,10,0,14},
-                                {10,10,10,0,0,0,14,10,10,14,10,10,14,4,10,14},
+// static const matrix map_qx3 = {{0,0,10,10,10,10,14,10,10,14,10,10,14,10,10,4},
+//                                 {4,0,0,10,10,10,14,10,10,14,10,10,14,10,10,14},
+//                                 {10,4,0,0,10,10,14,10,10,14,10,10,14,10,10,14},
+//                                 {10,10,4,0,4,10,14,10,10,14,10,10,14,10,0,14},
+//                                 {10,10,10,0,0,0,14,10,10,14,10,10,14,4,10,14},
+//                                 {10,10,10,10,4,0,14,10,10,14,10,10,4,10,10,14},
+//                                 {10,10,10,10,10,10,0,0,10,14,10,0,14,10,10,14},
+//                                 {10,10,10,10,10,10,4,0,4,14,0,10,14,10,10,14},
+//                                 {10,10,10,10,10,10,14,0,0,4,10,10,14,10,10,14},
+//                                 {10,10,10,10,10,10,14,10,0,0,0,10,14,10,10,14},
+//                                 {10,10,10,10,10,10,14,4,10,4,0,4,14,10,10,14},
+//                                 {10,10,10,10,10,10,4,10,10,14,0,0,4,10,10,14},
+//                                 {10,10,10,10,10,0,14,10,10,14,10,0,0,0,10,14},
+//                                 {10,10,10,10,0,10,14,10,10,14,10,10,4,0,0,14},
+//                                 {10,10,10,4,10,10,14,10,10,14,10,10,14,4,0,4},
+//                                 {0,10,10,10,10,10,14,10,10,14,10,10,14,10,0,0}};
+
+//Matrix with the cost of each possible cnot (QX3)
+static const matrix map_qx3 = {{0,0,10,10,10,10,10,10,10,10,10,10,10,10,10,4},
+                                {4,0,0,10,10,10,10,10,10,10,10,10,10,10,10,10},
+                                {10,4,0,0,10,10,10,10,10,10,10,10,10,10,10,10},
+                                {10,10,4,0,4,10,10,10,10,10,10,10,10,10,0,10},
+                                {10,10,10,0,0,0,10,10,10,10,10,10,10,4,10,10},
                                 {10,10,10,10,4,0,14,10,10,14,10,10,4,10,10,14},
-                                {10,10,10,10,10,10,0,0,10,14,10,0,14,10,10,14},
-                                {10,10,10,10,10,10,4,0,4,14,0,10,14,10,10,14},
-                                {10,10,10,10,10,10,14,0,0,4,10,10,14,10,10,14},
-                                {10,10,10,10,10,10,14,10,0,0,0,10,14,10,10,14},
+                                {10,10,10,10,10,10,0,0,10,10,10,0,10,10,10,10},
+                                {10,10,10,10,10,10,4,0,4,10,0,10,10,10,10,10},
+                                {10,10,10,10,10,10,10,0,0,4,10,10,10,10,10,10},
+                                {10,10,10,10,10,10,10,10,0,0,0,10,10,10,10,10},
                                 {10,10,10,10,10,10,14,4,10,4,0,4,14,10,10,14},
-                                {10,10,10,10,10,10,4,10,10,14,0,0,4,10,10,14},
-                                {10,10,10,10,10,0,14,10,10,14,10,0,0,0,10,14},
-                                {10,10,10,10,0,10,14,10,10,14,10,10,4,0,0,14},
+                                {10,10,10,10,10,10,4,10,10,10,0,0,4,10,10,10},
+                                {10,10,10,10,10,0,10,10,10,10,10,0,0,0,10,10},
+                                {10,10,10,10,0,10,10,10,10,10,10,10,4,0,0,10},
                                 {10,10,10,4,10,10,14,10,10,14,10,10,14,4,0,4},
-                                {0,10,10,10,10,10,14,10,10,14,10,10,14,10,0,0}};
+                                {0,10,10,10,10,10,10,10,10,10,10,10,10,10,0,0}};
 
 
 
@@ -231,7 +250,7 @@ void print_results( const matrix& cnots, const std::vector<int>& perm, const uns
     std::cout << std::endl;  
 }
 
-circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm)
+circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping)
 {
     //piece of code from ibm.cpp
     int* permute = &perm[0];
@@ -262,69 +281,69 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
         {
             if( gate.controls().empty() ) // a NOT gate
             {
-                append_toffoli( circ_IBM, gate.controls(), target );
+                append_toffoli( circ_qx, gate.controls(), target );
             }
             else // CNOT gate
             {
-                switch ( cnots[control][target] )
+                switch ( mapping[control][target] )
                 {
-                    case 1:
-                        append_toffoli( circ_IBM, gate.controls(), target );
+                    case 0:
+                        append_toffoli( circ_qx, gate.controls(), target );
                         break;
                         
-                    case 2 : // invert CNOT
-                        
-                        append_hadamard( circ_IBM, control );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, control );
-                        append_hadamard( circ_IBM, control );
-                        append_hadamard( circ_IBM, target );
+                    case 4 : // invert CNOT
+                        append_hadamard( circ_qx, control );
+                        append_hadamard( circ_qx, target );
+                        append_toffoli( circ_qx, new_controls, control );
+                        append_hadamard( circ_qx, control );
+                        append_hadamard( circ_qx, target );
                         break;
-                    case 3 : // swap target with 2
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
+
+                    // case 10 : // swap target
+                    //     append_toffoli( circ_qx, new_controls, 2u );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_hadamard( circ_qx, target );
+                    //     append_toffoli( circ_qx, new_controls, 2u );
+                    //     append_hadamard( circ_qx, 2u );
                         
-                        append_toffoli( circ_IBM, gate.controls(), 2u );
+                    //     append_toffoli( circ_qx, gate.controls(), 2u );
                         
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        break;
-                    case 4 : // swap control with 2
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, control );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, 2u );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_toffoli( circ_qx, new_controls, 2u );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_hadamard( circ_qx, target );
+                    //     append_toffoli( circ_qx, new_controls, 2u );
+                    //     break;
+                    // case 41 : // swap control with 2
+                    //     append_toffoli( circ_qx, control2, control );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_hadamard( circ_qx, control );
+                    //     append_toffoli( circ_qx, control2, control );
+                    //     append_hadamard( circ_qx, 2u );
                         
-                        append_toffoli( circ_IBM, control2, target );
+                    //     append_toffoli( circ_qx, control2, target );
                         
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, control );
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, control2, control );
-                        break;
-                    case 5: // swap target with qubit 2 and interchange control and qubit 2
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_toffoli( circ_qx, control2, control );
+                    //     append_hadamard( circ_qx, control );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_toffoli( circ_qx, control2, control );
+                    //     break;
+                    // case 14: // swap target or control and interchange control and target
+                    //     append_toffoli( circ_qx, new_controls, 2u );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_hadamard( circ_qx, target );
+                    //     append_toffoli( circ_qx, new_controls, 2u );
                         
-                        append_hadamard( circ_IBM, control );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, control );
+                    //     append_hadamard( circ_qx, control );
+                    //     append_toffoli( circ_qx, control2, control );
+                    //     append_hadamard( circ_qx, control );
                         
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        break;
+                    //     append_toffoli( circ_qx, new_controls, 2u );
+                    //     append_hadamard( circ_qx, 2u );
+                    //     append_hadamard( circ_qx, target );
+                    //     append_toffoli( circ_qx, new_controls, 2u );
+                    //     break;
                         
                 }
             }
@@ -332,12 +351,12 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
         else if ( is_pauli( gate ) )
         {
             const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
-            append_pauli( circ_IBM, target, tag.axis, tag.root, tag.adjoint );
+            append_pauli( circ_qx, target, tag.axis, tag.root, tag.adjoint );
             
         }
         else if ( is_hadamard( gate ) )
         {
-            append_hadamard( circ_IBM, target );
+            append_hadamard( circ_qx, target );
         }
         else
         {
