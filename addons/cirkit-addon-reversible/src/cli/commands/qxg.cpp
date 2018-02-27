@@ -54,24 +54,6 @@ static const matrix map_qx2 = {{0,0,0,10,10}, {4,0,0,10,10}, {4,4,0,4,4}, {10,10
 //Matrix with the cost of each possible cnot (QX4)
 static const matrix map_qx4 = {{0,4,4,14,10}, {0,0,4,14,10}, {0,0,0,4,0}, {10,10,0,0,0}, {10,10,4,4,0}};
 //Matrix with the cost of each possible cnot (QX3)
-// static const matrix map_qx3 = {{0,0,10,10,10,10,14,10,10,14,10,10,14,10,10,4},
-//                                 {4,0,0,10,10,10,14,10,10,14,10,10,14,10,10,14},
-//                                 {10,4,0,0,10,10,14,10,10,14,10,10,14,10,10,14},
-//                                 {10,10,4,0,4,10,14,10,10,14,10,10,14,10,0,14},
-//                                 {10,10,10,0,0,0,14,10,10,14,10,10,14,4,10,14},
-//                                 {10,10,10,10,4,0,14,10,10,14,10,10,4,10,10,14},
-//                                 {10,10,10,10,10,10,0,0,10,14,10,0,14,10,10,14},
-//                                 {10,10,10,10,10,10,4,0,4,14,0,10,14,10,10,14},
-//                                 {10,10,10,10,10,10,14,0,0,4,10,10,14,10,10,14},
-//                                 {10,10,10,10,10,10,14,10,0,0,0,10,14,10,10,14},
-//                                 {10,10,10,10,10,10,14,4,10,4,0,4,14,10,10,14},
-//                                 {10,10,10,10,10,10,4,10,10,14,0,0,4,10,10,14},
-//                                 {10,10,10,10,10,0,14,10,10,14,10,0,0,0,10,14},
-//                                 {10,10,10,10,0,10,14,10,10,14,10,10,4,0,0,14},
-//                                 {10,10,10,4,10,10,14,10,10,14,10,10,14,4,0,4},
-//                                 {0,10,10,10,10,10,14,10,10,14,10,10,14,10,0,0}};
-
-//Matrix with the cost of each possible cnot (QX3)
 static const matrix map_qx3 = {{0,0,10,10,10,10,10,10,10,10,10,10,10,10,10,4},
                                 {4,0,0,10,10,10,10,10,10,10,10,10,10,10,10,10},
                                 {10,4,0,0,10,10,10,10,10,10,10,10,10,10,10,10},
@@ -250,21 +232,21 @@ void print_results( const matrix& cnots, const std::vector<int>& perm, const uns
     std::cout << std::endl;  
 }
 
-int search_qubit_column(const matrix& mapping, const unsigned target)
+int search_qubit_column(const matrix& mapping, const unsigned target, const unsigned value)
 {
     for (int i = 0; i < mapping.size(); ++i)
     {
-        if(mapping[i][target] == 0)
+        if(mapping[i][target] == value && i != target)
             return i;
     }
     return (-1);
 }
 
-int search_qubit_row(const matrix& mapping, const unsigned control)
+int search_qubit_row(const matrix& mapping, const unsigned control, const unsigned value)
 {
     for (int i = 0; i < mapping.size(); ++i)
     {
-        if(mapping[control][i] == 0)
+        if(mapping[control][i] == value && i != control)
             return i;   
     }
     return (-1);
@@ -327,13 +309,12 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                         break;
 
                     case 10 : // swap target
-                        qubit = search_qubit_column(mapping, target);
+                        qubit = search_qubit_column(mapping, target, 0u);
                         if(qubit >= 0)
                         {
-                            std::cout << "Caso 10 target" << std::endl;
                             append_toffoli( circ_qx, new_controls, qubit );
                             append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, target );
                             append_toffoli( circ_qx, new_controls, qubit );
                             append_hadamard( circ_qx, qubit );
                             
@@ -341,52 +322,91 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             
                             append_hadamard( circ_qx, qubit );
                             append_toffoli( circ_qx, new_controls, qubit );
-                            append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, target );
                             append_hadamard( circ_qx, qubit );
                             append_toffoli( circ_qx, new_controls, qubit );
                             break;
                         }
                         else
                         {
-                            qubit = search_qubit_row(mapping, control);
+                            qubit = search_qubit_row(mapping, control, 0u);
                             if(qubit < 0)
                                 assert(false);
                             else
                             {
-                                std::cout << "Caso 10 controle" << std::endl;
-                                // append_toffoli( circ_qx, control2, control );
-                                // append_hadamard( circ_qx, 2u );
-                                // append_hadamard( circ_qx, control );
-                                // append_toffoli( circ_qx, control2, control );
-                                // append_hadamard( circ_qx, 2u );
+                                control2.push_back( qubit );
+                                append_toffoli( circ_qx, control2, control );
+                                append_hadamard( circ_qx, qubit );
+                                append_hadamard( circ_qx, control );
+                                append_toffoli( circ_qx, control2, control );
+                                append_hadamard( circ_qx, qubit );
                                 
-                                // append_toffoli( circ_qx, control2, target );
+                                append_toffoli( circ_qx, control2, target );
                                 
-                                // append_hadamard( circ_qx, 2u );
-                                // append_toffoli( circ_qx, control2, control );
-                                // append_hadamard( circ_qx, control );
-                                // append_hadamard( circ_qx, 2u );
-                                // append_toffoli( circ_qx, control2, control );
+                                append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, control2, control );
+                                append_hadamard( circ_qx, control );
+                                append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, control2, control );
                                 break;
                             }
-                        }   
-                    // case 14: // swap target or control and interchange control and target
-                    //     append_toffoli( circ_qx, new_controls, 2u );
-                    //     append_hadamard( circ_qx, 2u );
-                    //     append_hadamard( circ_qx, target );
-                    //     append_toffoli( circ_qx, new_controls, 2u );
-                        
-                    //     append_hadamard( circ_qx, control );
-                    //     append_toffoli( circ_qx, control2, control );
-                    //     append_hadamard( circ_qx, control );
-                        
-                    //     append_toffoli( circ_qx, new_controls, 2u );
-                    //     append_hadamard( circ_qx, 2u );
-                    //     append_hadamard( circ_qx, target );
-                    //     append_toffoli( circ_qx, new_controls, 2u );
-                    //     break;
-                        
-                }
+                        }
+
+                    case 14 : // swap target or control and interchange control and target
+                        qubit = search_qubit_column(mapping, target, 4u);
+                        if(qubit >= 0)
+                        {
+                            std::cout << "Caso 14 target" << std::endl;
+
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, target );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, qubit );
+                            
+                            append_hadamard( circ_qx, control );
+                            append_hadamard( circ_qx, target );
+                            append_toffoli( circ_qx, new_controls, control );
+                            append_hadamard( circ_qx, control );
+                            append_hadamard( circ_qx, target );
+                            
+                            append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, target );
+                            append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, new_controls, qubit );
+
+
+
+                            
+                            break;
+                        }
+                        else
+                        {
+                            qubit = search_qubit_row(mapping, control, 4u);
+                            if(qubit < 0)
+                                assert(false);
+                            else
+                            {
+                                control2.push_back( qubit );
+                                std::cout << "Caso 14 controle" << std::endl;
+                                append_toffoli( circ_qx, control2, qubit );
+                                append_hadamard( circ_qx, qubit );
+                                append_hadamard( circ_qx, control );
+                                append_toffoli( circ_qx, control2, qubit );
+                                
+                                append_hadamard( circ_qx, target );
+                                append_toffoli( circ_qx, control2, control );
+                                append_hadamard( circ_qx, target );
+                                
+                                append_toffoli( circ_qx, control2, qubit );
+                                append_hadamard( circ_qx, qubit );
+                                append_hadamard( circ_qx, control );
+                                append_toffoli( circ_qx, control2, qubit );
+                                break;
+                            }
+                        }
+                }     
             }
         }
         else if ( is_pauli( gate ) )
@@ -496,30 +516,32 @@ bool qxg_command::execute()
             //print_matrix(cnots);
             //std::cout << "cost matrix: " << std::endl;
             //print_matrix(map_cost);
-            unsigned int it = 0;
-            do
-            {
-                q = h;
-                //print_permutation(perm);
-                for(int i=0; i<cnots.size(); ++i)
-                {
-                    manipulate_matrix( cnots, h, i, map_cost, perm, map_qx4);
-                    //print_permutation(perm);
-                    cost = matrix_cost(map_cost) + circ.num_gates();
-                    //std::cout << " i: " << i << " " << cost << std::endl;
-                    if(cost <= lower_cost)
-                    {
-                        q = i;
-                        lower_cost = cost;
-                        for(int j=0; j<cnots.size(); ++j)
-                            best_perm[j] = perm[j];
-                    }
-                    manipulate_matrix( cnots, i, h, map_cost, perm, map_qx4 );
-                }
-                p.push_back(q);
-                manipulate_matrix( cnots, h, q, map_cost, perm, map_qx4 );
-                ++it;
-            }while (it < cnots.size()); 
+            // unsigned int it = 0;
+            // do
+            // {
+            //     q = h;
+            //     //print_permutation(perm);
+            //     for(int i=0; i<cnots.size(); ++i)
+            //     {
+            //         manipulate_matrix( cnots, h, i, map_cost, perm, map_qx4);
+            //         //print_permutation(perm);
+            //         cost = matrix_cost(map_cost) + circ.num_gates();
+            //         //std::cout << " i: " << i << " " << cost << std::endl;
+            //         if(cost <= lower_cost)
+            //         {
+            //             q = i;
+            //             lower_cost = cost;
+            //             for(int j=0; j<cnots.size(); ++j)
+            //                 best_perm[j] = perm[j];
+            //         }
+            //         manipulate_matrix( cnots, i, h, map_cost, perm, map_qx4 );
+            //     }
+            //     p.push_back(q);
+            //     manipulate_matrix( cnots, h, q, map_cost, perm, map_qx4 );
+            //     ++it;
+            // }while (it < cnots.size());
+            print_results(cnots, best_perm, lower_cost);
+            circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx4);
         }
         else
         {
@@ -532,36 +554,37 @@ bool qxg_command::execute()
             //print_matrix(cnots);
             //std::cout << "cost matrix: " << std::endl;
             //print_matrix(map_cost);
-            unsigned int it = 0;
-            do
-            {
-                //std::cout << "Perm: ";
-                //print_permutation(perm);
-                h = higher_cost(map_cost, cnots, p);
-                //std::cout << "qubit higher cost: " << h << std::endl;
-                q = h;
-                //print_permutation(perm);
-                for(int i=0; i<cnots.size(); ++i)
-                {
-                    manipulate_matrix( cnots, h, i, map_cost, perm, map_qx2 );
-                    //print_permutation(perm);
-                    cost = matrix_cost(map_cost) + circ.num_gates();
-                    //std::cout << " i: " << i << " " << cost << std::endl;
-                    if(cost <= lower_cost)
-                    {
-                        q = i;
-                        lower_cost = cost;
-                        for(int j=0; j<cnots.size(); ++j)
-                            best_perm[j] = perm[j];
-                    }
-                    manipulate_matrix( cnots, i, h, map_cost, perm, map_qx2 );
-                }
-                p.push_back(q);
-                manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );              
-                it++;
-            } while (it < cnots.size()); 
+            // unsigned int it = 0;
+            // do
+            // {
+            //     //std::cout << "Perm: ";
+            //     //print_permutation(perm);
+            //     h = higher_cost(map_cost, cnots, p);
+            //     //std::cout << "qubit higher cost: " << h << std::endl;
+            //     q = h;
+            //     //print_permutation(perm);
+            //     for(int i=0; i<cnots.size(); ++i)
+            //     {
+            //         manipulate_matrix( cnots, h, i, map_cost, perm, map_qx2 );
+            //         //print_permutation(perm);
+            //         cost = matrix_cost(map_cost) + circ.num_gates();
+            //         //std::cout << " i: " << i << " " << cost << std::endl;
+            //         if(cost <= lower_cost)
+            //         {
+            //             q = i;
+            //             lower_cost = cost;
+            //             for(int j=0; j<cnots.size(); ++j)
+            //                 best_perm[j] = perm[j];
+            //         }
+            //         manipulate_matrix( cnots, i, h, map_cost, perm, map_qx2 );
+            //     }
+            //     p.push_back(q);
+            //     manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );              
+            //     it++;
+            // } while (it < cnots.size());
+            print_results(cnots, best_perm, lower_cost);
+            circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx2);
         }
-        print_results(cnots, best_perm, lower_cost);
     }
     //circ_qx = remove_dup_gates( circ_qx );
     circuits.extend();
