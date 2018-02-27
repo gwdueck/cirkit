@@ -273,7 +273,8 @@ int search_qubit_row(const matrix& mapping, const unsigned control)
 circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping)
 {
     //piece of code from ibm.cpp
-    int* permute = &perm[0];
+    //int* permute = &perm[0];
+    int permute[16];
     unsigned start = circ.lines() + 1;
     unsigned target, control;
     int qubit;
@@ -285,8 +286,23 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     }   
     
     copy_metadata(circ, circ_qx);
+    
+    for(int i=0; i<cnots.size(); ++i)
+    {
+        for(int j=0; j<cnots.size(); ++j)
+        {
+            if(perm[j] == i)
+            {
+                permute[i] = j;
+                //std::cout << " " << j;
+                break;
+            }
+        }
+    }
+
+
     permute_lines( circ , permute );
-    return circ;
+
     // iterate through the gates
     for ( const auto& gate : circ )
     {
