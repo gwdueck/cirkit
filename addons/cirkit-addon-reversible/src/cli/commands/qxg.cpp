@@ -123,13 +123,13 @@ command::rules_t qxg_command::validity_rules() const
 }
 
 //Change two lines of the circuit
-void manipulate_matrix( matrix& m1, int x, int y, matrix& m2, std::vector<int>& p, const matrix& map )
+void manipulate_matrix( matrix& m1, int x, int y, matrix& m2, std::vector<int>& perm, const matrix& map )
 {
     int aux;
 
-    aux = p[x];
-    p[x] = p[y];
-    p[y] = aux;
+    aux = perm[x];
+    perm[x] = perm[y];
+    perm[y] = aux;
     for(int j=0; j<m1.size(); ++j)
     {
         aux = m1[x][j];
@@ -273,8 +273,7 @@ int search_qubit_row(const matrix& mapping, const unsigned control)
 circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping)
 {
     //piece of code from ibm.cpp
-    //int* permute = &perm[0];
-    int permute[16];
+    std::vector<int> permute;
     unsigned start = circ.lines() + 1;
     unsigned target, control;
     int qubit;
@@ -288,20 +287,11 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     copy_metadata(circ, circ_qx);
     
     for(int i=0; i<cnots.size(); ++i)
-    {
         for(int j=0; j<cnots.size(); ++j)
-        {
             if(perm[j] == i)
-            {
-                permute[i] = j;
-                //std::cout << " " << j;
-                break;
-            }
-        }
-    }
-
-
-    permute_lines( circ , permute );
+                permute.push_back(j);
+    
+    permute_lines( circ , &permute[0] );
 
     // iterate through the gates
     for ( const auto& gate : circ )
@@ -450,10 +440,10 @@ bool qxg_command::execute()
         //std::cout << "initial cost: " << cost << std::endl;
         std::cout << "initial gates: " << circ.num_gates() << std::endl;
         lower_cost = cost;
-        std::cout << "cnots matrix: " << std::endl;
-        print_matrix(cnots);
-        std::cout << "cost matrix: " << std::endl;
-        print_matrix(map_cost);
+        // std::cout << "cnots matrix: " << std::endl;
+        // print_matrix(cnots);
+        // std::cout << "cost matrix: " << std::endl;
+        // print_matrix(map_cost);
 
         unsigned int it = 0;
         do
