@@ -15,8 +15,3 @@ alias "abc_read ([^\\s]+)" "abc -c \"%1%; strash; &get -n\""
 
 # An expression simulator
 alias "exprsim ([^\\s]+)" "expr %1%; expr > tt; print -t"
-
-# test circuit
-alias "t" "read_qc /home/pc2/Documents/testes/examples/qc/graycode6_47.qc"
-
-alias "x" "read_qc /home/pc2/Documents/testes/examples/qc/xor5_254.qc"

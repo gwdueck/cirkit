@@ -301,6 +301,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                         break;
                         
                     case 4 : // invert CNOT
+                        std::cout << "Caso 4" << std::endl;
                         append_hadamard( circ_qx, control );
                         append_hadamard( circ_qx, target );
                         append_toffoli( circ_qx, new_controls, control );
@@ -312,19 +313,21 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                         qubit = search_qubit_column(mapping, target, 0u);
                         if(qubit >= 0)
                         {
-                            append_toffoli( circ_qx, new_controls, qubit );
+                            std::cout << "Caso 10 target fixo" << std::endl;
+                            control2.push_back( qubit );
+                            append_toffoli( circ_qx, control2, control );
                             append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, target );
-                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, control );
+                            append_toffoli( circ_qx, control2, control );
                             append_hadamard( circ_qx, qubit );
                             
-                            append_toffoli( circ_qx, gate.controls(), qubit );
+                            append_toffoli( circ_qx, control2, target );
                             
                             append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, new_controls, qubit );
-                            append_hadamard( circ_qx, target );
+                            append_toffoli( circ_qx, control2, control );
+                            append_hadamard( circ_qx, control );
                             append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_toffoli( circ_qx, control2, control );
                             break;
                         }
                         else
@@ -334,20 +337,21 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 assert(false);
                             else
                             {
-                                control2.push_back( qubit );
-                                append_toffoli( circ_qx, control2, control );
+                                std::cout << "Caso 10 controle fixo" << std::endl;
+                                append_toffoli( circ_qx, new_controls, qubit );
                                 append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, control );
-                                append_toffoli( circ_qx, control2, control );
+                                append_hadamard( circ_qx, target );
+                                append_toffoli( circ_qx, new_controls, qubit );
                                 append_hadamard( circ_qx, qubit );
                                 
-                                append_toffoli( circ_qx, control2, target );
+                                append_toffoli( circ_qx, gate.controls(), qubit );
                                 
                                 append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, control2, control );
-                                append_hadamard( circ_qx, control );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, target );
                                 append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, control2, control );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                
                                 break;
                             }
                         }
@@ -356,29 +360,25 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                         qubit = search_qubit_column(mapping, target, 4u);
                         if(qubit >= 0)
                         {
-                            std::cout << "Caso 14 target" << std::endl;
-
-                            append_toffoli( circ_qx, new_controls, qubit );
+                            std::cout << "Caso 14 target fixo" << std::endl;
+                            control2.push_back( qubit );
+                            append_toffoli( circ_qx, control2, control );
                             append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, target );
-                            append_toffoli( circ_qx, new_controls, qubit );
-                            append_hadamard( circ_qx, qubit );
-                            
                             append_hadamard( circ_qx, control );
+                            append_toffoli( circ_qx, control2, control );
+                            //append_hadamard( circ_qx, qubit );
+                            
+                            //append_hadamard( circ_qx, qubit );
                             append_hadamard( circ_qx, target );
-                            append_toffoli( circ_qx, new_controls, control );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, target );
+                            //append_hadamard( circ_qx, qubit );
+
+                            //append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, control2, control );
                             append_hadamard( circ_qx, control );
-                            append_hadamard( circ_qx, target );
-                            
                             append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, new_controls, qubit );
-                            append_hadamard( circ_qx, target );
-                            append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, new_controls, qubit );
-
-
-
-                            
+                            append_toffoli( circ_qx, control2, control );
                             break;
                         }
                         else
@@ -389,23 +389,27 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             else
                             {
                                 control2.push_back( qubit );
-                                std::cout << "Caso 14 controle" << std::endl;
-                                append_toffoli( circ_qx, control2, qubit );
+                                std::cout << "Caso 14 controle fixo" << std::endl;
+                                append_toffoli( circ_qx, new_controls, qubit );
                                 append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, control );
-                                append_toffoli( circ_qx, control2, qubit );
-                                
                                 append_hadamard( circ_qx, target );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                //append_hadamard( circ_qx, qubit );
+                                
+                                //append_hadamard( circ_qx, qubit );
+                                append_hadamard( circ_qx, control );
                                 append_toffoli( circ_qx, control2, control );
-                                append_hadamard( circ_qx, target );
-                                
-                                append_toffoli( circ_qx, control2, qubit );
-                                append_hadamard( circ_qx, qubit );
                                 append_hadamard( circ_qx, control );
-                                append_toffoli( circ_qx, control2, qubit );
+                                //append_hadamard( circ_qx, qubit );
+                                
+                                //append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, target );
+                                append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, new_controls, qubit );
                                 break;
                             }
-                        }
+                       }
                 }     
             }
         }
