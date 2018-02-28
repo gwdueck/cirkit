@@ -39,31 +39,37 @@
 #include <reversible/target_tags.hpp>
 #include <reversible/io/write_qc.hpp>
 #include <reversible/io/print_circuit.hpp>
-
+#include <cli/commands/ibm.hpp>
+#include <cli/commands/permute_lines.hpp>
+#include <reversible/functions/add_gates.hpp>
+#include <reversible/functions/add_line_to_circuit.hpp>
+#include <reversible/functions/remove_dup_gates.hpp>
+#include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/copy_metadata.hpp>
 
 typedef std::vector<std::vector<int>> matrix;
 
 //Matrix with the cost of each possible cnot (QX2)
 static const matrix map_qx2 = {{0,0,0,10,10}, {4,0,0,10,10}, {4,4,0,4,4}, {10,10,0,0,0}, {10,10,0,4,0}};
 //Matrix with the cost of each possible cnot (QX4)
-static const matrix map_qx4 = {{0,4,4,10,10}, {0,0,4,10,10}, {0,0,0,4,0}, {10,10,0,0,0}, {10,10,4,4,0}};
+static const matrix map_qx4 = {{0,4,4,14,10}, {0,0,4,14,10}, {0,0,0,4,0}, {10,10,0,0,0}, {10,10,4,4,0}};
 //Matrix with the cost of each possible cnot (QX3)
 static const matrix map_qx3 = {{0,0,10,10,10,10,10,10,10,10,10,10,10,10,10,4},
-                    {4,0,0,10,10,10,10,10,10,10,10,10,10,10,10,10},
-                    {10,4,0,0,10,10,10,10,10,10,10,10,10,10,10,10},
-                    {10,10,4,0,4,10,10,10,10,10,10,10,10,10,0,10},
-                    {10,10,10,0,0,0,10,10,10,10,10,10,10,4,10,10},
-                    {10,10,10,10,4,0,10,10,10,10,10,10,4,10,10,10},
-                    {10,10,10,10,10,10,0,0,10,10,10,0,10,10,10,10},
-                    {10,10,10,10,10,10,4,0,4,10,0,10,10,10,10,10},
-                    {10,10,10,10,10,10,10,0,0,4,10,10,10,10,10,10},
-                    {10,10,10,10,10,10,10,10,0,0,0,10,10,10,10,10},
-                    {10,10,10,10,10,10,10,4,10,4,0,4,10,10,10,10},
-                    {10,10,10,10,10,10,4,10,10,10,0,0,4,10,10,10},
-                    {10,10,10,10,10,0,10,10,10,10,10,0,0,0,10,10},
-                    {10,10,10,10,0,10,10,10,10,10,10,10,4,0,0,10},
-                    {10,10,4,10,10,10,10,10,10,10,10,10,10,4,0,4},
-                    {0,10,10,10,10,10,10,10,10,10,10,10,10,10,0,0}};
+                                {4,0,0,10,10,10,10,10,10,10,10,10,10,10,10,10},
+                                {10,4,0,0,10,10,10,10,10,10,10,10,10,10,10,10},
+                                {10,10,4,0,4,10,10,10,10,10,10,10,10,10,0,10},
+                                {10,10,10,0,0,0,10,10,10,10,10,10,10,4,10,10},
+                                {10,10,10,10,4,0,14,10,10,14,10,10,4,10,10,14},
+                                {10,10,10,10,10,10,0,0,10,10,10,0,10,10,10,10},
+                                {10,10,10,10,10,10,4,0,4,10,0,10,10,10,10,10},
+                                {10,10,10,10,10,10,10,0,0,4,10,10,10,10,10,10},
+                                {10,10,10,10,10,10,10,10,0,0,0,10,10,10,10,10},
+                                {10,10,10,10,10,10,14,4,10,4,0,4,14,10,10,14},
+                                {10,10,10,10,10,10,4,10,10,10,0,0,4,10,10,10},
+                                {10,10,10,10,10,0,10,10,10,10,10,0,0,0,10,10},
+                                {10,10,10,10,0,10,10,10,10,10,10,10,4,0,0,10},
+                                {10,10,10,4,10,10,14,10,10,14,10,10,14,4,0,4},
+                                {0,10,10,10,10,10,10,10,10,10,10,10,10,10,0,0}};
 
 
 
@@ -99,13 +105,13 @@ command::rules_t qxg_command::validity_rules() const
 }
 
 //Change two lines of the circuit
-void manipulate_matrix( matrix& m1, int x, int y, matrix& m2, std::vector<int>& p, const matrix& map )
+void manipulate_matrix( matrix& m1, int x, int y, matrix& m2, std::vector<int>& perm, const matrix& map )
 {
     int aux;
 
-    aux = p[x];
-    p[x] = p[y];
-    p[y] = aux;
+    aux = perm[x];
+    perm[x] = perm[y];
+    perm[y] = aux;
     for(int j=0; j<m1.size(); ++j)
     {
         aux = m1[x][j];
@@ -198,141 +204,299 @@ unsigned matrix_cost(const matrix& m)
     return cost;
 }
 
-//Search for the qubit in the matrix with the lowest cost to swap
-int find_qubit(matrix& cnots, int h, const matrix& map, const std::vector<int>& p)
-{
-    int cost, lower, column = h, aux;
-    bool first = true;
-
-    for(int j=0; j<cnots.size(); j++)
-    {
-        if( j != h && std::find(p.begin(), p.end(), j) == p.end() )
-        {
-            aux = cnots[h][j];
-            cnots[h][j] = cnots[j][j];
-            cnots[j][j] = aux; 
-            cost = 0;
-            for(int i=0; i<cnots.size(); i++)
-            {
-                cost += cnots[i][h] * map[i][j]; 
-            }
-            if(first)
-            {
-                lower = cost;
-                first = false;
-                column = j;
-            }
-            if( cost < lower )
-            {
-                lower = cost;
-                column = j;
-            }
-            aux = cnots[h][j];
-            cnots[h][j] = cnots[j][j];
-            cnots[j][j] = aux; 
-        }
-    }
-    return column;
-}
-
 void print_permutation( const std::vector<int>& perm )
 {
-    for(int i=0; i<perm.size(); i++)
+    for(int i=0; i<perm.size(); ++i)
         std::cout << " " << perm[i];    
     std::cout << std::endl;
+}
+
+void print_results( const matrix& cnots, const std::vector<int>& perm, const unsigned cost)
+{
+    std::cout << "Best permutation found (gates =  " << cost << "):";
+    //print_permutation(perm);
+    
+    //This print the permutation like the ibm command
+    //std::cout << "ibm representation: ";
+    for(int i=0; i<cnots.size(); ++i)
+    {
+        for(int j=0; j<cnots.size(); ++j)
+        {
+            if(perm[j] == i)
+            {
+                std::cout << " " << j;
+                break;
+            }
+        }
+    }
+    std::cout << std::endl;  
+}
+
+int search_qubit_column(const matrix& mapping, const unsigned target, const unsigned value)
+{
+    for (int i = 0; i < mapping.size(); ++i)
+    {
+        if(mapping[i][target] == value && i != target)
+            return i;
+    }
+    return (-1);
+}
+
+int search_qubit_row(const matrix& mapping, const unsigned control, const unsigned value)
+{
+    for (int i = 0; i < mapping.size(); ++i)
+    {
+        if(mapping[control][i] == value && i != control)
+            return i;   
+    }
+    return (-1);
+}
+
+circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping)
+{
+    //piece of code from ibm.cpp
+    std::vector<int> permute;
+    unsigned start = circ.lines() + 1;
+    unsigned target, control;
+    int qubit;
+    std::vector<unsigned int> new_controls, control2;
+    circuit circ_qx;
+   
+    for(unsigned i = start ; i <= cnots.size(); i++)
+    {
+        add_line_to_circuit( circ, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
+    }   
+    
+    copy_metadata(circ, circ_qx);
+    
+    for(int i=0; i<cnots.size(); ++i)
+        for(int j=0; j<cnots.size(); ++j)
+            if(perm[j] == i)
+                permute.push_back(j);
+    
+    permute_lines( circ , &permute[0] );
+
+    // iterate through the gates
+    for ( const auto& gate : circ )
+    {
+        target = gate.targets().front();
+        new_controls.clear();
+        control2.clear();
+        new_controls.push_back( target );
+        if( !gate.controls().empty() )
+        {
+            control = gate.controls().front().line();
+        }
+        
+        if ( is_toffoli( gate ) )
+        {
+            if( gate.controls().empty() ) // a NOT gate
+            {
+                append_toffoli( circ_qx, gate.controls(), target );
+            }
+            else // CNOT gate
+            {
+                switch ( mapping[control][target] )
+                {
+                    case 0:
+                        append_toffoli( circ_qx, gate.controls(), target );
+                        break;
+                        
+                    case 4 : // invert CNOT
+                        append_hadamard( circ_qx, control );
+                        append_hadamard( circ_qx, target );
+                        append_toffoli( circ_qx, new_controls, control );
+                        append_hadamard( circ_qx, control );
+                        append_hadamard( circ_qx, target );
+                        break;
+
+                    case 10 : // swap (fixed target)
+                        qubit = search_qubit_column(mapping, target, 0u);
+                        if(qubit >= 0)
+                        {
+                            control2.push_back( qubit );
+                            append_toffoli( circ_qx, control2, control );
+                            append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, control );
+                            append_toffoli( circ_qx, control2, control );
+                            append_hadamard( circ_qx, qubit );
+                            
+                            append_toffoli( circ_qx, control2, target );
+                            
+                            append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, control2, control );
+                            append_hadamard( circ_qx, control );
+                            append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, control2, control );
+                        }
+                        else //swap (fixed control)
+                        { 
+                            qubit = search_qubit_row(mapping, control, 0u);
+                            if(qubit < 0)
+                                assert(false);
+                            else
+                            {
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, qubit );
+                                append_hadamard( circ_qx, target );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, qubit );
+                                
+                                append_toffoli( circ_qx, gate.controls(), qubit );
+                                
+                                append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, target );
+                                append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                        }
+                        break;
+                    case 14 : // swap target or control and interchange control and target (fixed target)
+                        qubit = search_qubit_column(mapping, target, 4u);
+                        if(qubit >= 0)
+                        {
+                            control2.push_back( qubit );
+                            append_toffoli( circ_qx, control2, control );
+                            append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, control );
+                            append_toffoli( circ_qx, control2, control );
+                            //append_hadamard( circ_qx, qubit );
+                            
+                            //append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, target );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, target );
+                            //append_hadamard( circ_qx, qubit );
+
+                            //append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, control2, control );
+                            append_hadamard( circ_qx, control );
+                            append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, control2, control );
+                        }
+                        else // (fixed control)
+                        {
+                            qubit = search_qubit_row(mapping, control, 4u);
+                            if(qubit < 0)
+                                assert(false);
+                            else
+                            {
+                                control2.push_back( qubit );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, qubit );
+                                append_hadamard( circ_qx, target );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                //append_hadamard( circ_qx, qubit );
+                                
+                                //append_hadamard( circ_qx, qubit );
+                                append_hadamard( circ_qx, control );
+                                append_toffoli( circ_qx, control2, control );
+                                append_hadamard( circ_qx, control );
+                                //append_hadamard( circ_qx, qubit );
+                                
+                                //append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, target );
+                                append_hadamard( circ_qx, qubit );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                       }
+                       break;
+                }     
+            }
+        }
+        else if ( is_pauli( gate ) )
+        {
+            const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
+            append_pauli( circ_qx, target, tag.axis, tag.root, tag.adjoint );
+            
+        }
+        else if ( is_hadamard( gate ) )
+        {
+            append_hadamard( circ_qx, target );
+        }
+        else
+        {
+            assert( false );
+        }
+    }
+    return circ_qx;
 }
 
 bool qxg_command::execute()
 {
     auto& circuits = env->store<circuit>();
-    circuit circ = circuits.current();
+    circuit aux = circuits.current();
+    circuit circ_qx, circ;
+    copy_circuit(aux, circ);
     unsigned cost, lower_cost;
     int h, c, q;
     std::vector <int> p;
+    std::vector<int> perm;
+    std::vector<int> best_perm;
 
     if ( is_set( "qx3" ) )
     {
+        if(circ.lines() > 16)
+        {
+            std::cout << "Only up to 16 variables!" << std::endl;
+            return true;
+        }
         matrix cnots(16, std::vector<int>(16));
         matrix map_cost(16, std::vector<int>(16));
-        std::vector<int> perm;
-        std::vector<int> best_perm;
         for (int i = 0; i < cnots.size(); ++i)
         {           
             perm.push_back(i);
             best_perm.push_back(i);
         }
-
         cost = initial_matrix(circ, cnots, map_cost, map_qx3);
-
         cost = cost + circ.num_gates();
         //std::cout << circ.num_gates() << std::endl;
         //std::cout << "initial cost: " << cost << std::endl;
+        std::cout << "initial gates: " << circ.num_gates() << std::endl;
         lower_cost = cost;
-        //std::cout << "cnots matrix: " << std::endl;
-        //print_matrix(cnots, 16);
-        //std::cout << "cost matrix: " << std::endl;
-        //print_matrix(map_cost, 16);
+        // std::cout << "cnots matrix: " << std::endl;
+        // print_matrix(cnots);
+        // std::cout << "cost matrix: " << std::endl;
+        // print_matrix(map_cost);
 
         unsigned int it = 0;
         do
         {
-            //std::cout << "Perm: ";
-            //print_permutation(perm);
             h = higher_cost(map_cost, cnots, p);
-            //std::cout << "qubit higher cost: " << h << std::endl;
-
             q = h;
-            //print_permutation(perm);
-            for(int i=0; i<cnots.size(); i++)
+            for(int i=0; i<cnots.size(); ++i)
             {
                 manipulate_matrix( cnots, h, i, map_cost, perm, map_qx3 );
-                //print_permutation(perm);
                 cost = matrix_cost(map_cost) + circ.num_gates();
-                //std::cout << " i: " << i << " " << cost << std::endl;
                 if(cost <= lower_cost)
                 {
                     q = i;
                     lower_cost = cost;
-                    for(int i=0; i<cnots.size(); i++)
-                        best_perm[i] = perm[i];
+                    for(int j=0; j<cnots.size(); ++j)
+                        best_perm[j] = perm[j];
                 }
                 manipulate_matrix( cnots, i, h, map_cost, perm, map_qx3 );
             }
             p.push_back(q);
-            //std::cout << " q: " << q << std::endl;
-            //print_permutation(perm);
             manipulate_matrix( cnots, h, q, map_cost, perm, map_qx3 );
-           // print_permutation(perm);
-            //c = find_qubit(cnots, h, map_qx2, p);
-           // p.push_back(q);
-            //std::cout << "column found: " << c << std::endl;
-            
             it++;
         } while (it < cnots.size());
-        std::cout << "Best permutation found (gates =  " << lower_cost << "):";
-        print_permutation(best_perm);
-        
-        //This print the permutation like the ibm command
-        std::cout << "ibm representation: ";
-        for(int i=0; i<cnots.size(); i++)
-        {
-            for(int j=0; j<cnots.size(); j++)
-            {
-                if(best_perm[j] == i)
-                {
-                    std::cout << " " << j;
-                    break;
-                }
-            }
-        }
-        std::cout << std::endl;  
+        circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx3);
+        circ_qx = remove_dup_gates( circ_qx );
+        //print_results(cnots, best_perm, lower_cost);
+        print_results(cnots, best_perm, circ_qx.num_gates());
     }
     else
     {
+        if(circ.lines() > 5)
+        {
+            std::cout << "Only up to 5 variables! Try another option." << std::endl;
+            return true;
+        }
         matrix cnots(5, std::vector<int>(5));
         matrix map_cost(5, std::vector<int>(5));
-        std::vector<int> perm;
-        std::vector<int> best_perm;
         for (int i = 0; i < cnots.size(); ++i)
         {           
             perm.push_back(i);
@@ -340,31 +504,22 @@ bool qxg_command::execute()
         }
 
         if ( is_set( "qx4" ) )
-            cost = initial_matrix(circ, cnots, map_cost, map_qx4);
-        else
-            cost = initial_matrix(circ, cnots, map_cost, map_qx2);
-
-        cost = cost + circ.num_gates();
-        //std::cout << circ.num_gates() << std::endl;
-        //std::cout << "initial cost: " << cost << std::endl;
-        lower_cost = cost;
-        //std::cout << "cnots matrix: " << std::endl;
-        //print_matrix(cnots, 5);
-        //std::cout << "cost matrix: " << std::endl;
-        //print_matrix(map_cost, 5);
-
-        unsigned int it = 0;
-        do
         {
-            //std::cout << "Perm: ";
-            //print_permutation(perm);
-            h = higher_cost(map_cost, cnots, p);
-            //std::cout << "qubit higher cost: " << h << std::endl;
-            if ( is_set( "qx4" ) )
+            cost = initial_matrix(circ, cnots, map_cost, map_qx4);
+            cost = cost + circ.num_gates();
+            //std::cout << circ.num_gates() << std::endl;
+            //std::cout << "initial cost: " << cost << std::endl;
+            lower_cost = cost;
+            //std::cout << "cnots matrix: " << std::endl;
+            //print_matrix(cnots);
+            //std::cout << "cost matrix: " << std::endl;
+            //print_matrix(map_cost);
+            unsigned int it = 0;
+            do
             {
                 q = h;
                 //print_permutation(perm);
-                for(int i=0; i<cnots.size(); i++)
+                for(int i=0; i<cnots.size(); ++i)
                 {
                     manipulate_matrix( cnots, h, i, map_cost, perm, map_qx4);
                     //print_permutation(perm);
@@ -374,26 +529,41 @@ bool qxg_command::execute()
                     {
                         q = i;
                         lower_cost = cost;
-                        for(int i=0; i<cnots.size(); i++)
-                            best_perm[i] = perm[i];
+                        for(int j=0; j<cnots.size(); ++j)
+                            best_perm[j] = perm[j];
                     }
                     manipulate_matrix( cnots, i, h, map_cost, perm, map_qx4 );
                 }
                 p.push_back(q);
-                //std::cout << " q: " << q << std::endl;
-                //print_permutation(perm);
                 manipulate_matrix( cnots, h, q, map_cost, perm, map_qx4 );
-               // print_permutation(perm);
-                //c = find_qubit(cnots, h, map_qx2, p);
-               // p.push_back(q);
-                //std::cout << "column found: " << c << std::endl;
-                
-            }
-            else
+                ++it;
+            }while (it < cnots.size());
+            circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx4);
+            circ_qx = remove_dup_gates( circ_qx );
+            //print_results(cnots, best_perm, lower_cost);
+            print_results(cnots, best_perm, circ_qx.num_gates());
+        }
+        else
+        {
+            cost = initial_matrix(circ, cnots, map_cost, map_qx2);
+             cost = cost + circ.num_gates();
+            //std::cout << circ.num_gates() << std::endl;
+            //std::cout << "initial cost: " << cost << std::endl;
+            lower_cost = cost;
+            //std::cout << "cnots matrix: " << std::endl;
+            //print_matrix(cnots);
+            //std::cout << "cost matrix: " << std::endl;
+            //print_matrix(map_cost);
+            unsigned int it = 0;
+            do
             {
+                //std::cout << "Perm: ";
+                //print_permutation(perm);
+                h = higher_cost(map_cost, cnots, p);
+                //std::cout << "qubit higher cost: " << h << std::endl;
                 q = h;
                 //print_permutation(perm);
-                for(int i=0; i<cnots.size(); i++)
+                for(int i=0; i<cnots.size(); ++i)
                 {
                     manipulate_matrix( cnots, h, i, map_cost, perm, map_qx2 );
                     //print_permutation(perm);
@@ -403,58 +573,24 @@ bool qxg_command::execute()
                     {
                         q = i;
                         lower_cost = cost;
-                        for(int i=0; i<cnots.size(); i++)
-                            best_perm[i] = perm[i];
+                        for(int j=0; j<cnots.size(); ++j)
+                            best_perm[j] = perm[j];
                     }
                     manipulate_matrix( cnots, i, h, map_cost, perm, map_qx2 );
                 }
                 p.push_back(q);
-                //std::cout << " q: " << q << std::endl;
-                //print_permutation(perm);
-                manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );
-               // print_permutation(perm);
-                //c = find_qubit(cnots, h, map_qx2, p);
-               // p.push_back(q);
-                //std::cout << "column found: " << c << std::endl;
-                
-            }
-            
-            it++;
-            // cost = matrix_cost(map_cost) + circ.num_gates();
-            // //std::cout << "total cost: " << cost << std::endl;
-            // if(cost < lower_cost)
-            // {
-            //     lower_cost = cost;
-            //     for(int i=0; i<5; i++)
-            //         best_perm[i] = perm[i];
-            // }
-
-            // for( auto v : p)
-            //     std::cout << v << " ";
-            // std::cout << std::endl;
-        } while (it < cnots.size()); //five times was a test, because of the five qubits (it will change later)
-        
-        std::cout << "Best permutation found (gates =  " << lower_cost << "):";
-        print_permutation(best_perm);
-        
-        //This print the permutation like the ibm command
-        std::cout << "ibm representation: ";
-        for(int i=0; i<cnots.size(); i++)
-        {
-            for(int j=0; j<cnots.size(); j++)
-            {
-                if(best_perm[j] == i)
-                {
-                    std::cout << " " << j;
-                    break;
-                }
-            }
+                manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );              
+                it++;
+            } while (it < cnots.size());
+            circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx2);
+            circ_qx = remove_dup_gates( circ_qx );
+            //print_results(cnots, best_perm, lower_cost);
+            print_results(cnots, best_perm, circ_qx.num_gates());
         }
-        std::cout << std::endl;  
     }
+    circuits.extend();
+    circuits.current() = circ_qx;
 
-    
-    
     return true;
 }
 
