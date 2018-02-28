@@ -84,6 +84,16 @@ circuit remove_dup_gates( const circuit& circ )
 // only consderred a few self-inverse gates
 bool is_inverse(const gate& g1, const gate& g2 )
 {
+    if( (is_S_gate( g1 ) && is_S_star_gate( g2 )) ||
+       (is_S_gate( g2 ) && is_S_star_gate( g1 )) ||
+       (is_T_gate( g1 ) && is_T_star_gate( g2 )) ||
+       (is_T_gate( g2 ) && is_T_star_gate( g1 )))
+    {
+        if( g1.targets().front() == g2.targets().front())
+        {
+            return true;
+        }
+    }
     if( !same_type( g1, g2 )){
         return false;
     }
@@ -171,7 +181,28 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     {
         return ( target_g1 != g2.controls().front().line() ) && (target_g1 != target_g2 );
     }
-    return target_g1 != target_g2;
+    if( target_g1 != target_g2 )
+    {
+        return true;
+    }
+    // they have the same target
+    // both gates must be one of S, S*, T, T*, or Z
+    if( ( is_S_gate( g1 ) ||
+         is_S_star_gate( g1 ) ||
+         is_T_gate( g1 ) ||
+         is_T_star_gate( g1 ) ||
+         is_T_gate( g1 )
+       ) && (
+             is_S_gate( g2 ) ||
+             is_S_star_gate( g2 ) ||
+             is_T_gate( g2 ) ||
+             is_T_star_gate( g2 ) ||
+             is_T_gate( g2 )
+       ))
+    {
+        return true;
+    }
+    return false;
 }
 
 // no controls or targets intersect
@@ -195,7 +226,7 @@ bool gates_do_not_intersect( const gate& g1, const gate& g2 )
     return target_g1 != target_g2;
 }
 
-/* Check if both are T gates. Merge them if possible
+/* Check if both are T gates or S. Merge them if possible
  */
 bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
 {
@@ -213,6 +244,18 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
                 res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
                 return true;
             }
+        if ( is_S_gate( g1 ) && ( is_S_gate( g2 ) ) )
+        {
+            res = g1;
+            res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+            return true;
+        }
+        if ( is_S_star_gate( g1 ) && ( is_S_star_gate( g2 ) ) )
+        {
+            res = g1;
+            res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+            return true;
+        }
 
     }
     return false;
@@ -242,7 +285,43 @@ bool is_T_star_gate( const gate& g )
     return false;
 }
 
+bool is_S_gate( const gate& g )
+{
+    if ( is_pauli( g ) )
+    {
+        const auto& tag = boost::any_cast<pauli_tag>( g.type() );
+        return ( ( tag.axis == pauli_axis::Z ) &&
+                ( tag.root == 2u ) &&
+                !tag.adjoint );
+    }
+    return false;
 }
+    
+bool is_S_star_gate( const gate& g )
+{
+    if ( is_pauli( g ) )
+    {
+        const auto& tag = boost::any_cast<pauli_tag>( g.type() );
+        return ( ( tag.axis == pauli_axis::Z ) &&
+                ( tag.root == 2u ) &&
+                tag.adjoint );
+    }
+    return false;
+}
+
+bool is_Z_gate( const gate& g )
+{
+    if ( is_pauli( g ) )
+    {
+        const auto& tag = boost::any_cast<pauli_tag>( g.type() );
+        return ( ( tag.axis == pauli_axis::Z ) &&
+                ( tag.root == 1u ));
+    }
+    return false;
+}
+}
+
+
 
 // Local Variables:
 // c-basic-offset: 2
