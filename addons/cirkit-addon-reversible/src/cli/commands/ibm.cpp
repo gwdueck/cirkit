@@ -96,7 +96,7 @@ command::rules_t ibm_command::validity_rules() const
     
 bool ibm_command::execute()
 {
-    
+
     auto& circuits = env->store<circuit>();
     circuit circ_working = circuits.current();
     circuit circ_IBM;
