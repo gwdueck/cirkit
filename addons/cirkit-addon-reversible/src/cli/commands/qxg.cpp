@@ -483,8 +483,10 @@ bool qxg_command::execute()
             manipulate_matrix( cnots, h, q, map_cost, perm, map_qx3 );
             it++;
         } while (it < cnots.size());
-        print_results(cnots, best_perm, lower_cost);
         circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx3);
+        circ_qx = remove_dup_gates( circ_qx );
+        //print_results(cnots, best_perm, lower_cost);
+        print_results(cnots, best_perm, circ_qx.num_gates());
     }
     else
     {
@@ -536,8 +538,10 @@ bool qxg_command::execute()
                 manipulate_matrix( cnots, h, q, map_cost, perm, map_qx4 );
                 ++it;
             }while (it < cnots.size());
-            print_results(cnots, best_perm, lower_cost);
             circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx4);
+            circ_qx = remove_dup_gates( circ_qx );
+            //print_results(cnots, best_perm, lower_cost);
+            print_results(cnots, best_perm, circ_qx.num_gates());
         }
         else
         {
@@ -578,11 +582,12 @@ bool qxg_command::execute()
                 manipulate_matrix( cnots, h, q, map_cost, perm, map_qx2 );              
                 it++;
             } while (it < cnots.size());
-            print_results(cnots, best_perm, lower_cost);
             circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx2);
+            circ_qx = remove_dup_gates( circ_qx );
+            //print_results(cnots, best_perm, lower_cost);
+            print_results(cnots, best_perm, circ_qx.num_gates());
         }
     }
-    //circ_qx = remove_dup_gates( circ_qx );
     circuits.extend();
     circuits.current() = circ_qx;
 
