@@ -101,6 +101,7 @@
 #include <cli/commands/ibm.hpp>
 #include <cli/commands/alex.hpp>
 #include <cli/commands/permute_lines.hpp>
+#include <cli/commands/reduce.hpp>
 
 using namespace cirkit;
 
@@ -200,6 +201,7 @@ ALICE_BEGIN(revkit)
     ADD_COMMAND( ibm );
     ADD_COMMAND( permute_lines );
     ADD_COMMAND( levels );
+    ADD_COMMAND( reduce );
     ADD_COMMAND( qxg );
 
   cli.set_category( "Various" );
