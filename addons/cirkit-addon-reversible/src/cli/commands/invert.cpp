@@ -84,7 +84,7 @@ bool invert_command::execute()
     circuit circ = circuits.current();
 	circuit circ_invert;
 	copy_metadata(circ, circ_invert);
-    std::cout << "Invert a quantum circuit" << std::endl;
+    //std::cout << "Inverting a quantum circuit" << std::endl;
     for ( const auto& gate : circ )
     {
         if ( is_toffoli( gate ) )
@@ -104,10 +104,6 @@ bool invert_command::execute()
 
 	circuits.extend();
     circuits.current() = circ_invert;
-    circuit circ_identity;
-    circuits.extend();
-    copy_metadata(circ, circ_identity);
-    circuits.current() = circ_identity;
     return true;
 }
 
