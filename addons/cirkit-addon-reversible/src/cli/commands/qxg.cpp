@@ -460,7 +460,6 @@ bool qxg_command::execute()
         // print_matrix(cnots);
         // std::cout << "cost matrix: " << std::endl;
         // print_matrix(map_cost);
-
         unsigned int it = 0;
         do
         {
