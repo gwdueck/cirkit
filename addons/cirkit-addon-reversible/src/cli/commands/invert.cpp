@@ -65,7 +65,7 @@ namespace cirkit
  ******************************************************************************/
 
 invert_command::invert_command( const environment::ptr& env )
-    : cirkit_command( env, "IBM QX mapping algorithm" )
+    : cirkit_command( env, "Invert circuit" )
 {
     opts.add_options()
     ;
@@ -80,7 +80,29 @@ command::rules_t invert_command::validity_rules() const
 
 bool invert_command::execute()
 {
+	auto& circuits = env->store<circuit>();
+    circuit circ = circuits.current();
+	circuit circ_invert;
+	copy_metadata(circ, circ_invert);
     std::cout << "Invert a quantum circuit" << std::endl;
+    for ( const auto& gate : circ )
+    {
+        if ( is_toffoli( gate ) )
+        {
+            prepend_toffoli( circ_invert, gate.controls(), gate.targets().front() );
+        }
+        else if ( is_hadamard( gate ) )
+        {
+            prepend_hadamard( circ_invert,  gate.targets().front() );
+        }
+        else if ( is_pauli( gate ) )
+        {
+            const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
+            prepend_pauli( circ_invert,  gate.targets().front(), tag.axis, tag.root, !tag.adjoint );
+        }
+	}
+	circuits.extend();
+    circuits.current() = circ_invert;
     return true;
 }
 
