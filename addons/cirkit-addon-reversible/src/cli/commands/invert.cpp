@@ -46,7 +46,7 @@
 #include <reversible/functions/remove_dup_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/copy_metadata.hpp>
-
+#include <reversible/functions/add_circuit.hpp>
 
 
 namespace cirkit
@@ -101,8 +101,13 @@ bool invert_command::execute()
             prepend_pauli( circ_invert,  gate.targets().front(), tag.axis, tag.root, !tag.adjoint );
         }
 	}
+
 	circuits.extend();
     circuits.current() = circ_invert;
+    circuit circ_identity;
+    circuits.extend();
+    copy_metadata(circ, circ_identity);
+    circuits.current() = circ_identity;
     return true;
 }
 
