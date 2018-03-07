@@ -38,6 +38,7 @@
 #include <reversible/gate.hpp>
 #include <reversible/target_tags.hpp>
 #include <reversible/pauli_tags.hpp>
+#include <reversible/functions/add_gates.hpp>
 
 namespace cirkit
 {
@@ -81,8 +82,8 @@ bool rm_dup_command::execute()
         j = i + 1;
         bool done = false;
         bool incr_i = true;
-        while( ( !done ) && ( j < circ_rm.num_gates() ) )
-        {
+        //while( ( !done ) && ( j < circ_rm.num_gates() ) )
+        //{
             // if ( is_toffoli( gate ) )
             // {
             //     prepend_toffoli( circ_invert, gate.controls(), gate.targets().front() );
@@ -91,7 +92,18 @@ bool rm_dup_command::execute()
                  is_toffoli( circ_rm[i+2] ) &&  
                  is_hadamard( circ_rm[i+3] ) && is_hadamard( circ_rm[i+4]))
             {
-                std::cout << "ASdsaDsaD" << std::endl;
+                if((circ_rm[i+2].targets().front() == circ_rm[i].targets().front()) ||
+                    circ_rm[i+2].targets().front() == circ_rm[i+1].targets().front())
+                {
+                    std::cout << "ASdsaDsaD: " << i << std::endl;
+                    prepend_toffoli( circ_rm, circ_rm[i+2].targets(), circ_rm[i+2].controls().front().line() );
+                    circ_rm.remove_gate_at(i+1);
+                    circ_rm.remove_gate_at(i+2);
+                    circ_rm.remove_gate_at(i+3);
+                    circ_rm.remove_gate_at(i+4);
+                    circ_rm.remove_gate_at(i+5);                  
+                }
+                
                 // if( circ_rm[i+2].controls() )
                 // {
 
@@ -128,8 +140,7 @@ bool rm_dup_command::execute()
             //     done = true;
             // }
             j++;
-        }
-        i++;
+        //}
         if ( incr_i )
         {
             i++;
