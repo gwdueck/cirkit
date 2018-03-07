@@ -24,7 +24,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "invert.hpp"
+#include "rm_dup.hpp"
 
 #include <fstream>
 #include <algorithm>
@@ -33,21 +33,11 @@
 #include <core/utils/range_utils.hpp>
 #include <core/utils/program_options.hpp>
 #include <reversible/circuit.hpp>
-#include <reversible/gate.hpp>
 #include <cli/reversible_stores.hpp>
-#include <reversible/pauli_tags.hpp>
-#include <reversible/target_tags.hpp>
-#include <reversible/io/write_qc.hpp>
-#include <reversible/io/print_circuit.hpp>
-#include <cli/commands/ibm.hpp>
-#include <cli/commands/permute_lines.hpp>
-#include <reversible/functions/add_gates.hpp>
-#include <reversible/functions/add_line_to_circuit.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
-#include <reversible/functions/copy_circuit.hpp>
-#include <reversible/functions/copy_metadata.hpp>
-#include <reversible/functions/add_circuit.hpp>
-
+#include <reversible/gate.hpp>
+#include <reversible/target_tags.hpp>
+#include <reversible/pauli_tags.hpp>
 
 namespace cirkit
 {
@@ -64,8 +54,8 @@ namespace cirkit
  * Public functions                                                           *
  ******************************************************************************/
 
-invert_command::invert_command( const environment::ptr& env )
-    : cirkit_command( env, "Invert circuit" )
+rm_dup_command::rm_dup_command( const environment::ptr& env )
+    : cirkit_command( env, "rm_dup circuit" )
 {
     opts.add_options()
     ;
@@ -73,43 +63,87 @@ invert_command::invert_command( const environment::ptr& env )
 }
 
 
-command::rules_t invert_command::validity_rules() const
+command::rules_t rm_dup_command::validity_rules() const
 {
   return {has_store_element<circuit>( env )};
 }
 
-bool invert_command::execute()
+bool rm_dup_command::execute()
 {
 	auto& circuits = env->store<circuit>();
     circuit circ = circuits.current();
-	circuit circ_invert;
-	copy_metadata(circ, circ_invert);
-    //std::cout << "Inverting a quantum circuit" << std::endl;
-    for ( const auto& gate : circ )
+    circuit circ_rm;
+    circ_rm = remove_dup_gates(circ);
+    gate g;
+    unsigned i = 0, j;
+    while(i < circ_rm.num_gates() - 1 )
     {
-        if ( is_toffoli( gate ) )
+        j = i + 1;
+        bool done = false;
+        bool incr_i = true;
+        while( ( !done ) && ( j < circ_rm.num_gates() ) )
         {
-            prepend_toffoli( circ_invert, gate.controls(), gate.targets().front() );
+            // if ( is_toffoli( gate ) )
+            // {
+            //     prepend_toffoli( circ_invert, gate.controls(), gate.targets().front() );
+            // }
+            if ( is_hadamard( circ_rm[i] ) && is_hadamard( circ_rm[i+1] ) &&
+                 is_toffoli( circ_rm[i+2] ) &&  
+                 is_hadamard( circ_rm[i+3] ) && is_hadamard( circ_rm[i+4]))
+            {
+                std::cout << "ASdsaDsaD" << std::endl;
+                // if( circ_rm[i+2].controls() )
+                // {
+
+                // }
+                //prepend_hadamard( circ_invert,  gate.targets().front() );
+            }
+            // else if ( is_pauli( gate ) )
+            // {
+            //     const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
+            //     prepend_pauli( circ_invert,  gate.targets().front(), tag.axis, tag.root, !tag.adjoint );
+            // }
+
+            // if( is_inverse( circ_rm[i], circ_rm[j] ) )
+            // {
+            //     circ_rm.remove_gate_at(j);
+            //     circ_rm.remove_gate_at(i);
+            //     done = true;
+            //     i = 0; // overkill, but to be safe
+            //     incr_i = false;
+            // }
+            // if ( !done && gates_can_merge( circ_rm[i], circ_rm[j], g) )
+            // {
+            //     circ_rm.remove_gate_at(j);
+            //     circ_rm[i] = g;
+            //     done = true;
+            //     i = 0; // overkill, but to be safe
+            //     incr_i = false;
+            // }
+            // if(!done && gates_can_move( circ_rm[i], circ_rm[j]) )
+            // {
+            //     j++;
+            // }
+            // else{
+            //     done = true;
+            // }
+            j++;
         }
-        else if ( is_hadamard( gate ) )
+        i++;
+        if ( incr_i )
         {
-            prepend_hadamard( circ_invert,  gate.targets().front() );
+            i++;
         }
-        else if ( is_pauli( gate ) )
-        {
-            const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
-            prepend_pauli( circ_invert,  gate.targets().front(), tag.axis, tag.root, !tag.adjoint );
-        }
-	}
-	if ( is_set( "new" ) )
-    {
-    	circuits.extend();
     }
-    circuits.current() = circ_invert;
+    if ( is_set( "new" ) )
+    {
+        circuits.extend();    
+    }
+    circuits.current() = circ_rm;
     return true;
 }
 
-command::log_opt_t invert_command::log() const
+command::log_opt_t rm_dup_command::log() const
 {
   return log_opt_t({{"runtime", statistics->get<double>( "runtime" )}});
 }

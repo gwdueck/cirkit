@@ -97,6 +97,7 @@
 #include <reversible/rcbdd.hpp>
 #include <reversible/truth_table.hpp>
 
+#include<cli/commands/rm_dup.hpp>
 #include<cli/commands/invert.hpp>
 #include<cli/commands/qxg.hpp>
 #include <cli/commands/ibm.hpp>
@@ -202,7 +203,6 @@ ALICE_BEGIN(revkit)
     ADD_COMMAND( permute_lines );
     ADD_COMMAND( levels );
     ADD_COMMAND( qxg );
-    ADD_COMMAND( invert );
 
   cli.set_category( "Various" );
 
@@ -219,6 +219,8 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( spectral );
   ADD_COMMAND( tt );
   ADD_COMMAND( alex );
+  ADD_COMMAND( invert );
+  ADD_COMMAND( rm_dup );
 
 
 ALICE_END

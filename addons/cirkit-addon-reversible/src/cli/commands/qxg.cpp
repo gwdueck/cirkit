@@ -587,7 +587,10 @@ bool qxg_command::execute()
             print_results(cnots, best_perm, circ_qx.num_gates());
         }
     }
-    circuits.extend();
+    if ( is_set( "new" ) )
+    {
+        circuits.extend();    
+    }
     circuits.current() = circ_qx;
 
     return true;
