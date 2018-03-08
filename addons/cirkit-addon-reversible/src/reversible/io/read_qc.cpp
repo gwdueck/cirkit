@@ -36,6 +36,7 @@
 #include <core/utils/string_utils.hpp>
 #include <reversible/gate.hpp>
 #include <reversible/pauli_tags.hpp>
+#include <reversible/rotation_tags.hpp>
 #include <reversible/functions/add_gates.hpp>
 
 namespace cirkit
@@ -45,6 +46,7 @@ circuit read_qc( const std::string& filename )
 {
   circuit circ;
   std::unordered_map<std::string, unsigned> var2line;
+  double rot = 0.0;
 
   line_parser( filename, {
       {std::regex( "^ *#.*$" ), []( const std::smatch& m ) {
@@ -167,7 +169,18 @@ circuit read_qc( const std::string& filename )
           assert( lines.size() == 1u );
 
           append_pauli( circ, var2line[lines.back()], pauli_axis::Z, 4u, !std::string( m[1u] ).empty() );
-        }}
+        }},
+      {std::regex( "^RZ [-+]?([0-9]*\\.[0-9]+|[0-9]+) *(.*)$" ), [&circ, &rot, &var2line]( const std::smatch& m ) {
+          std::vector<std::string> lines;
+          
+          rot = std::stod( m[1u] );
+          
+          split_string( lines, m[2u], " " );
+          
+          assert( lines.size() == 1u );
+          
+          append_rotation( circ, var2line[lines.back()], rotation_axis::Z, rot );
+      }}
     }, false );
 
   return circ;

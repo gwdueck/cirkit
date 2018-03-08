@@ -191,13 +191,13 @@ bool gates_can_move( const gate& g1, const gate& g2 )
          is_S_star_gate( g1 ) ||
          is_T_gate( g1 ) ||
          is_T_star_gate( g1 ) ||
-         is_T_gate( g1 )
+         is_Z_gate( g1 )
        ) && (
              is_S_gate( g2 ) ||
              is_S_star_gate( g2 ) ||
              is_T_gate( g2 ) ||
              is_T_star_gate( g2 ) ||
-             is_T_gate( g2 )
+             is_Z_gate( g2 )
        ))
     {
         return true;

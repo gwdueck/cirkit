@@ -32,6 +32,7 @@
 
 #include <core/utils/range_utils.hpp>
 #include <reversible/pauli_tags.hpp>
+#include <reversible/rotation_tags.hpp>
 #include <reversible/target_tags.hpp>
 
 namespace cirkit
@@ -130,6 +131,11 @@ void write_qc( const circuit& circ, std::ostream& os, bool iqc_compliant )
     else if ( is_hadamard( gate ) )
     {
       os << "H " << vars[gate.targets().front()] << std::endl;
+    }
+    else if ( is_rotation( gate ) )
+    {
+      const auto& tag = boost::any_cast<rotation_tag>( gate.type() );
+      os << "RZ " << tag.rotation << " " << vars[gate.targets().front()] << std::endl;
     }
     else
     {
