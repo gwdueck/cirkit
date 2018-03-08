@@ -25,26 +25,34 @@
  */
 
 /**
- * @file read_qc.hpp
+ * @file reduce.hpp
  *
- * @brief Read QC files
+ * @brief Reduce the number of gates in a circuit
  *
- * @author Mathias Soeken
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef READ_QC_HPP
-#define READ_QC_HPP
+#ifndef CLI_REDUCE_COMMAND_HPP
+#define CLI_REDUCE_COMMAND_HPP
 
-#include <string>
-
+#include <cli/cirkit_command.hpp>
 #include <reversible/circuit.hpp>
 
 namespace cirkit
 {
+void reduce( circuit& circ , int perm[]);
+    
+class reduce_command : public cirkit_command
+{
+public:
+  reduce_command( const environment::ptr& env );
 
-circuit read_qc( const std::string& filename );
+protected:
+  rules_t validity_rules() const;
+  bool execute();
+
+};
 
 }
 

@@ -24,31 +24,41 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file read_qc.hpp
- *
- * @brief Read QC files
- *
- * @author Mathias Soeken
- * @author Gerhard Dueck
- * @since  2.3
- */
+#include "rotation_tags.hpp"
 
-#ifndef READ_QC_HPP
-#define READ_QC_HPP
-
-#include <string>
-
-#include <reversible/circuit.hpp>
+#include <reversible/target_tags.hpp>
 
 namespace cirkit
 {
 
-circuit read_qc( const std::string& filename );
-
+bool is_rotation( const gate& g )
+{
+  return is_type<rotation_tag>( g.type() );
 }
 
-#endif
+gate& create_rotation( gate& g, unsigned target, rotation_axis axis, double rotation )
+{
+  g.add_target( target );
+  g.set_type( rotation_tag( axis, rotation ) );
+  return g;
+}
+
+gate& append_rotation( circuit& circ, unsigned target, rotation_axis axis, double rotation )
+{
+  return create_rotation( circ.append_gate(), target, axis, rotation );
+}
+
+gate& prepend_rotation( circuit& circ, unsigned target, rotation_axis axis, double rotation )
+{
+  return create_rotation( circ.prepend_gate(), target, axis, rotation );
+}
+
+gate& insert_rotation( circuit& circ, unsigned n, unsigned target, rotation_axis axis, double rotation )
+{
+  return create_rotation( circ.insert_gate( n ), target, axis, rotation );
+}
+
+}
 
 // Local Variables:
 // c-basic-offset: 2
