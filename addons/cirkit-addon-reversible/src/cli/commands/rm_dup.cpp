@@ -72,11 +72,12 @@ command::rules_t rm_dup_command::validity_rules() const
 bool rm_dup_command::execute()
 {
 	auto& circuits = env->store<circuit>();
-    circuit circ = circuits.current();
-    circuit circ_rm;
-    circ_rm = remove_dup_gates(circ);
-    gate g;
-    unsigned i = 0, j;
+    circuit circ_rm = circuits.current();
+    //circuit circ_rm;
+    //circ_rm = remove_dup_gates(circ);
+    unsigned i = 0, j, target;
+    std::vector<unsigned int> controls;
+    std::cout << "Begin search" << std::endl;
     while(i < circ_rm.num_gates() - 1 )
     {
         j = i + 1;
@@ -95,14 +96,26 @@ bool rm_dup_command::execute()
                 if((circ_rm[i+2].targets().front() == circ_rm[i].targets().front()) ||
                     circ_rm[i+2].targets().front() == circ_rm[i+1].targets().front())
                 {
-                    std::cout << "ASdsaDsaD: " << i << std::endl;
-                    prepend_toffoli( circ_rm, circ_rm[i+2].targets(), circ_rm[i+2].controls().front().line() );
-                    circ_rm.remove_gate_at(i+1);
-                    circ_rm.remove_gate_at(i+2);
-                    circ_rm.remove_gate_at(i+3);
-                    circ_rm.remove_gate_at(i+4);
-                    circ_rm.remove_gate_at(i+5);                  
+                    insert_toffoli( circ_rm, i,circ_rm[i+2].targets(), circ_rm[i+2].controls().front().line() );
+                    for (int j = 0; j < 5; ++j)
+                        circ_rm.remove_gate_at(i+1);                  
                 }
+            }
+             if ( is_toffoli( circ_rm[i] ) && 
+                  is_hadamard( circ_rm[i+1] ) && is_hadamard( circ_rm[i+2] ) && 
+                  is_toffoli( circ_rm[i+3] ) && is_hadamard( circ_rm[i+4] ) && 
+                  is_toffoli( circ_rm[i+5] ) && 
+                  is_hadamard( circ_rm[i+6] ) && is_toffoli( circ_rm[i+7] ) &&
+                  is_hadamard( circ_rm[i+8] ) && is_hadamard( circ_rm[i+9] ) && 
+                  is_toffoli( circ_rm[i+10] ) )
+            {
+                // if((circ_rm[i+2].targets().front() == circ_rm[i].targets().front()) ||
+                //     circ_rm[i+2].targets().front() == circ_rm[i+1].targets().front())
+                // {
+                    insert_toffoli( circ_rm, i,circ_rm[i].targets(), circ_rm[i+5].targets().front() );
+                    for (int j = 0; j < 11; ++j)
+                        circ_rm.remove_gate_at(i+1);                  
+                //}
                 
                 // if( circ_rm[i+2].controls() )
                 // {
@@ -146,6 +159,8 @@ bool rm_dup_command::execute()
             i++;
         }
     }
+    std::cout << "Begin remove_dup_gates" << std::endl;
+    circ_rm = remove_dup_gates(circ_rm);
     if ( is_set( "new" ) )
     {
         circuits.extend();    
