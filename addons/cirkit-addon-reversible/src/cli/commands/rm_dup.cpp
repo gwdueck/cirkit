@@ -39,6 +39,7 @@
 #include <reversible/target_tags.hpp>
 #include <reversible/pauli_tags.hpp>
 #include <reversible/functions/add_gates.hpp>
+#include <reversible/io/print_circuit.hpp>
 
 namespace cirkit
 {
@@ -78,89 +79,45 @@ bool rm_dup_command::execute()
     unsigned i = 0, j, target;
     std::vector<unsigned int> controls;
     std::cout << "Begin search" << std::endl;
-    while(i < circ_rm.num_gates() - 1 )
+    while(i < circ_rm.num_gates())
     {
-        j = i + 1;
-        bool done = false;
-        bool incr_i = true;
-        //while( ( !done ) && ( j < circ_rm.num_gates() ) )
-        //{
-            // if ( is_toffoli( gate ) )
-            // {
-            //     prepend_toffoli( circ_invert, gate.controls(), gate.targets().front() );
-            // }
-            if ( is_hadamard( circ_rm[i] ) && is_hadamard( circ_rm[i+1] ) &&
-                 is_toffoli( circ_rm[i+2] ) &&  
-                 is_hadamard( circ_rm[i+3] ) && is_hadamard( circ_rm[i+4]))
-            {
-                if((circ_rm[i+2].targets().front() == circ_rm[i].targets().front()) ||
-                    circ_rm[i+2].targets().front() == circ_rm[i+1].targets().front())
-                {
-                    insert_toffoli( circ_rm, i,circ_rm[i+2].targets(), circ_rm[i+2].controls().front().line() );
-                    for (int j = 0; j < 5; ++j)
-                        circ_rm.remove_gate_at(i+1);                  
-                }
-            }
-             if ( is_toffoli( circ_rm[i] ) && 
-                  is_hadamard( circ_rm[i+1] ) && is_hadamard( circ_rm[i+2] ) && 
-                  is_toffoli( circ_rm[i+3] ) && is_hadamard( circ_rm[i+4] ) && 
-                  is_toffoli( circ_rm[i+5] ) && 
-                  is_hadamard( circ_rm[i+6] ) && is_toffoli( circ_rm[i+7] ) &&
-                  is_hadamard( circ_rm[i+8] ) && is_hadamard( circ_rm[i+9] ) && 
-                  is_toffoli( circ_rm[i+10] ) )
-            {
-                // if((circ_rm[i+2].targets().front() == circ_rm[i].targets().front()) ||
-                //     circ_rm[i+2].targets().front() == circ_rm[i+1].targets().front())
-                // {
-                    insert_toffoli( circ_rm, i,circ_rm[i].targets(), circ_rm[i+5].targets().front() );
-                    for (int j = 0; j < 11; ++j)
-                        circ_rm.remove_gate_at(i+1);                  
-                //}
-                
-                // if( circ_rm[i+2].controls() )
-                // {
 
-                // }
-                //prepend_hadamard( circ_invert,  gate.targets().front() );
-            }
-            // else if ( is_pauli( gate ) )
-            // {
-            //     const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
-            //     prepend_pauli( circ_invert,  gate.targets().front(), tag.axis, tag.root, !tag.adjoint );
-            // }
-
-            // if( is_inverse( circ_rm[i], circ_rm[j] ) )
-            // {
-            //     circ_rm.remove_gate_at(j);
-            //     circ_rm.remove_gate_at(i);
-            //     done = true;
-            //     i = 0; // overkill, but to be safe
-            //     incr_i = false;
-            // }
-            // if ( !done && gates_can_merge( circ_rm[i], circ_rm[j], g) )
-            // {
-            //     circ_rm.remove_gate_at(j);
-            //     circ_rm[i] = g;
-            //     done = true;
-            //     i = 0; // overkill, but to be safe
-            //     incr_i = false;
-            // }
-            // if(!done && gates_can_move( circ_rm[i], circ_rm[j]) )
-            // {
-            //     j++;
-            // }
-            // else{
-            //     done = true;
-            // }
-            j++;
-        //}
-        if ( incr_i )
+        if ( is_hadamard( circ_rm[i] ) && is_hadamard( circ_rm[i+1] ) &&
+             is_toffoli( circ_rm[i+2] ) &&  
+             is_hadamard( circ_rm[i+3] ) && is_hadamard( circ_rm[i+4]))
         {
-            i++;
+            if((circ_rm[i+2].targets().front() == circ_rm[i].targets().front()) ||
+                circ_rm[i+2].targets().front() == circ_rm[i+1].targets().front())
+            {
+                //std::cout << "A: " << i << std::endl;
+                insert_toffoli( circ_rm, i,circ_rm[i+2].targets(), circ_rm[i+2].controls().front().line() );
+                for (int j = 0; j < 5; ++j)
+                    circ_rm.remove_gate_at(i+1);
+                //std::cout << circ_rm << std::endl;                
+            }
         }
+        else if ( is_toffoli( circ_rm[i] ) && 
+              is_hadamard( circ_rm[i+1] ) && is_hadamard( circ_rm[i+2] ) && 
+              is_toffoli( circ_rm[i+3] ) && is_hadamard( circ_rm[i+4] ) && 
+              is_toffoli( circ_rm[i+5] ) && 
+              is_hadamard( circ_rm[i+6] ) && is_toffoli( circ_rm[i+7] ) &&
+              is_hadamard( circ_rm[i+8] ) && is_hadamard( circ_rm[i+9] ) && 
+              is_toffoli( circ_rm[i+10] ) )
+        {
+                //std::cout << "B: " << i << std::endl;
+                if(circ_rm[i+5].targets().front() == circ_rm[i+4].targets().front())
+                    insert_toffoli( circ_rm, i,circ_rm[i+5].controls(), circ_rm[i].controls().front().line() );
+                else
+                    insert_toffoli( circ_rm, i,circ_rm[i].targets(), circ_rm[i+5].targets().front() );
+                for (int j = 0; j < 11; ++j)
+                    circ_rm.remove_gate_at(i+1);                  
+                //std::cout << circ_rm << std::endl;
+        }
+        ++i;
+
     }
-    std::cout << "Begin remove_dup_gates" << std::endl;
-    circ_rm = remove_dup_gates(circ_rm);
+    std::cout << "\nBegin remove_dup_gates" << std::endl;
+    //circ_rm = remove_dup_gates(circ_rm);
     if ( is_set( "new" ) )
     {
         circuits.extend();    
