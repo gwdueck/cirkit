@@ -39,6 +39,7 @@
 #include <cli/commands/permute_lines.hpp>
 #include <reversible/optimization/simplify.hpp>
 #include <reversible/pauli_tags.hpp>
+#include <reversible/rotation_tags.hpp>
 #include <reversible/target_tags.hpp>
 #include <reversible/functions/copy_metadata.hpp>
 #include <reversible/functions/copy_circuit.hpp>
@@ -96,7 +97,7 @@ command::rules_t ibm_command::validity_rules() const
     
 bool ibm_command::execute()
 {
-    
+
     auto& circuits = env->store<circuit>();
     circuit circ_working = circuits.current();
     circuit circ_IBM;
@@ -312,6 +313,11 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
         else if ( is_hadamard( gate ) )
         {
             append_hadamard( circ_IBM, target );
+        }
+        else if ( is_rotation( gate ) )
+        {
+            const auto& tag = boost::any_cast<rotation_tag>( gate.type() );
+            append_rotation( circ_IBM, target, rotation_axis::Z, tag.rotation );
         }
         else
         {

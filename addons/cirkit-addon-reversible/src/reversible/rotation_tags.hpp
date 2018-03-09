@@ -25,29 +25,56 @@
  */
 
 /**
- * @file read_qc.hpp
+ * @file rotation_tags.hpp
  *
- * @brief Read QC files
+ * @brief Rotation gates
  *
- * @author Mathias Soeken
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef READ_QC_HPP
-#define READ_QC_HPP
-
-#include <string>
+#ifndef ROTATION_TAGS_HPP
+#define ROTATION_TAGS_HPP
 
 #include <reversible/circuit.hpp>
+#include <reversible/gate.hpp>
 
 namespace cirkit
 {
 
-circuit read_qc( const std::string& filename );
+enum class rotation_axis { X, Y, Z };
+
+/**
+ * @brief Target tag for rotation gates
+ */
+struct rotation_tag
+{
+  rotation_tag() {}
+
+  rotation_tag( rotation_axis axis, double rotation = 0.0 )
+    : axis( axis ),
+      rotation( rotation )
+  {
+  }
+
+  /**
+   * @brief Axis of rotation gate
+   */
+  rotation_axis axis = rotation_axis::Z;
+
+  /**
+   * @brief rotation angle
+   */
+  double rotation = 0.0;
+};
+
+bool is_rotation( const gate& g );
+
+gate& append_rotation( circuit& circ, unsigned target, rotation_axis axis, double rotation = 0.0 );
+gate& prepend_rotation( circuit& circ, unsigned target, rotation_axis axis, double rotation = 0.0 );
+gate& insert_rotation( circuit& circ, unsigned n, unsigned target, rotation_axis axis, double rotation = 0.0 );
 
 }
-
 #endif
 
 // Local Variables:
