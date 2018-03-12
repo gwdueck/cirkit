@@ -483,7 +483,7 @@ bool qxg_command::execute()
             it++;
         } while (it < cnots.size());
         circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx3);
-       // circ_qx = remove_dup_gates( circ_qx );
+        circ_qx = remove_dup_gates( circ_qx );
         //print_results(cnots, best_perm, lower_cost);
         print_results(cnots, best_perm, circ_qx.num_gates());
     }
@@ -538,7 +538,7 @@ bool qxg_command::execute()
                 ++it;
             }while (it < cnots.size());
             circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx4);
-            //circ_qx = remove_dup_gates( circ_qx );
+            circ_qx = remove_dup_gates( circ_qx );
             //print_results(cnots, best_perm, lower_cost);
             print_results(cnots, best_perm, circ_qx.num_gates());
         }
@@ -582,7 +582,7 @@ bool qxg_command::execute()
                 it++;
             } while (it < cnots.size());
             circ_qx = matrix_to_circuit(circ, cnots, best_perm, map_qx2);
-            //circ_qx = remove_dup_gates( circ_qx );
+            circ_qx = remove_dup_gates( circ_qx );
             //print_results(cnots, best_perm, lower_cost);
             print_results(cnots, best_perm, circ_qx.num_gates());
         }
