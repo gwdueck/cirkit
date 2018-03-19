@@ -51,6 +51,7 @@ bool is_T_star_gate( const gate& g );
 bool is_S_gate( const gate& g );
 bool is_S_star_gate( const gate& g );
 bool is_Z_gate( const gate& g );
+bool is_RZ_gate( const gate& g );
     
 }
 

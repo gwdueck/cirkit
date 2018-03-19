@@ -29,6 +29,7 @@
 #include <reversible/gate.hpp>
 #include <reversible/target_tags.hpp>
 #include <reversible/pauli_tags.hpp>
+#include <reversible/rotation_tags.hpp>
 
 namespace cirkit
 {
@@ -316,6 +317,15 @@ bool is_Z_gate( const gate& g )
         const auto& tag = boost::any_cast<pauli_tag>( g.type() );
         return ( ( tag.axis == pauli_axis::Z ) &&
                 ( tag.root == 1u ));
+    }
+    return false;
+}
+    
+bool is_RZ_gate( const gate& g ){
+    if ( is_rotation( g ) )
+    {
+        const auto& tag = boost::any_cast<rotation_tag>( g.type() );
+        return ( ( tag.axis == rotation_axis::Z ) );
     }
     return false;
 }
