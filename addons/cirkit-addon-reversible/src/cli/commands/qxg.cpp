@@ -305,113 +305,112 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
             }
             else // CNOT gate
             {
-                switch ( mapping[control][target] )
+                if ( mapping[control][target] == 0 )
                 {
-                    case 0:
-                        append_toffoli( circ_qx, gate.controls(), target );
-                        break;
+                    append_toffoli( circ_qx, gate.controls(), target );
+                }
+                else if( mapping[control][target] == 4 ) // invert CNOT
+                {
+                    append_hadamard( circ_qx, control );
+                    append_hadamard( circ_qx, target );
+                    append_toffoli( circ_qx, new_controls, control );
+                    append_hadamard( circ_qx, control );
+                    append_hadamard( circ_qx, target );
+                }
+                else if( mapping[control][target] == 10 )
+                {
+                    qubit = search_qubit_column(mapping, target, 0u);
+                    if(qubit >= 0) // swap (fixed target)
+                    {
+                        control2.push_back( qubit );
+                        append_toffoli( circ_qx, control2, control );
+                        append_hadamard( circ_qx, qubit );
+                        append_hadamard( circ_qx, control );
+                        append_toffoli( circ_qx, control2, control );
+                        append_hadamard( circ_qx, qubit );
                         
-                    case 4 : // invert CNOT
+                        append_toffoli( circ_qx, control2, target );
+                        
+                        append_hadamard( circ_qx, qubit );
+                        append_toffoli( circ_qx, control2, control );
                         append_hadamard( circ_qx, control );
-                        append_hadamard( circ_qx, target );
-                        append_toffoli( circ_qx, new_controls, control );
-                        append_hadamard( circ_qx, control );
-                        append_hadamard( circ_qx, target );
-                        break;
-
-                    case 10 : // swap (fixed target)
-                        qubit = search_qubit_column(mapping, target, 0u);
-                        if(qubit >= 0)
+                        append_hadamard( circ_qx, qubit );
+                        append_toffoli( circ_qx, control2, control );
+                    }
+                    else //swap (fixed control)
+                    { 
+                        qubit = search_qubit_row(mapping, control, 0u);
+                        if(qubit < 0)
+                            assert(false);
+                        else 
                         {
-                            control2.push_back( qubit );
-                            append_toffoli( circ_qx, control2, control );
+                            append_toffoli( circ_qx, new_controls, qubit );
                             append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, control );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, qubit );
-                            
-                            append_toffoli( circ_qx, control2, target );
-                            
-                            append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, control );
-                            append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, control2, control );
-                        }
-                        else //swap (fixed control)
-                        { 
-                            qubit = search_qubit_row(mapping, control, 0u);
-                            if(qubit < 0)
-                                assert(false);
-                            else
-                            {
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, qubit );
-                                
-                                append_toffoli( circ_qx, gate.controls(), qubit );
-                                
-                                append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                            }
-                        }
-                        break;
-                    case 14 : // swap target or control and interchange control and target (fixed target)
-                        qubit = search_qubit_column(mapping, target, 4u);
-                        if(qubit >= 0)
-                        {
-                            control2.push_back( qubit );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, control );
-                            append_toffoli( circ_qx, control2, control );
-                            //append_hadamard( circ_qx, qubit );
-                            
-                            //append_hadamard( circ_qx, qubit );
                             append_hadamard( circ_qx, target );
                             append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, qubit );
+                            
+                            append_toffoli( circ_qx, gate.controls(), qubit );
+                            
+                            append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, new_controls, qubit );
                             append_hadamard( circ_qx, target );
-                            //append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                        }
+                    }
+                }
+                else if( mapping[control][target] == 14 ) // swap target or control and interchange control and target (fixed target)
+                {
+                    qubit = search_qubit_column(mapping, target, 4u);
+                    if(qubit >= 0)
+                    {
+                        control2.push_back( qubit );
+                        append_toffoli( circ_qx, control2, control );
+                        append_hadamard( circ_qx, qubit );
+                        append_hadamard( circ_qx, control );
+                        append_toffoli( circ_qx, control2, control );
+                        //append_hadamard( circ_qx, qubit );
+                        
+                        //append_hadamard( circ_qx, qubit );
+                        append_hadamard( circ_qx, target );
+                        append_toffoli( circ_qx, new_controls, qubit );
+                        append_hadamard( circ_qx, target );
+                        //append_hadamard( circ_qx, qubit );
 
+                        //append_hadamard( circ_qx, qubit );
+                        append_toffoli( circ_qx, control2, control );
+                        append_hadamard( circ_qx, control );
+                        append_hadamard( circ_qx, qubit );
+                        append_toffoli( circ_qx, control2, control );
+                    }
+                    else // (fixed control)
+                    {
+                        qubit = search_qubit_row(mapping, control, 4u);
+                        if(qubit < 0)
+                            assert(false);
+                        else
+                        {
+                            control2.push_back( qubit );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, target );
+                            append_toffoli( circ_qx, new_controls, qubit );
                             //append_hadamard( circ_qx, qubit );
+                            
+                            //append_hadamard( circ_qx, qubit );
+                            append_hadamard( circ_qx, control );
                             append_toffoli( circ_qx, control2, control );
                             append_hadamard( circ_qx, control );
+                            //append_hadamard( circ_qx, qubit );
+                            
+                            //append_hadamard( circ_qx, qubit );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, target );
                             append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, control2, control );
+                            append_toffoli( circ_qx, new_controls, qubit );
                         }
-                        else // (fixed control)
-                        {
-                            qubit = search_qubit_row(mapping, control, 4u);
-                            if(qubit < 0)
-                                assert(false);
-                            else
-                            {
-                                control2.push_back( qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                //append_hadamard( circ_qx, qubit );
-                                
-                                //append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, control );
-                                append_toffoli( circ_qx, control2, control );
-                                append_hadamard( circ_qx, control );
-                                //append_hadamard( circ_qx, qubit );
-                                
-                                //append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                            }
-                       }
-                       break;
+                   }
                 }     
             }
         }
@@ -519,6 +518,32 @@ bool qxg_command::execute()
 
     if ( is_set( "qx3" ) )
     {
+        for (int i = 0; i < 16; ++i)
+        {
+            for (int j = 0; j < 16; ++j)
+            {
+                if(map_qx3[i][j] == 0)
+                {
+                    // 0
+                    std::cout << " " << i << " " << j << ": " << "0" << std::endl;
+                }
+                else if ((map_qx3[i][j]-4) % 7 == 0)
+                {   
+                    // -1
+                    std::cout << " " << i << " " << j << ": " << "-4" << std::endl;
+                }
+                else if ((map_qx3[i][j]+4) % 7 == 0)
+                {
+                    // +1
+                    std::cout << " " << i << " " << j << ": " << "+4" << std::endl;
+                }
+                else
+                {
+                    std::cout << "BUGOU!" << std::endl;
+                }
+            }
+        }
+
         if(circ.lines() > 16)
         {
             std::cout << "Only up to 16 variables!" << std::endl;
