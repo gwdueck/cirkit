@@ -167,7 +167,7 @@ int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
                 cost += m1[i][j] + m1[j][i];
                 qtd_cnot += m2[i][j] + m2[j][i];
             }
-            std::cout << "Cost Inside: " << i << " cost: " << cost << " qtd_cnot: " << qtd_cnot <<std::endl;
+            //std::cout << "Cost Inside: " << i << " cost: " << cost << " qtd_cnot: " << qtd_cnot <<std::endl;
             if( cost > higher_cost)
             {
                 higher_cost = cost;
@@ -468,7 +468,7 @@ circuit qxg(circuit& circ, const matrix& map )
     do
     {
         h = higher_cost(map_cost, cnots, p);
-        std::cout << "Higher cost: " << h << std::endl;
+        //std::cout << "Higher cost: " << h << std::endl;
         q = h;
         for(unsigned int i=0; i<cnots.size(); ++i)
         {
@@ -484,23 +484,23 @@ circuit qxg(circuit& circ, const matrix& map )
             }
             manipulate_matrix( cnots, i, h, map_cost, perm, map );
         }
-        std::cout << "Chosen: " << q << std::endl;
+        //std::cout << "Chosen: " << q << std::endl;
         if(h == q)
             p.push_back(h);
-        if(p.size() == cnots.size())
-            break;
+        // if(p.size() == cnots.size())
+        //     break;
         // for(unsigned int i=0; i<p.size(); ++i)
         //     std::cout << "P: " << p[i] << std::endl;
         manipulate_matrix( cnots, h, q, map_cost, perm, map );
         // std::cout << "=============================================" << std::endl;
         it++;
-        // if(it%cnots.size() == 0)
-        // {
-        //     p.clear();
-        // }
+        if(it%cnots.size() == 0)
+        {
+            p.clear();
+        }
         // std::cout << "Esperando..." << std::endl;
         // std::cin.get();
-    } while (it < 3*cnots.size());
+    } while (it < 2*cnots.size());
     //circ_qx = matrix_to_circuit(circ, cnots, best_perm, map);
     //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
