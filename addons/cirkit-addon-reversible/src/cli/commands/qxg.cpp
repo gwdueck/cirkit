@@ -153,44 +153,29 @@ void print_matrix( const matrix& m)
 //Search matrix for the qubit with higher cost
 int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
 {
-    int cost_target, cost_control, qtd_cnot_control, qtd_cnot_target; 
+    int cost, qtd_cnot; 
     int higher_cost = 0, index = 0, higher_qtd_cnot = 0;
     
     for(int i=0; i<m1.size(); ++i)
     {
-        cost_control = 0;
-        qtd_cnot_control = 0;
-        // cost_target = 0;
-        // qtd_cnot_target = 0;
+        cost = 0;
+        qtd_cnot = 0;
         if (std::find(p.begin(), p.end(), i) == p.end())
         {
             for(int j=0; j<m1.size(); ++j)
             {
-                cost_control += m1[i][j];
-                qtd_cnot_control += m2[i][j];
-                // cost_target += m1[j][i];
-                // qtd_cnot_target += m2[j][i];
+                cost += m1[i][j] + m1[j][i];
+                qtd_cnot += m2[i][j] + m2[j][i];
             }
-            if(cost_control > higher_cost)
+            std::cout << "Cost Inside: " << i << " cost: " << cost << " qtd_cnot: " << qtd_cnot <<std::endl;
+            if( cost > higher_cost)
             {
-                higher_cost = cost_control;
-                higher_qtd_cnot = qtd_cnot_control;
+                higher_cost = cost;
                 index = i;
             }
-            // if(cost_target > higher_cost)
-            // {
-            //     higher_cost = cost_target;
-            //     higher_qtd_cnot = qtd_cnot_target;
-            //     index = i;
-            // }
-            // if(cost_target == higher_cost && qtd_cnot_target > higher_qtd_cnot)
-            // {
-            //     higher_qtd_cnot = qtd_cnot_target;
-            //     index = i;
-            // }
-            if(cost_control == higher_cost && qtd_cnot_control > higher_qtd_cnot)
+            else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
             {
-                higher_qtd_cnot = qtd_cnot_control;
+                higher_qtd_cnot = qtd_cnot;
                 index = i;
             }
         }
@@ -452,7 +437,7 @@ circuit qxg(circuit& circ, const matrix& map )
 {
     circuit circ_qx;
     unsigned int cost, lower_cost, h, c, q;
-    std::vector <int> p;
+    std::vector <int> p, t;
     std::vector<int> perm;
     std::vector<int> best_perm;
     matrix cnots;
@@ -483,7 +468,7 @@ circuit qxg(circuit& circ, const matrix& map )
     do
     {
         h = higher_cost(map_cost, cnots, p);
-        // std::cout << "Higher cost: " << h << std::endlr;
+        std::cout << "Higher cost: " << h << std::endl;
         q = h;
         for(unsigned int i=0; i<cnots.size(); ++i)
         {
@@ -499,14 +484,23 @@ circuit qxg(circuit& circ, const matrix& map )
             }
             manipulate_matrix( cnots, i, h, map_cost, perm, map );
         }
-        // std::cout << "Chosen: " << q << std::endl;
-        p.push_back(q);
+        std::cout << "Chosen: " << q << std::endl;
+        if(h == q)
+            p.push_back(h);
+        if(p.size() == cnots.size())
+            break;
+        // for(unsigned int i=0; i<p.size(); ++i)
+        //     std::cout << "P: " << p[i] << std::endl;
         manipulate_matrix( cnots, h, q, map_cost, perm, map );
         // std::cout << "=============================================" << std::endl;
         it++;
+        // if(it%cnots.size() == 0)
+        // {
+        //     p.clear();
+        // }
         // std::cout << "Esperando..." << std::endl;
         // std::cin.get();
-    } while (it < cnots.size());
+    } while (it < 3*cnots.size());
     //circ_qx = matrix_to_circuit(circ, cnots, best_perm, map);
     //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
