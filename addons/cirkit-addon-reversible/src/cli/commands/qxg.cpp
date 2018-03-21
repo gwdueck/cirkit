@@ -167,7 +167,6 @@ int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
                 cost += m1[i][j] + m1[j][i];
                 qtd_cnot += m2[i][j] + m2[j][i];
             }
-            //std::cout << "Cost Inside: " << i << " cost: " << cost << " qtd_cnot: " << qtd_cnot <<std::endl;
             if( cost > higher_cost)
             {
                 higher_cost = cost;
