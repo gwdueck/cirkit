@@ -50,17 +50,9 @@
 typedef std::vector<std::vector<int>> matrix;
 
 //Matrix with the cost of each possible cnot (QX2)
-static const matrix map_qx2 = { {0,0,0,10,10}, 
-                                {4,0,0,10,10}, 
-                                {4,4,0,4,4}, 
-                                {10,10,0,0,0}, 
-                                {10,10,0,4,0}};
+static const matrix map_qx2 = { {0,0,0,10,10},{4,0,0,10,10},{4,4,0,4,4},{10,10,0,0,0},{10,10,0,4,0}};
 //Matrix with the cost of each possible cnot (QX4)
-static const matrix map_qx4 = { {0,4,4,18,10}, 
-                                {0,0,4,18,10}, 
-                                {0,0,0,4,0}, 
-                                {10,10,0,0,0}, 
-                                {10,10,4,4,0}};
+static const matrix map_qx4 = { {0,4,4,18,10},{0,0,4,18,10},{0,0,0,4,0},{10,10,0,0,0},{10,10,4,4,0}};
 //Matrix with the cost of each possible cnot (QX3)
 static const matrix map_qx3 = { {0, 0, 10, 24, 38, 52, 74, 80, 94, 88, 66, 52, 46, 32, 10, 4},
                                 {4, 0, 0, 10, 24, 38, 80, 94, 108, 94, 80, 66, 52, 38, 24, 18},
@@ -260,6 +252,22 @@ int search_qubit_row(const matrix& mapping, const unsigned int control, const un
     return (-1);
 }
 
+void find_path(const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& mapping)
+{
+    if ((map_qx3[i][j]-4) % 7 == 0)
+    {   
+        // -1
+        std::cout << " " << i << " " << j << ": " << "-4" << std::endl;
+        find_path(control, target, permute, mapping);
+    }
+    else if ((map_qx3[i][j]+4) % 7 == 0)
+    {
+        // +1
+        std::cout << " " << i << " " << j << ": " << "+4" << std::endl;
+        find_path(control, target);
+    }
+}
+
 circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping)
 {
     //piece of code from ibm.cpp
@@ -359,7 +367,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                         }
                     }
                 }
-                else if( mapping[control][target] == 14 ) // swap target or control and interchange control and target (fixed target)
+                else if( mapping[control][target] == 18 ) // swap target or control and interchange control and target (fixed target)
                 {
                     qubit = search_qubit_column(mapping, target, 4u);
                     if(qubit >= 0)
@@ -410,7 +418,13 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             append_toffoli( circ_qx, new_controls, qubit );
                         }
                    }
-                }     
+                }
+                else
+                {
+                    permute.clear();
+                    find_path(control, target, permute, mapping);
+                }
+                     
             }
         }
         else if ( is_pauli( gate ) )
@@ -517,32 +531,6 @@ bool qxg_command::execute()
 
     if ( is_set( "qx3" ) )
     {
-        for (int i = 0; i < 16; ++i)
-        {
-            for (int j = 0; j < 16; ++j)
-            {
-                if(map_qx3[i][j] == 0)
-                {
-                    // 0
-                    std::cout << " " << i << " " << j << ": " << "0" << std::endl;
-                }
-                else if ((map_qx3[i][j]-4) % 7 == 0)
-                {   
-                    // -1
-                    std::cout << " " << i << " " << j << ": " << "-4" << std::endl;
-                }
-                else if ((map_qx3[i][j]+4) % 7 == 0)
-                {
-                    // +1
-                    std::cout << " " << i << " " << j << ": " << "+4" << std::endl;
-                }
-                else
-                {
-                    std::cout << "BUGOU!" << std::endl;
-                }
-            }
-        }
-
         if(circ.lines() > 16)
         {
             std::cout << "Only up to 16 variables!" << std::endl;
