@@ -51,6 +51,7 @@ circuit remove_dup_gates( const circuit& circ )
         {
             if( is_inverse( result[i], result[j] ) )
             {
+//                std::cout << "is_inverse " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
@@ -59,6 +60,7 @@ circuit remove_dup_gates( const circuit& circ )
             }
             if ( !done && gates_can_merge( result[i], result[j], g) )
             {
+ //               std::cout << "gates_can_merge " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result[i] = g;
                 done = true;
@@ -67,6 +69,7 @@ circuit remove_dup_gates( const circuit& circ )
             }
             if(!done && gates_can_move( result[i], result[j]) )
             {
+//                std::cout << "gates_can_move " << i << " " << j << "\n";
                 j++;
             }
             else{
@@ -174,7 +177,8 @@ bool gates_can_move( const gate& g1, const gate& g2 )
         }
         else
         {
-            return g2.controls().front().line() != target_g1;
+            return (g2.controls().front().line() != target_g1) &&
+            (g1.controls().front().line() != target_g2);
         }
     }
     // g2 CNOT; g1 is not a Toffoli
