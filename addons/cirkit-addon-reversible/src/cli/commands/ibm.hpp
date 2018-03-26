@@ -42,7 +42,7 @@
 
 namespace cirkit
 {
-circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] );
+circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool templ );
 
 class ibm_command : public cirkit_command
 {
