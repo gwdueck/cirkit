@@ -50,17 +50,9 @@
 typedef std::vector<std::vector<int>> matrix;
 
 //Matrix with the cost of each possible cnot (QX2)
-static const matrix map_qx2 = { {0,0,0,10,10}, 
-                                {4,0,0,10,10}, 
-                                {4,4,0,4,4}, 
-                                {10,10,0,0,0}, 
-                                {10,10,0,4,0}};
+static const matrix map_qx2 = { {0,0,0,10,10},{4,0,0,10,10},{4,4,0,4,4},{10,10,0,0,0},{10,10,0,4,0}};
 //Matrix with the cost of each possible cnot (QX4)
-static const matrix map_qx4 = { {0,4,4,18,10}, 
-                                {0,0,4,18,10}, 
-                                {0,0,0,4,0}, 
-                                {10,10,0,0,0}, 
-                                {10,10,4,4,0}};
+static const matrix map_qx4 = { {0,4,4,18,10},{0,0,4,18,10},{0,0,0,4,0},{10,10,0,0,0},{10,10,4,4,0}};
 //Matrix with the cost of each possible cnot (QX3)
 static const matrix map_qx3 = { {0, 0, 10, 24, 38, 52, 74, 80, 94, 88, 66, 52, 46, 32, 10, 4},
                                 {4, 0, 0, 10, 24, 38, 80, 94, 108, 94, 80, 66, 52, 38, 24, 18},
@@ -79,7 +71,22 @@ static const matrix map_qx3 = { {0, 0, 10, 24, 38, 52, 74, 80, 94, 88, 66, 52, 4
                                 {10, 24, 18, 4, 10, 24, 46, 52, 66, 60, 38, 24, 18, 4, 0, 4},
                                 {0, 10, 24, 10, 24, 38, 52, 66, 80, 66, 52, 38, 24, 10, 0, 0}};
 
-
+static const matrix path_qx3={{0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
+                            {-1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                            {0,-1,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
+                            {0,0,-1,0,-1,0,0,0,0,0,0,0,0,0,1,0},
+                            {0,0,0,1,0,1,0,0,0,0,0,0,0,-1,0,0},
+                            {0,0,0,0,-1,0,0,0,0,0,0,0,-1,0,0,0},
+                            {0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0},
+                            {0,0,0,0,0,0,-1,0,-1,0,1,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,1,0,-1,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,-1,0,-1,0,-1,0,0,0,0},
+                            {0,0,0,0,0,0,-1,0,0,0,1,0,-1,0,0,0},
+                            {0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0},
+                            {0,0,0,0,1,0,0,0,0,0,0,0,-1,0,1,0},
+                            {0,0,0,-1,0,0,0,0,0,0,0,0,0,-1,0,-1},
+                            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0}};
 
 namespace cirkit
 {
@@ -167,7 +174,6 @@ int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
                 cost += m1[i][j] + m1[j][i];
                 qtd_cnot += m2[i][j] + m2[j][i];
             }
-            std::cout << "Cost Inside: " << i << " cost: " << cost << " qtd_cnot: " << qtd_cnot <<std::endl;
             if( cost > higher_cost)
             {
                 higher_cost = cost;
@@ -261,14 +267,46 @@ int search_qubit_row(const matrix& mapping, const unsigned int control, const un
     return (-1);
 }
 
+void find_path(const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& mapping, const unsigned int& path_size)
+{
+    
+    if(mapping[control][target] != 0)
+    {
+        std::cout << "control: " << control << " target: " << target << " mapping: " << mapping[control][target] << std::endl;
+        permute.push_back(target);
+    }
+    else if(permute.size() >= path_size)
+    {
+        std::cout << "path_size: " << path_size << " permute_size: " << permute.size() << std::endl;
+        return;
+    }
+    else
+    {
+        for (int i = 0; i < path_qx3.size(); ++i)
+        {
+            if (mapping[control][i] != 0 && std::find(permute.begin(), permute.end(), i) == permute.end())
+            {   
+                permute.push_back(i);
+                std::cout << "Push: " << i << std::endl;
+                find_path(i, target, permute, path_qx3, path_size);
+                if(permute.back() != target)
+                {
+                    std::cout << "Pop: " << permute.back() << std::endl;
+                    permute.pop_back();
+                }
+            }   
+        }
+    }
+}
+
 circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping)
 {
     //piece of code from ibm.cpp
     std::vector<int> permute;
     unsigned int start = circ.lines() + 1;
     unsigned int target, control;
-    int qubit;
-    std::vector<unsigned int> new_controls, control2;
+    unsigned int qubit;
+    std::vector<unsigned int> new_controls;
     circuit circ_qx;
    
     for(unsigned int i = start ; i <= cnots.size(); i++)
@@ -290,7 +328,6 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     {
         target = gate.targets().front();
         new_controls.clear();
-        control2.clear();
         new_controls.push_back( target );
         if( !gate.controls().empty() )
         {
@@ -305,114 +342,176 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
             }
             else // CNOT gate
             {
-                switch ( mapping[control][target] )
+                if ( mapping[control][target] == 0 )
                 {
-                    case 0:
-                        append_toffoli( circ_qx, gate.controls(), target );
-                        break;
+                    append_toffoli( circ_qx, gate.controls(), target );
+                }
+                else if( mapping[control][target] == 4 ) // invert CNOT
+                {
+                    append_hadamard( circ_qx, control );
+                    append_hadamard( circ_qx, target );
+                    append_toffoli( circ_qx, new_controls, control );
+                    append_hadamard( circ_qx, control );
+                    append_hadamard( circ_qx, target );
+                }
+                else
+                {
+                    permute.clear();
+                    unsigned int path_size;
+                    if((map_qx3[control][target] - 4) % 7 == 0)
+                    {
+                        path_size = ((map_qx3[control][target] - 4) / 14) + 2;
+                        find_path(control, target, permute, path_qx3, path_size);
+                        for (int i = 0; i < permute.size() - 1; ++i)
+                        {
+                            new_controls.clear();
+                            if(i == permute.size() - 2)
+                            {
+                                new_controls.push_back(perm.back());
+                                append_hadamard( circ_qx, perm.back() );
+                                append_hadamard( circ_qx, perm.back()-1 );
+                                append_toffoli( circ_qx, new_controls, perm.back()-1 );
+                                append_hadamard( circ_qx, perm.back() );
+                                append_hadamard( circ_qx, perm.back()-1 );
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == 1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                append_toffoli( circ_qx, new_controls, perm[i+1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i+1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i+1] );
+                                
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == -1)
+                            {
+                                new_controls.push_back(perm[i+1]);
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                        }
+                        for (int i = permute.size() - 2; i > 0; --i)
+                        {
+                            new_controls.clear();
+                            if(path_qx3[perm[i]][perm[i-1]] == 1)
+                            {
+                                new_controls.push_back(perm[i-1]);
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                            }
+                            else if(path_qx3[perm[i]][perm[i-1]] == -1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                append_toffoli( circ_qx, new_controls, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i-1] );
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                        }
+                    }
+                    else if((map_qx3[control][target] + 4) % 7 == 0)
+                    {//====================================================================
+                        path_size = ((map_qx3[control][target] + 4) / 14) + 2;
+                        find_path(control, target, permute, path_qx3, path_size);
+                        for (int i = 0; i < permute.size() - 1; ++i)
+                        {
+                            new_controls.clear();
+                            if(i == permute.size() - 3)
+                            {
+                                new_controls.push_back(perm.back());
+                                append_toffoli( circ_qx, new_controls, perm.back() );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm.back() );
+                                append_hadamard( circ_qx, perm[i+1] );
+                            }
+                            else if(i == permute.size() - 2)
+                            {
+                                new_controls.push_back(perm.back());
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == 1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                qubit = perm[i+1];
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == -1)
+                            {
+                                new_controls.push_back(perm[i+1]);
+                                qubit = perm[i];
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                            
+                        }
                         
-                    case 4 : // invert CNOT
-                        append_hadamard( circ_qx, control );
-                        append_hadamard( circ_qx, target );
-                        append_toffoli( circ_qx, new_controls, control );
-                        append_hadamard( circ_qx, control );
-                        append_hadamard( circ_qx, target );
-                        break;
-
-                    case 10 : // swap (fixed target)
-                        qubit = search_qubit_column(mapping, target, 0u);
-                        if(qubit >= 0)
+                        for (int i = permute.size() - 3; i > 0; --i)
                         {
-                            control2.push_back( qubit );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, control );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, qubit );
-                            
-                            append_toffoli( circ_qx, control2, target );
-                            
-                            append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, control );
-                            append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, control2, control );
-                        }
-                        else //swap (fixed control)
-                        { 
-                            qubit = search_qubit_row(mapping, control, 0u);
-                            if(qubit < 0)
-                                assert(false);
+                            new_controls.clear();
+                            if(path_qx3[perm[i]][perm[i-1]] == 1)
+                            {
+                                new_controls.push_back(perm[i-1]);
+                                qubit = perm[i];
+                            }
+                            else if(path_qx3[perm[i]][perm[i-1]] == -1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                qubit = perm[i-1];
+                            }
                             else
                             {
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, qubit );
-                                
-                                append_toffoli( circ_qx, gate.controls(), qubit );
-                                
-                                append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
+                                assert(false);
                             }
-                        }
-                        break;
-                    case 14 : // swap target or control and interchange control and target (fixed target)
-                        qubit = search_qubit_column(mapping, target, 4u);
-                        if(qubit >= 0)
-                        {
-                            control2.push_back( qubit );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, control );
-                            append_toffoli( circ_qx, control2, control );
-                            //append_hadamard( circ_qx, qubit );
-                            
-                            //append_hadamard( circ_qx, qubit );
-                            append_hadamard( circ_qx, target );
                             append_toffoli( circ_qx, new_controls, qubit );
-                            append_hadamard( circ_qx, target );
-                            //append_hadamard( circ_qx, qubit );
-
-                            //append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, control2, control );
-                            append_hadamard( circ_qx, control );
-                            append_hadamard( circ_qx, qubit );
-                            append_toffoli( circ_qx, control2, control );
-                        }
-                        else // (fixed control)
-                        {
-                            qubit = search_qubit_row(mapping, control, 4u);
-                            if(qubit < 0)
-                                assert(false);
-                            else
-                            {
-                                control2.push_back( qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                //append_hadamard( circ_qx, qubit );
-                                
-                                //append_hadamard( circ_qx, qubit );
-                                append_hadamard( circ_qx, control );
-                                append_toffoli( circ_qx, control2, control );
-                                append_hadamard( circ_qx, control );
-                                //append_hadamard( circ_qx, qubit );
-                                
-                                //append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                                append_hadamard( circ_qx, target );
-                                append_hadamard( circ_qx, qubit );
-                                append_toffoli( circ_qx, new_controls, qubit );
-                            }
-                       }
-                       break;
-                }     
+                            append_hadamard( circ_qx, perm[i-1] );
+                            append_hadamard( circ_qx, perm[i] );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, perm[i-1] );
+                            append_hadamard( circ_qx, perm[i] );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                        }     
+                    }
+                }
             }
         }
         else if ( is_pauli( gate ) )
@@ -468,7 +567,7 @@ circuit qxg(circuit& circ, const matrix& map )
     do
     {
         h = higher_cost(map_cost, cnots, p);
-        std::cout << "Higher cost: " << h << std::endl;
+        //std::cout << "Higher cost: " << h << std::endl;
         q = h;
         for(unsigned int i=0; i<cnots.size(); ++i)
         {
@@ -484,23 +583,23 @@ circuit qxg(circuit& circ, const matrix& map )
             }
             manipulate_matrix( cnots, i, h, map_cost, perm, map );
         }
-        std::cout << "Chosen: " << q << std::endl;
+        //std::cout << "Chosen: " << q << std::endl;
         if(h == q)
             p.push_back(h);
-        if(p.size() == cnots.size())
-            break;
+        // if(p.size() == cnots.size())
+        //     break;
         // for(unsigned int i=0; i<p.size(); ++i)
         //     std::cout << "P: " << p[i] << std::endl;
         manipulate_matrix( cnots, h, q, map_cost, perm, map );
         // std::cout << "=============================================" << std::endl;
         it++;
-        // if(it%cnots.size() == 0)
-        // {
-        //     p.clear();
-        // }
+        if(it%cnots.size() == 0)
+        {
+            p.clear();
+        }
         // std::cout << "Esperando..." << std::endl;
         // std::cin.get();
-    } while (it < 3*cnots.size());
+    } while (it < 2*cnots.size());
     //circ_qx = matrix_to_circuit(circ, cnots, best_perm, map);
     //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
@@ -516,7 +615,7 @@ bool qxg_command::execute()
     circuit aux = circuits.current();
     circuit circ_qx, circ;
     copy_circuit(aux, circ);
-
+   
     if ( is_set( "qx3" ) )
     {
         if(circ.lines() > 16)
