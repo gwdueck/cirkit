@@ -296,7 +296,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_toffoli( circ_IBM, control2, control );
                             append_hadamard( circ_IBM, 2u );
                             
-                            append_toffoli( circ_IBM, gate.controls(), 2u );
+                            append_toffoli( circ_IBM, control2, target );
                             
                             append_hadamard( circ_IBM, 2u );
                             append_toffoli( circ_IBM, control2, control );
