@@ -294,12 +294,6 @@ void find_path(const unsigned int control, const unsigned int target, std::vecto
                     std::cout << "Pop: " << permute.back() << std::endl;
                     permute.pop_back();
                 }
-
-                // if(!(find_path(i, target, permute, path_qx3, path_size)))
-                // {
-                //     std::cout << "Pop: " << permute.back() << std::endl;
-                //     permute.pop_back();
-                // }
             }   
         }
     }
@@ -311,8 +305,8 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     std::vector<int> permute;
     unsigned int start = circ.lines() + 1;
     unsigned int target, control;
-    int qubit;
-    std::vector<unsigned int> new_controls, control2;
+    unsigned int qubit;
+    std::vector<unsigned int> new_controls;
     circuit circ_qx;
    
     for(unsigned int i = start ; i <= cnots.size(); i++)
@@ -334,7 +328,6 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     {
         target = gate.targets().front();
         new_controls.clear();
-        control2.clear();
         new_controls.push_back( target );
         if( !gate.controls().empty() )
         {
@@ -367,112 +360,159 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                     unsigned int path_size;
                     if((map_qx3[control][target] - 4) % 7 == 0)
                     {
-                        path_size = ((map_qx3[control][target] - 4) / 14) + 2;     
+                        path_size = ((map_qx3[control][target] - 4) / 14) + 2;
+                        find_path(control, target, permute, path_qx3, path_size);
+                        for (int i = 0; i < permute.size() - 1; ++i)
+                        {
+                            new_controls.clear();
+                            if(i == permute.size() - 2)
+                            {
+                                new_controls.push_back(perm.back());
+                                append_hadamard( circ_qx, perm.back() );
+                                append_hadamard( circ_qx, perm.back()-1 );
+                                append_toffoli( circ_qx, new_controls, perm.back()-1 );
+                                append_hadamard( circ_qx, perm.back() );
+                                append_hadamard( circ_qx, perm.back()-1 );
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == 1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                append_toffoli( circ_qx, new_controls, perm[i+1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i+1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i+1] );
+                                
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == -1)
+                            {
+                                new_controls.push_back(perm[i+1]);
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                        }
+                        for (int i = permute.size() - 2; i > 0; --i)
+                        {
+                            new_controls.clear();
+                            if(path_qx3[perm[i]][perm[i-1]] == 1)
+                            {
+                                new_controls.push_back(perm[i-1]);
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i] );
+                            }
+                            else if(path_qx3[perm[i]][perm[i-1]] == -1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                append_toffoli( circ_qx, new_controls, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i-1] );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_toffoli( circ_qx, new_controls, perm[i-1] );
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                        }
                     }
                     else if((map_qx3[control][target] + 4) % 7 == 0)
-                    {
+                    {//====================================================================
                         path_size = ((map_qx3[control][target] + 4) / 14) + 2;
+                        find_path(control, target, permute, path_qx3, path_size);
+                        for (int i = 0; i < permute.size() - 1; ++i)
+                        {
+                            new_controls.clear();
+                            if(i == permute.size() - 3)
+                            {
+                                new_controls.push_back(perm.back());
+                                append_toffoli( circ_qx, new_controls, perm.back() );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, perm.back() );
+                                append_hadamard( circ_qx, perm[i+1] );
+                            }
+                            else if(i == permute.size() - 2)
+                            {
+                                new_controls.push_back(perm.back());
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == 1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                qubit = perm[i+1];
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                            else if(path_qx3[perm[i]][perm[i+1]] == -1)
+                            {
+                                new_controls.push_back(perm[i+1]);
+                                qubit = perm[i];
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                                append_hadamard( circ_qx, perm[i] );
+                                append_hadamard( circ_qx, perm[i+1] );
+                                append_toffoli( circ_qx, new_controls, qubit );
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                            
+                        }
+                        
+                        for (int i = permute.size() - 3; i > 0; --i)
+                        {
+                            new_controls.clear();
+                            if(path_qx3[perm[i]][perm[i-1]] == 1)
+                            {
+                                new_controls.push_back(perm[i-1]);
+                                qubit = perm[i];
+                            }
+                            else if(path_qx3[perm[i]][perm[i-1]] == -1)
+                            {
+                                new_controls.push_back(perm[i]);
+                                qubit = perm[i-1];
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, perm[i-1] );
+                            append_hadamard( circ_qx, perm[i] );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                            append_hadamard( circ_qx, perm[i-1] );
+                            append_hadamard( circ_qx, perm[i] );
+                            append_toffoli( circ_qx, new_controls, qubit );
+                        }     
                     }
-                    find_path(control, target, permute, path_qx3, path_size);
                 }
-
             }
-
-                // else if( mapping[control][target] == 10 )
-                // {
-                //     qubit = search_qubit_column(mapping, target, 0u);
-                //     if(qubit >= 0) // swap (fixed target)
-                //     {
-                //         control2.push_back( qubit );
-                //         append_toffoli( circ_qx, control2, control );
-                //         append_hadamard( circ_qx, qubit );
-                //         append_hadamard( circ_qx, control );
-                //         append_toffoli( circ_qx, control2, control );
-                //         append_hadamard( circ_qx, qubit );
-                        
-                //         append_toffoli( circ_qx, control2, target );
-                        
-                //         append_hadamard( circ_qx, qubit );
-                //         append_toffoli( circ_qx, control2, control );
-                //         append_hadamard( circ_qx, control );
-                //         append_hadamard( circ_qx, qubit );
-                //         append_toffoli( circ_qx, control2, control );
-                //     }
-                //     else //swap (fixed control)
-                //     { 
-                //         qubit = search_qubit_row(mapping, control, 0u);
-                //         if(qubit < 0)
-                //             assert(false);
-                //         else 
-                //         {
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //             append_hadamard( circ_qx, qubit );
-                //             append_hadamard( circ_qx, target );
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //             append_hadamard( circ_qx, qubit );
-                            
-                //             append_toffoli( circ_qx, gate.controls(), qubit );
-                            
-                //             append_hadamard( circ_qx, qubit );
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //             append_hadamard( circ_qx, target );
-                //             append_hadamard( circ_qx, qubit );
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //         }
-                //     }
-                // } //Mudar daqui pra baixo!!! COMO?!
-                // else if( mapping[control][target] == 18 ) // swap target or control and interchange control and target (fixed target)
-                // {
-                //     qubit = search_qubit_column(mapping, target, 4u);
-                //     if(qubit >= 0)
-                //     {
-                //         control2.push_back( qubit );
-                //         append_toffoli( circ_qx, control2, control );
-                //         append_hadamard( circ_qx, qubit );
-                //         append_hadamard( circ_qx, control );
-                //         append_toffoli( circ_qx, control2, control );
-                //         //append_hadamard( circ_qx, qubit );
-                        
-                //         //append_hadamard( circ_qx, qubit );
-                //         append_hadamard( circ_qx, target );
-                //         append_toffoli( circ_qx, new_controls, qubit );
-                //         append_hadamard( circ_qx, target );
-                //         //append_hadamard( circ_qx, qubit );
-
-                //         //append_hadamard( circ_qx, qubit );
-                //         append_toffoli( circ_qx, control2, control );
-                //         append_hadamard( circ_qx, control );
-                //         append_hadamard( circ_qx, qubit );
-                //         append_toffoli( circ_qx, control2, control );
-                //     }
-                //     else // (fixed control)
-                //     {
-                //         qubit = search_qubit_row(mapping, control, 4u);
-                //         if(qubit < 0)
-                //             assert(false);
-                //         else
-                //         {
-                //             control2.push_back( qubit );
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //             append_hadamard( circ_qx, qubit );
-                //             append_hadamard( circ_qx, target );
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //             //append_hadamard( circ_qx, qubit );
-                            
-                //             //append_hadamard( circ_qx, qubit );
-                //             append_hadamard( circ_qx, control );
-                //             append_toffoli( circ_qx, control2, control );
-                //             append_hadamard( circ_qx, control );
-                //             //append_hadamard( circ_qx, qubit );
-                            
-                //             //append_hadamard( circ_qx, qubit );
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //             append_hadamard( circ_qx, target );
-                //             append_hadamard( circ_qx, qubit );
-                //             append_toffoli( circ_qx, new_controls, qubit );
-                //         }
-                //    }
-                // }
         }
         else if ( is_pauli( gate ) )
         {
