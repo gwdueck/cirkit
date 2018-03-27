@@ -267,7 +267,7 @@ int search_qubit_row(const matrix& mapping, const unsigned int control, const un
     return (-1);
 }
 
-void find_path(const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& mapping, const unsigned int& path_size)
+bool find_path(const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& mapping, const unsigned int& path_size)
 {
     
     if(mapping[control][target] != 0)
@@ -276,7 +276,7 @@ void find_path(const unsigned int control, const unsigned int target, std::vecto
     }
     else if(permute.size() >= path_size)
     {
-        return;
+        return true;
     }
     else
     {
