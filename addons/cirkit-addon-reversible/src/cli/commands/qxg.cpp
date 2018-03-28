@@ -28,7 +28,7 @@
 
 #include <fstream>
 #include <algorithm>
-
+#include <core/utils/timer.hpp>
 #include <alice/rules.hpp>
 #include <core/utils/range_utils.hpp>
 #include <core/utils/program_options.hpp>
@@ -46,6 +46,8 @@
 #include <reversible/functions/remove_dup_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/copy_metadata.hpp>
+
+using namespace boost::program_options;
 
 typedef std::vector<std::vector<int>> matrix;
 
@@ -625,11 +627,12 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     return circ_qx;
 }
 
-circuit qxg(circuit& circ, const matrix& map, const matrix& path )
+circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
 {
+    properties_timer t( statistics );
     circuit circ_qx;
     unsigned int cost, lower_cost, h, c, q;
-    std::vector <int> p, t;
+    std::vector <int> p;
     std::vector<int> perm;
     std::vector<int> best_perm;
     matrix cnots;
@@ -694,11 +697,17 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path )
         // std::cin.get();
     } while (it < 2*cnots.size());
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
-    circ_qx = remove_dup_gates( circ_qx );
+    //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
     print_results(cnots, best_perm, circ_qx.num_gates());
 
     return circ_qx;
+}
+
+circuit optimize_circuit(circuit& circ,  properties::ptr& statistics)
+{
+    properties_timer t( statistics );
+    return remove_dup_gates( circ );
 }
 
 bool qxg_command::execute()
@@ -707,7 +716,8 @@ bool qxg_command::execute()
     circuit aux = circuits.current();
     circuit circ_qx, circ;
     copy_circuit(aux, circ);
-   
+    //auto settings = make_settings();
+
     if ( is_set( "QS1_1" ) )
     {
         if(circ.lines() > 20)
@@ -715,7 +725,9 @@ bool qxg_command::execute()
             std::cout << "Only up to 20 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx20, path_qx20);
+        circ_qx = qxg(circ, map_qx20, path_qx20, statistics);
+        print_runtime();
+        circ_qx = optimize_circuit(circ_qx, statistics);
     }
     else if ( is_set( "qx3" ) )
     {
@@ -724,7 +736,10 @@ bool qxg_command::execute()
             std::cout << "Only up to 16 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx3, path_qx3);
+        circ_qx = qxg(circ, map_qx3, path_qx3, statistics);
+        print_runtime();
+        circ_qx = optimize_circuit(circ_qx, statistics);
+        print_runtime();
     }
     else
     {
@@ -734,9 +749,11 @@ bool qxg_command::execute()
             return true;
         }
         if ( is_set( "qx4" ) )
-            circ_qx = qxg(circ, map_qx4, map_qx4);
+            circ_qx = qxg(circ, map_qx4, map_qx4, statistics);
         else
-            circ_qx = qxg(circ, map_qx2, map_qx2);
+            circ_qx = qxg(circ, map_qx2, map_qx2, statistics);
+        print_runtime();
+        circ_qx = optimize_circuit(circ_qx, statistics);
     }
     if ( is_set( "new" ) )
         circuits.extend();    
