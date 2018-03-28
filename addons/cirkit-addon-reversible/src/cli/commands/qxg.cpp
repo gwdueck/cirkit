@@ -88,6 +88,48 @@ static const matrix path_qx3={{0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {0,0,0,-1,0,0,0,0,0,0,0,0,0,-1,0,-1},
                             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0}};
 
+static const matrix map_qx20= {{0, 0, 10, 66, 52, 0, 10, 10, 38, 52, 10, 10, 24, 24, 38, 24, 24, 24, 38, 38},
+                                {0, 0, 0, 52, 38, 10, 0, 0, 24, 38, 10, 10, 10, 10, 24, 24, 24, 24, 24, 24},
+                                {10, 0, 0, 52, 38, 24, 10, 0, 24, 38, 24, 24, 10, 10, 24, 38, 24, 24, 24, 24},
+                                {66, 52, 52, 0, 0, 52, 52, 38, 10, 0, 52, 38, 24, 24, 10, 52, 38, 38, 24, 24},
+                                {52, 38, 38, 0, 0, 38, 38, 24, 0, 0, 38, 24, 10, 10, 10, 38, 24, 24, 24, 24},
+                                {0, 10, 24, 52, 38, 0, 0, 10, 24, 38, 0, 0, 10, 24, 38, 10, 10, 10, 24, 38},
+                                {10, 0, 10, 52, 38, 0, 0, 0, 24, 38, 0, 0, 10, 10, 24, 10, 10, 10, 24, 24},
+                                {10, 0, 0, 38, 24, 10, 0, 0, 10, 24, 10, 10, 0, 0, 10, 24, 10, 10, 10, 10},
+                                {38, 24, 24, 10, 0, 24, 24, 10, 0, 0, 24, 10, 0, 0, 10, 24, 10, 10, 10, 10},
+                                {52, 38, 38, 0, 0, 38, 38, 24, 0, 0, 38, 24, 10, 10, 0, 38, 24, 24, 10, 10},
+                                {10, 10, 24, 52, 38, 0, 0, 10, 24, 38, 0, 0, 10, 24, 38, 0, 10, 10, 24, 38},
+                                {10, 10, 24, 38, 24, 0, 0, 10, 10, 24, 0, 0, 0, 10, 24, 10, 0, 0, 10, 24},
+                                {24, 10, 10, 24, 10, 10, 10, 0, 0, 10, 10, 0, 0, 0, 10, 10, 0, 0, 10, 10},
+                                {24, 10, 10, 24, 10, 24, 10, 0, 0, 10, 24, 10, 0, 0, 0, 24, 10, 10, 0, 0},
+                                {38, 24, 24, 10, 10, 38, 24, 10, 10, 0, 38, 24, 10, 0, 0, 38, 24, 10, 0, 0},
+                                {24, 24, 38, 52, 38, 10, 10, 24, 24, 38, 0, 10, 10, 24, 38, 0, 0, 10, 24, 38},
+                                {24, 24, 24, 38, 24, 10, 10, 10, 10, 24, 10, 0, 0, 10, 24, 0, 0, 0, 10, 24},
+                                {24, 24, 24, 38, 24, 10, 10, 10, 10, 24, 10, 0, 0, 10, 10, 10, 0, 0, 0, 10},
+                                {38, 24, 24, 24, 24, 24, 24, 10, 10, 10, 24, 10, 10, 0, 0, 24, 10, 0, 0, 0},
+                                {38, 24, 24, 24, 24, 38, 24, 10, 10, 10, 38, 24, 10, 0, 0, 38, 24, 10, 0, 0}};
+
+static const matrix path_qx20 = {{0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                                    {1,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0},
+                                    {0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
+                                    {0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0},
+                                    {0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0},
+                                    {1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0},
+                                    {0,1,0,0,0,1,0,1,0,0,1,1,0,0,0,0,0,0,0,0},
+                                    {0,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,0,0},
+                                    {0,0,0,0,1,0,0,0,0,1,0,0,1,1,0,0,0,0,0,0},
+                                    {0,0,0,1,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0},
+                                    {0,0,0,0,0,1,1,0,0,0,0,1,0,0,0,1,0,0,0,0},
+                                    {0,0,0,0,0,1,1,0,0,0,1,0,1,0,0,0,1,1,0,0},
+                                    {0,0,0,0,0,0,0,1,1,0,0,1,0,1,0,0,1,1,0,0},
+                                    {0,0,0,0,0,0,0,1,1,0,0,0,1,0,1,0,0,0,1,1},
+                                    {0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1},
+                                    {0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0},
+                                    {0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,1,0,0},
+                                    {0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0,1,0},
+                                    {0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,1,0,1},
+                                    {0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1,0}};
+
 namespace cirkit
 {
 
@@ -109,6 +151,7 @@ qxg_command::qxg_command( const environment::ptr& env )
     opts.add_options()
      ( "qx4,4", "IBM QX4 matrix")
      ( "qx3,3", "IBM QX3 matrix")
+     ( "QS1_1,20", "QS1_1 matrix")
     ;
   add_new_option();
 }
@@ -267,7 +310,7 @@ int search_qubit_row(const matrix& mapping, const unsigned int control, const un
     return (-1);
 }
 
-bool find_path(const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& mapping, const unsigned int& path_size)
+void find_path(const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& mapping, const unsigned int& path_size)
 {
     
     if(mapping[control][target] != 0)
@@ -276,16 +319,16 @@ bool find_path(const unsigned int control, const unsigned int target, std::vecto
     }
     else if(permute.size() >= path_size)
     {
-        return true;
+        return;
     }
     else
     {
-        for (int i = 0; i < path_qx3.size(); ++i)
+        for (int i = 0; i < mapping.size(); ++i)
         {
             if (mapping[control][i] != 0 && std::find(permute.begin(), permute.end(), i) == permute.end())
             {   
                 permute.push_back(i);
-                find_path(i, target, permute, path_qx3, path_size);
+                find_path(i, target, permute, mapping, path_size);
                 if(permute.back() != target)
                 {
                     permute.pop_back();
@@ -295,7 +338,7 @@ bool find_path(const unsigned int control, const unsigned int target, std::vecto
     }
 }
 
-circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping)
+circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping, const matrix& path)
 {
     //piece of code from ibm.cpp
     std::vector<int> permute;
@@ -354,11 +397,11 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                 {
                     permute.clear();
                     unsigned int path_size;
-                    if((map_qx3[control][target] - 4) % 7 == 0)
+                    if((mapping[control][target] - 4) % 7 == 0)
                     {
                         path_size = ((map_qx3[control][target] - 4) / 14) + 2;
                         permute.push_back(control);
-                        find_path(control, target, permute, path_qx3, path_size);
+                        find_path(control, target, permute, path, path_size);
                         for (int i = 0; i < permute.size() - 1; ++i)
                         {
                             new_controls.clear();
@@ -371,7 +414,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 append_hadamard( circ_qx, permute.back() );
                                 append_hadamard( circ_qx, permute[i] );
                             }
-                            else if(path_qx3[permute[i]][permute[i+1]] == 1)
+                            else if(path[permute[i]][permute[i+1]] == 1)
                             {
                                 new_controls.push_back(permute[i]);
                                 append_toffoli( circ_qx, new_controls, permute[i+1] );
@@ -383,7 +426,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 append_toffoli( circ_qx, new_controls, permute[i+1] );
                                 
                             }
-                            else if(path_qx3[permute[i]][permute[i+1]] == -1)
+                            else if(path[permute[i]][permute[i+1]] == -1)
                             {
                                 new_controls.push_back(permute[i+1]);
                                 append_toffoli( circ_qx, new_controls, permute[i] );
@@ -396,14 +439,14 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             }
                             else
                             {
-                                std::cout << "AAAAAAA " << permute[i] << " " << permute[i+1] << std::endl;
-                                //assert(false);
+                                //std::cout << "AAAAAAA " << permute[i] << " " << permute[i+1] << std::endl;
+                                assert(false);
                             }
                         }
                         for (int i = permute.size() - 2; i > 0; --i)
                         {
                             new_controls.clear();
-                            if(path_qx3[permute[i-1]][permute[i]] == 1)
+                            if(path[permute[i-1]][permute[i]] == 1)
                             {
                                 new_controls.push_back(permute[i-1]);
                                 append_toffoli( circ_qx, new_controls, permute[i] );
@@ -414,7 +457,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 append_hadamard( circ_qx, permute[i] );
                                 append_toffoli( circ_qx, new_controls, permute[i] );
                             }
-                            else if(path_qx3[permute[i-1]][permute[i]] == -1)
+                            else if(path[permute[i-1]][permute[i]] == -1)
                             {
                                 new_controls.push_back(permute[i]);
                                 append_toffoli( circ_qx, new_controls, permute[i-1] );
@@ -427,17 +470,17 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             }
                             else
                             {
-                                std::cout << "BBBBBBB " << permute[i] << " " << permute[i+1] << std::endl;
-                                //assert(false);
+                                //std::cout << "BBBBBBB " << permute[i] << " " << permute[i+1] << std::endl;
+                                assert(false);
                             }
                         }
                     }
-                    else if((map_qx3[control][target] + 4) % 7 == 0)
+                    else if((mapping[control][target] + 4) % 7 == 0)
                     {
                         path_size = ((map_qx3[control][target] + 4) / 14) + 2;
                         permute.clear();
                         permute.push_back(control);
-                        find_path(control, target, permute, path_qx3, path_size);
+                        find_path(control, target, permute, path, path_size);
                         for (int i = 0; i < permute.size() - 1; ++i)
                         {
                             new_controls.clear();
@@ -448,7 +491,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             }
                             else if(i == permute.size() - 3)
                             {
-                                if(path_qx3[permute[i]][permute[i+1]] == 1)
+                                if(path[permute[i]][permute[i+1]] == 1)
                                 {
                                     new_controls.push_back(permute[i]);
                                     append_toffoli( circ_qx, new_controls, permute[i+1] );
@@ -457,7 +500,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                     append_toffoli( circ_qx, new_controls, permute[i+1] );
                                     append_hadamard( circ_qx, permute[i+1] );    
                                 }
-                                else if(path_qx3[permute[i]][permute[i+1]] == -1)
+                                else if(path[permute[i]][permute[i+1]] == -1)
                                 {
                                     new_controls.push_back(permute[i+1]);
                                     append_toffoli( circ_qx, new_controls, permute[i] );
@@ -468,11 +511,11 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 }
                                  else
                                 {
-                                    std::cout << "CCCCCCCC " << permute[i] << " " << permute[i+1] << std::endl;
-                                    //assert(false);
+                                    //std::cout << "CCCCCCCC " << permute[i] << " " << permute[i+1] << std::endl;
+                                    assert(false);
                                 }
                             }
-                            else if(path_qx3[permute[i]][permute[i+1]] == 1)
+                            else if(path[permute[i]][permute[i+1]] == 1)
                             {
                                 new_controls.push_back(permute[i]);
                                 append_toffoli( circ_qx, new_controls, permute[i+1] );
@@ -483,7 +526,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 append_hadamard( circ_qx, permute[i+1] );
                                 append_toffoli( circ_qx, new_controls, permute[i+1] );
                             }
-                            else if(path_qx3[permute[i]][permute[i+1]] == -1)
+                            else if(path[permute[i]][permute[i+1]] == -1)
                             {
                                 new_controls.push_back(permute[i+1]);
                                 append_toffoli( circ_qx, new_controls, permute[i] );
@@ -496,8 +539,8 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             }
                             else
                             {
-                                std::cout << "DDDDDD " << permute[i] << " " << permute[i+1] << std::endl;
-                                //assert(false);
+                                //std::cout << "DDDDDD " << permute[i] << " " << permute[i+1] << std::endl;
+                                assert(false);
                             }
                             
                         }
@@ -507,7 +550,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             new_controls.clear();
                             if(i == permute.size() - 2)
                             {
-                                if(path_qx3[permute[i-1]][permute[i]] == 1)
+                                if(path[permute[i-1]][permute[i]] == 1)
                                 {
                                     new_controls.push_back(permute[i-1]);
                                     append_hadamard( circ_qx, permute[i] );    
@@ -517,7 +560,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                     append_toffoli( circ_qx, new_controls, permute[i] );
                                     
                                 }
-                                else if(path_qx3[permute[i-1]][permute[i]] == -1)
+                                else if(path[permute[i-1]][permute[i]] == -1)
                                 {
                                     new_controls.push_back(permute[i]);
                                     append_hadamard( circ_qx, permute[i] );
@@ -528,11 +571,11 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 }
                                  else
                                 {
-                                    std::cout << "EEEEEE " << permute[i] << " " << permute[i+1] << std::endl;
-                                    //assert(false);
+                                    //std::cout << "EEEEEE " << permute[i] << " " << permute[i+1] << std::endl;
+                                    assert(false);
                                 }
                             }
-                            else if(path_qx3[permute[i-1]][permute[i]] == 1)
+                            else if(path[permute[i-1]][permute[i]] == 1)
                             {
                                 new_controls.push_back(permute[i-1]);
                                 append_toffoli( circ_qx, new_controls, permute[i] );
@@ -543,7 +586,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                                 append_hadamard( circ_qx, permute[i] );
                                 append_toffoli( circ_qx, new_controls, permute[i] );
                             }
-                            else if(path_qx3[permute[i-1]][permute[i]] == -1)
+                            else if(path[permute[i-1]][permute[i]] == -1)
                             {
                                 new_controls.push_back(permute[i]);
                                 append_toffoli( circ_qx, new_controls, permute[i-1] );
@@ -556,8 +599,8 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                             }
                             else
                             {
-                                std::cout << "FFFFFFF " << permute[i] << " " << permute[i+1] << std::endl;
-                                //assert(false);
+                                //std::cout << "FFFFFFF " << permute[i] << " " << permute[i+1] << std::endl;
+                                assert(false);
                             }
                         }     
                     }
@@ -582,7 +625,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     return circ_qx;
 }
 
-circuit qxg(circuit& circ, const matrix& map )
+circuit qxg(circuit& circ, const matrix& map, const matrix& path )
 {
     circuit circ_qx;
     unsigned int cost, lower_cost, h, c, q;
@@ -650,7 +693,7 @@ circuit qxg(circuit& circ, const matrix& map )
         // std::cout << "Esperando..." << std::endl;
         // std::cin.get();
     } while (it < 2*cnots.size());
-    circ_qx = matrix_to_circuit(circ, cnots, best_perm, map);
+    circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
     circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
     print_results(cnots, best_perm, circ_qx.num_gates());
@@ -665,14 +708,23 @@ bool qxg_command::execute()
     circuit circ_qx, circ;
     copy_circuit(aux, circ);
    
-    if ( is_set( "qx3" ) )
+    if ( is_set( "QS1_1" ) )
+    {
+        if(circ.lines() > 20)
+        {
+            std::cout << "Only up to 20 variables!" << std::endl;
+            return true;
+        }
+        circ_qx = qxg(circ, map_qx20, path_qx20);
+    }
+    else if ( is_set( "qx3" ) )
     {
         if(circ.lines() > 16)
         {
             std::cout << "Only up to 16 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx3);
+        circ_qx = qxg(circ, map_qx3, path_qx3);
     }
     else
     {
@@ -682,9 +734,9 @@ bool qxg_command::execute()
             return true;
         }
         if ( is_set( "qx4" ) )
-            circ_qx = qxg(circ, map_qx4);
+            circ_qx = qxg(circ, map_qx4, map_qx4);
         else
-            circ_qx = qxg(circ, map_qx2);
+            circ_qx = qxg(circ, map_qx2, map_qx2);
     }
     if ( is_set( "new" ) )
         circuits.extend();    
