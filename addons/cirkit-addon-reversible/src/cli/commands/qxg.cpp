@@ -401,7 +401,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                     unsigned int path_size;
                     if((mapping[control][target] - 4) % 7 == 0)
                     {
-                        path_size = ((map_qx3[control][target] - 4) / 14) + 2;
+                        path_size = ((mapping[control][target] - 4) / 14) + 2;
                         permute.push_back(control);
                         find_path(control, target, permute, path, path_size);
                         for (int i = 0; i < permute.size() - 1; ++i)
@@ -479,7 +479,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
                     }
                     else if((mapping[control][target] + 4) % 7 == 0)
                     {
-                        path_size = ((map_qx3[control][target] + 4) / 14) + 2;
+                        path_size = ((mapping[control][target] + 4) / 14) + 2;
                         permute.clear();
                         permute.push_back(control);
                         find_path(control, target, permute, path, path_size);
@@ -728,6 +728,8 @@ bool qxg_command::execute()
         circ_qx = qxg(circ, map_qx20, path_qx20, statistics);
         print_runtime();
         circ_qx = optimize_circuit(circ_qx, statistics);
+        print_runtime();
+        std::cout << "After: " << circ_qx.num_gates() << std::endl;
     }
     else if ( is_set( "qx3" ) )
     {
@@ -740,6 +742,7 @@ bool qxg_command::execute()
         print_runtime();
         circ_qx = optimize_circuit(circ_qx, statistics);
         print_runtime();
+        std::cout << "After: " << circ_qx.num_gates() << std::endl;
     }
     else
     {
