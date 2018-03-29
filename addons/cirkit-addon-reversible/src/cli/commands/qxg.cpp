@@ -659,6 +659,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     // print_matrix(cnots);
     // std::cout << "cost matrix: " << std::endl;
     // print_matrix(map_cost);
+    
     unsigned int it = 0;
     do
     {
