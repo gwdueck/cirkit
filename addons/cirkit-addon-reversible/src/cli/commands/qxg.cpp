@@ -660,14 +660,17 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     // std::cout << "cost matrix: " << std::endl;
     // print_matrix(map_cost);
     
-    unsigned int it = 0;
+    srand (time(NULL));
+    unsigned int it = 0, i;
     do
     {
-        h = higher_cost(map_cost, cnots, p);
+        h = rand() % cnots.size();
+        i = rand() % cnots.size();
+        //h = higher_cost(map_cost, cnots, p);
         //std::cout << "Higher cost: " << h << std::endl;
-        q = h;
-        for(unsigned int i=0; i<cnots.size(); ++i)
-        {
+        //q = h;
+        //for(unsigned int i=0; i<cnots.size(); ++i)
+        //{
             manipulate_matrix( cnots, h, i, map_cost, perm, map );
             cost = matrix_cost(map_cost) + circ.num_gates();
             // std::cout << "qubit: " << i << " cost: " << cost << std::endl;
@@ -678,25 +681,25 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
                 for(int j=0; j<cnots.size(); ++j)
                     best_perm[j] = perm[j];
             }
-            manipulate_matrix( cnots, i, h, map_cost, perm, map );
-        }
+            //manipulate_matrix( cnots, i, h, map_cost, perm, map );
+        //}
         //std::cout << "Chosen: " << q << std::endl;
-        if(h == q)
-            p.push_back(h);
+        //if(h == q)
+         //   p.push_back(h);
         // if(p.size() == cnots.size())
         //     break;
         // for(unsigned int i=0; i<p.size(); ++i)
         //     std::cout << "P: " << p[i] << std::endl;
-        manipulate_matrix( cnots, h, q, map_cost, perm, map );
+        //manipulate_matrix( cnots, h, q, map_cost, perm, map );
         // std::cout << "=============================================" << std::endl;
         it++;
-        if(it%cnots.size() == 0)
-        {
-            p.clear();
-        }
+        // if(it%cnots.size() == 0)
+        // {
+        //     p.clear();
+        // }
         // std::cout << "Esperando..." << std::endl;
         // std::cin.get();
-    } while (it < 2*cnots.size());
+    } while (it < 10000000);
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
     //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
