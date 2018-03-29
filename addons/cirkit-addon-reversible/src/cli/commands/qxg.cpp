@@ -699,7 +699,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
     //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
-    print_results(cnots, best_perm, circ_qx.num_gates());
+    //print_results(cnots, best_perm, circ_qx.num_gates());
 
     return circ_qx;
 }
@@ -739,10 +739,11 @@ bool qxg_command::execute()
             return true;
         }
         circ_qx = qxg(circ, map_qx3, path_qx3, statistics);
+        std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         print_runtime();
         circ_qx = optimize_circuit(circ_qx, statistics);
-        print_runtime();
         std::cout << "After: " << circ_qx.num_gates() << std::endl;
+        print_runtime();
     }
     else
     {
