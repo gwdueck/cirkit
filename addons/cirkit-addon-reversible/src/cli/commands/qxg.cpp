@@ -312,32 +312,125 @@ int search_qubit_row(const matrix& mapping, const unsigned int control, const un
     return (-1);
 }
 
-void find_path(const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& mapping, const unsigned int& path_size)
+void find_path(const matrix& mapping, const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& path, const unsigned int& path_size)
 {
-    
-    if(mapping[control][target] != 0)
+    unsigned int x;
+    if(permute.size() >= path_size)
     {
-        permute.push_back(target);
-    }
-    else if(permute.size() >= path_size)
-    {
+        // std::cout << "Tamanho maximo" << std::endl;
         return;
     }
     else
     {
-        for (int i = 0; i < mapping.size(); ++i)
+        for (int i = 0; i < path.size(); ++i)
         {
-            if (mapping[control][i] != 0 && std::find(permute.begin(), permute.end(), i) == permute.end())
+            if (path[control][i] != 0 && std::find(permute.begin(), permute.end(), i) == permute.end())
             {   
                 permute.push_back(i);
-                find_path(i, target, permute, mapping, path_size);
-                if(permute.back() != target)
+                // for (int c = 0; c < permute.size(); ++c){std::cout << " " << permute[c];}std::cout << std::endl;
+                // std::cout << "target: " << target << std::endl;
+                if(i == target)
                 {
+                    // std::cout << "AAAAAAAAAAAA" << std::endl;
+                    x = (permute.size() - 2) * 14;
+                    if(path[control][i] == -1)
+                        if(x + 4 == mapping[permute[0]][target])
+                        {
+                            // std::cout << "Achou1!" << std::endl;
+                            return;
+                        }
+                    if(path[permute[0]][permute[1]] == -1)
+                    {
+                        if(x + 4 == mapping[permute[0]][target])
+                        {
+                            for (int y = 0; y < permute.size(); ++y)
+                                permute[y] = permute[y] * -1;
+                            // std::cout << "Achou2!" << std::endl;
+                            return;  
+                        }
+                    }
+                    if(path[control][i] == 1)
+                        if(x - 4 == mapping[permute[0]][target])
+                        {
+                            // std::cout << "Achou3!" << std::endl;
+                            return;
+                        }
+                    if(path[permute[0]][permute[1]] == 1)
+                    {
+                        if(x - 4 == mapping[permute[0]][target])
+                        {
+                            for (int y = 0; y < permute.size(); ++y)
+                                permute[y] = permute[y] * -1;
+                            // std::cout << "Achou4!" << std::endl;
+                            return;
+                        }
+                    }
                     permute.pop_back();
+                }
+                else
+                {
+                    find_path(mapping, i, target, permute, path, path_size);
+                    if(permute.back() != target && permute.back() != target*-1)
+                    {
+                        permute.pop_back();
+                    }
+                    else
+                    {
+                        // std::cout << "Achou5!" << std::endl;
+                    }
                 }
             }   
         }
     }
+}
+
+void invert_cnot(circuit& circ, const unsigned int control, const unsigned int target)
+{
+    std::vector<unsigned int> controls;
+    controls.push_back( target );
+    append_hadamard( circ, control );
+    append_hadamard( circ, target );
+    append_toffoli( circ, controls, control );
+    append_hadamard( circ, control );
+    append_hadamard( circ, target );
+    return circ;
+}
+
+void swap_gates_seven(circuit& circ, const unsigned int control, const unsigned int target)
+{
+    std::vector<unsigned int> controls;
+    controls.push_back( control );
+    append_toffoli( circ, controls, target );
+    append_hadamard( circ, control );
+    append_hadamard( circ, target );
+    append_toffoli( circ, controls, target );
+    append_hadamard( circ, control );
+    append_hadamard( circ, target );
+    append_toffoli( circ, controls, target );
+    return circ;
+}
+
+void swap_gates_five(circuit& circ, const unsigned int control, const unsigned int target, const unsigned hadamard)
+{
+    std::vector<unsigned int> controls;
+    controls.push_back( control );
+    append_toffoli( circ, controls, target );
+    append_hadamard( circ, control );
+    append_hadamard( circ, target );
+    append_toffoli( circ, controls, target );
+    append_hadamard( circ, hadamard );
+    return circ;
+}
+
+void swap_gates_five_back(circuit& circ, const unsigned int control, const unsigned int target, const unsigned hadamard)
+{
+    std::vector<unsigned int> controls;
+    controls.push_back( control );
+    append_hadamard( circ, hadamard );
+    append_toffoli( circ, controls, target );
+    append_hadamard( circ, control );
+    append_hadamard( circ, target );
+    append_toffoli( circ, controls, target );
 }
 
 circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping, const matrix& path)
@@ -347,6 +440,8 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     unsigned int start = circ.lines() + 1;
     unsigned int target, control;
     unsigned int qubit;
+    unsigned int comeco, fim;
+
     std::vector<unsigned int> new_controls;
     circuit circ_qx;
    
@@ -357,13 +452,14 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     
     copy_metadata(circ, circ_qx);
     
+    // std::cout << "tamanho do circuito no comeco: " << circ_qx.num_gates() << std::endl;
     for(int i=0; i<cnots.size(); ++i)
         for(int j=0; j<cnots.size(); ++j)
             if(perm[j] == i)
                 permute.push_back(j);
     
     permute_lines( circ , &permute[0] );
-
+    permute.clear();
     // iterate through the gates
     for ( const auto& gate : circ )
     {
@@ -383,231 +479,175 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
             }
             else // CNOT gate
             {
+                // std::cout << "controle: " << control << " target: " << target << std::endl;
+                // std::cout << "esperado: " << mapping[control][target] << std::endl;
+                // comeco = circ_qx.num_gates();
+                // std::cout << "comeco: " << comeco << std::endl;
                 if ( mapping[control][target] == 0 )
                 {
                     append_toffoli( circ_qx, gate.controls(), target );
                 }
                 else if( mapping[control][target] == 4 ) // invert CNOT
                 {
-                    append_hadamard( circ_qx, control );
-                    append_hadamard( circ_qx, target );
-                    append_toffoli( circ_qx, new_controls, control );
-                    append_hadamard( circ_qx, control );
-                    append_hadamard( circ_qx, target );
+                    invert_cnot(circ_qx, control, target);
                 }
                 else
                 {
-                    permute.clear();
                     unsigned int path_size;
+                    permute.clear();
                     if((mapping[control][target] - 4) % 7 == 0)
                     {
+                        // std::cout << "-4" << std::endl;
                         path_size = ((mapping[control][target] - 4) / 14) + 2;
+                        permute.clear();
                         permute.push_back(control);
-                        find_path(control, target, permute, path, path_size);
-                        for (int i = 0; i < permute.size() - 1; ++i)
+                        find_path(mapping, control, target, permute, path, path_size);
+                        // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
+                        if(permute[0] < 0 || permute[1] < 0)
                         {
-                            new_controls.clear();
-                            if(i == permute.size() - 2)
+                            // std::cout << "-4 negativo" << std::endl;
+                            for (int y = 0; y < permute.size(); ++y)
+                                permute[y] = permute[y] * -1;
+                            for (int i = permute.size() - 1; i > 1; --i)
                             {
-                                new_controls.push_back(permute.back());
-                                append_hadamard( circ_qx, permute.back() );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute.back() );
-                                append_hadamard( circ_qx, permute[i] );
-                            }
-                            else if(path[permute[i]][permute[i+1]] == 1)
+                                if(path[permute[i]][permute[i-1]] == -1)
+                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
+                                else
+                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
+                            }                
+
+                            invert_cnot(circ_qx, permute[0], permute[1]);                           
+                            
+                            for (int i = 1; i < permute.size() - 1; ++i)
                             {
-                                new_controls.push_back(permute[i]);
-                                append_toffoli( circ_qx, new_controls, permute[i+1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i+1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i+1] );
-                                
-                            }
-                            else if(path[permute[i]][permute[i+1]] == -1)
-                            {
-                                new_controls.push_back(permute[i+1]);
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                            }
-                            else
-                            {
-                                //std::cout << "AAAAAAA " << permute[i] << " " << permute[i+1] << std::endl;
-                                assert(false);
-                            }
+                                if(path[permute[i]][permute[i+1]] == -1)
+                                    swap_gates_seven(circ_qx, permute[i+1], permute[i]);
+                                else
+                                    swap_gates_seven(circ_qx, permute[i], permute[i+1]);
+                            } 
                         }
-                        for (int i = permute.size() - 2; i > 0; --i)
+                        else
                         {
-                            new_controls.clear();
-                            if(path[permute[i-1]][permute[i]] == 1)
+                            // std::cout << "-4 positivo" << std::endl;
+                            for (int i = 0; i < permute.size() - 1; ++i)
                             {
-                                new_controls.push_back(permute[i-1]);
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                            }
-                            else if(path[permute[i-1]][permute[i]] == -1)
+                                if(i == permute.size() - 2)
+                                {
+                                    invert_cnot(circ_qx, permute[i], permute[i+1]); 
+                                }
+                                else
+                                {
+                                    if(path[permute[i]][permute[i+1]] == -1)
+                                        swap_gates_seven(circ_qx, permute[i+1], permute[i]);
+                                    else
+                                        swap_gates_seven(circ_qx, permute[i], permute[i+1]);
+                                }
+                                
+                            }                 
+                                         
+                            for (int i = permute.size() - 1; i > 1; --i)
                             {
-                                new_controls.push_back(permute[i]);
-                                append_toffoli( circ_qx, new_controls, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i-1] );
-                            }
-                            else
-                            {
-                                //std::cout << "BBBBBBB " << permute[i] << " " << permute[i+1] << std::endl;
-                                assert(false);
+                                if(path[permute[i]][permute[i-1]] == -1)
+                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
+                                else
+                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
                             }
                         }
                     }
                     else if((mapping[control][target] + 4) % 7 == 0)
                     {
+                        // std::cout << "+4" << std::endl;
                         path_size = ((mapping[control][target] + 4) / 14) + 2;
                         permute.clear();
                         permute.push_back(control);
-                        find_path(control, target, permute, path, path_size);
-                        for (int i = 0; i < permute.size() - 1; ++i)
+                        find_path(mapping, control, target, permute, path, path_size);
+                        // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
+                        if(permute[0] < 0 || permute[1] < 0)
                         {
-                            new_controls.clear();
-                            if(i == permute.size() - 2)
+                            // std::cout << "+4 negativo" << std::endl;
+                            for (int y = 0; y < permute.size(); ++y)
+                                permute[y] = permute[y] * -1;
+                            for (int i = permute.size() - 1; i > 2; --i)
                             {
-                                new_controls.push_back(permute[i]);
-                                append_toffoli( circ_qx, new_controls, permute.back() );
-                            }
-                            else if(i == permute.size() - 3)
-                            {
-                                if(path[permute[i]][permute[i+1]] == 1)
-                                {
-                                    new_controls.push_back(permute[i]);
-                                    append_toffoli( circ_qx, new_controls, permute[i+1] );
-                                    append_hadamard( circ_qx, permute[i] );
-                                    append_hadamard( circ_qx, permute[i+1] );
-                                    append_toffoli( circ_qx, new_controls, permute[i+1] );
-                                    append_hadamard( circ_qx, permute[i+1] );    
-                                }
-                                else if(path[permute[i]][permute[i+1]] == -1)
-                                {
-                                    new_controls.push_back(permute[i+1]);
-                                    append_toffoli( circ_qx, new_controls, permute[i] );
-                                    append_hadamard( circ_qx, permute[i] );
-                                    append_hadamard( circ_qx, permute[i+1] );
-                                    append_toffoli( circ_qx, new_controls, permute[i] );
-                                    append_hadamard( circ_qx, permute[i+1] );   
-                                }
-                                 else
-                                {
-                                    //std::cout << "CCCCCCCC " << permute[i] << " " << permute[i+1] << std::endl;
-                                    assert(false);
-                                }
-                            }
-                            else if(path[permute[i]][permute[i+1]] == 1)
-                            {
-                                new_controls.push_back(permute[i]);
-                                append_toffoli( circ_qx, new_controls, permute[i+1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i+1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i+1] );
-                            }
-                            else if(path[permute[i]][permute[i+1]] == -1)
-                            {
-                                new_controls.push_back(permute[i+1]);
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_hadamard( circ_qx, permute[i+1] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                            }
-                            else
-                            {
-                                //std::cout << "DDDDDD " << permute[i] << " " << permute[i+1] << std::endl;
-                                assert(false);
-                            }
+                                if(path[permute[i]][permute[i-1]] == -1)
+                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
+                                else
+                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
+                            }                
                             
-                        }
-                        
-                        for (int i = permute.size() - 2; i > 0; --i)
-                        {
-                            new_controls.clear();
-                            if(i == permute.size() - 2)
-                            {
-                                if(path[permute[i-1]][permute[i]] == 1)
-                                {
-                                    new_controls.push_back(permute[i-1]);
-                                    append_hadamard( circ_qx, permute[i] );    
-                                    append_toffoli( circ_qx, new_controls, permute[i] );
-                                    append_hadamard( circ_qx, permute[i-1] );
-                                    append_hadamard( circ_qx, permute[i] );
-                                    append_toffoli( circ_qx, new_controls, permute[i] );
-                                    
-                                }
-                                else if(path[permute[i-1]][permute[i]] == -1)
-                                {
-                                    new_controls.push_back(permute[i]);
-                                    append_hadamard( circ_qx, permute[i] );
-                                    append_toffoli( circ_qx, new_controls, permute[i-1] );
-                                    append_hadamard( circ_qx, permute[i-1] );
-                                    append_hadamard( circ_qx, permute[i] );
-                                    append_toffoli( circ_qx, new_controls, permute[i-1] );
-                                }
-                                 else
-                                {
-                                    //std::cout << "EEEEEE " << permute[i] << " " << permute[i+1] << std::endl;
-                                    assert(false);
-                                }
-                            }
-                            else if(path[permute[i-1]][permute[i]] == 1)
-                            {
-                                new_controls.push_back(permute[i-1]);
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i] );
-                            }
-                            else if(path[permute[i-1]][permute[i]] == -1)
-                            {
-                                new_controls.push_back(permute[i]);
-                                append_toffoli( circ_qx, new_controls, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i-1] );
-                                append_hadamard( circ_qx, permute[i] );
-                                append_toffoli( circ_qx, new_controls, permute[i-1] );
-                            }
+                            if(path[permute[2]][permute[1]] == -1)
+                                swap_gates_five(circ_qx, permute[1], permute[2], permute[2]);
                             else
+                                swap_gates_five(circ_qx, permute[2], permute[1], permute[1]);
+                            
+                            new_controls.clear();
+                            new_controls.push_back(permute[0]);
+                            append_toffoli(circ_qx, new_controls, permute[1]);
+
+                            if(path[permute[2]][permute[1]] == -1)
+                                swap_gates_five_back(circ_qx, permute[1], permute[2], permute[2]);
+                            else
+                                swap_gates_five_back(circ_qx, permute[2], permute[1], permute[1]);
+
+                            for (int i = 2; i < permute.size() - 1; ++i)
                             {
-                                //std::cout << "FFFFFFF " << permute[i] << " " << permute[i+1] << std::endl;
-                                assert(false);
+                                if(path[permute[i]][permute[i+1]] == -1)
+                                    swap_gates_seven(circ_qx, permute[i+1], permute[i]);
+                                else
+                                    swap_gates_seven(circ_qx, permute[i], permute[i+1]);
+                            } 
+                        }
+                        else
+                        {
+                            // std::cout << "+4 positivo" << std::endl;
+                            for (int i = 0; i <= permute.size() - 3; ++i)
+                            {
+                                // std::cout << "primeira fase: " << permute[i] << std::endl;
+                                if(i == permute.size() - 3)
+                                {
+                                    // std::cout << "igual" << std::endl;
+                                    if(path[permute[i]][permute[i+1]] == -1)
+                                        swap_gates_five(circ_qx, permute[i+1], permute[i], permute[i+1]);
+                                    else
+                                        swap_gates_five(circ_qx, permute[i], permute[i+1], permute[i]);
+
+                                    new_controls.clear();
+                                    new_controls.push_back(permute[i+1]);
+                                    append_toffoli(circ_qx, new_controls, permute[i+2]);
+
+                                    if(path[permute[i+1]][permute[i]] == -1)
+                                        swap_gates_five_back(circ_qx, permute[i], permute[i+1], permute[i]);
+                                    else
+                                        swap_gates_five_back(circ_qx, permute[i+1], permute[i], permute[i+1]);
+                                }
+                                else
+                                {
+                                    // std::cout << "nao igual" << std::endl;
+                                    if(path[permute[i]][permute[i+1]] == -1)
+                                        swap_gates_seven(circ_qx, permute[i+1], permute[i]);
+                                    else
+                                        swap_gates_seven(circ_qx, permute[i], permute[i+1]);
+                                }
                             }
-                        }     
-                    }
+
+                            for (int i = permute.size() - 2; i > 1; --i)
+                            {
+                                // std::cout << "segunda fase: " << permute[i] << std::endl;
+                                if(path[permute[i]][permute[i-1]] == -1)
+                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
+                                else
+                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
+                            } 
+
+                        }
+                    }                 
                 }
             }
+            // fim = circ_qx.num_gates();
+            // std::cout << "fim: " << fim << std::endl;
+            // std::cout << "diferenca: " << fim - comeco << std::endl;
+
+            // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
         }
         else if ( is_pauli( gate ) )
         {
@@ -624,6 +664,7 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
             assert( false );
         }
     }
+    //std::cout << "TAMANHO: " << circ_qx.num_gates() << std::endl;
     return circ_qx;
 }
 
@@ -637,6 +678,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     std::vector<int> best_perm;
     matrix cnots;
     matrix map_cost;
+    matrix aux;
 
     for (int i = 0; i < map.size(); ++i)
         p.push_back(0);
@@ -647,6 +689,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         map_cost.push_back(p);
         perm.push_back(i);
         best_perm.push_back(i);
+        aux.push_back(p);
     }
     p.clear();
     cost = initial_matrix(circ, cnots, map_cost, map);
@@ -674,10 +717,12 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
             manipulate_matrix( cnots, h, i, map_cost, perm, map );
             cost = matrix_cost(map_cost) + circ.num_gates();
             // std::cout << "qubit: " << i << " cost: " << cost << std::endl;
-            if(cost <= lower_cost)
+            if(cost < lower_cost)
             {
                 q = i;
                 lower_cost = cost;
+                std::cout << lower_cost << std::endl;
+                it = 0;
                 for(int j=0; j<cnots.size(); ++j)
                     best_perm[j] = perm[j];
             }
@@ -699,7 +744,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         // }
         // std::cout << "Esperando..." << std::endl;
         // std::cin.get();
-    } while (it < 10000000);
+    } while (it < 100000);
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
     //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, lower_cost);
@@ -721,6 +766,19 @@ bool qxg_command::execute()
     circuit circ_qx, circ;
     copy_circuit(aux, circ);
     //auto settings = make_settings();
+
+    // unsigned int path_size;
+    // if((map_qx3[12][0] - 4) % 7 == 0)
+    //     path_size = ((map_qx3[12][0] - 4) / 14) + 2;
+    // else if((map_qx3[12][0] + 4) % 7 == 0)
+    //     path_size = ((map_qx3[12][0] + 4) / 14) + 2;
+
+    // std::cout << path_size << std::endl;
+    // std::vector<int> permute;
+    // permute.push_back(12);
+    // find_path(map_qx3, 12, 0, permute, path_qx3, path_size);
+    // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
+    // return true;
 
     if ( is_set( "QS1_1" ) )
     {
