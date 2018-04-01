@@ -29,6 +29,7 @@
 #include <reversible/gate.hpp>
 #include <reversible/target_tags.hpp>
 #include <reversible/pauli_tags.hpp>
+#include <reversible/rotation_tags.hpp>
 
 namespace cirkit
 {
@@ -50,22 +51,31 @@ circuit remove_dup_gates( const circuit& circ )
         {
             if( is_inverse( result[i], result[j] ) )
             {
+//                std::cout << "is_inverse " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
-                i = 0; // overkill, but to be safe
+                if(i>10)
+                    i = i - 10;
+                else
+                    i = 0; 
                 incr_i = false;
             }
             if ( !done && gates_can_merge( result[i], result[j], g) )
             {
+ //               std::cout << "gates_can_merge " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result[i] = g;
                 done = true;
-                i = 0; // overkill, but to be safe
+                if(i>10)
+                    i = i - 10;
+                else
+                    i = 0; 
                 incr_i = false;
             }
             if(!done && gates_can_move( result[i], result[j]) )
             {
+//                std::cout << "gates_can_move " << i << " " << j << "\n";
                 j++;
             }
             else{
@@ -173,7 +183,8 @@ bool gates_can_move( const gate& g1, const gate& g2 )
         }
         else
         {
-            return g2.controls().front().line() != target_g1;
+            return (g2.controls().front().line() != target_g1) &&
+            (g1.controls().front().line() != target_g2);
         }
     }
     // g2 CNOT; g1 is not a Toffoli
@@ -316,6 +327,15 @@ bool is_Z_gate( const gate& g )
         const auto& tag = boost::any_cast<pauli_tag>( g.type() );
         return ( ( tag.axis == pauli_axis::Z ) &&
                 ( tag.root == 1u ));
+    }
+    return false;
+}
+    
+bool is_RZ_gate( const gate& g ){
+    if ( is_rotation( g ) )
+    {
+        const auto& tag = boost::any_cast<rotation_tag>( g.type() );
+        return ( ( tag.axis == rotation_axis::Z ) );
     }
     return false;
 }

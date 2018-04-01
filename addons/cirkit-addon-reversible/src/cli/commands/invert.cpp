@@ -101,8 +101,10 @@ bool invert_command::execute()
             prepend_pauli( circ_invert,  gate.targets().front(), tag.axis, tag.root, !tag.adjoint );
         }
 	}
-
-	circuits.extend();
+	if ( is_set( "new" ) )
+    {
+    	circuits.extend();
+    }
     circuits.current() = circ_invert;
     return true;
 }

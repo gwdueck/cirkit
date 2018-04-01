@@ -83,7 +83,7 @@ ibm_command::ibm_command( const environment::ptr& env )
     ( "rm_dup,r",  "Remove duplicate gates" )
     ( "ibm_qx4,4", "The IBM Qx4 is the target")
     ( "verbose,v",  "verbose" )
-
+    ( "template,t", "use template transformations--instead of swap based")
     ;
   add_new_option();
 }
@@ -111,11 +111,11 @@ bool ibm_command::execute()
     {
         if ( is_set( "ibm_qx4" ) )
         {
-            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4 );
+            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, is_set( "template" ) );
         }
         else
         {
-            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2 );
+            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2, is_set( "template" ) );
         }
         
         if ( is_set( "new" ) )
@@ -138,11 +138,11 @@ bool ibm_command::execute()
             permute_lines( circ_working , perm );
             if ( is_set( "ibm_qx4" ) )
             {
-                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4 );
+                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, is_set( "template" ) );
             }
             else
             {
-                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2 );
+                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2, is_set( "template" ) );
             }
             if ( is_set( "new" ) )
             {
@@ -202,11 +202,11 @@ command::log_opt_t ibm_command::log() const
 }
 
 // transform a Clifford+T circuit to be IBM compliant
-circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
+circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool templ )
 {
     circuit circ_IBM;
     unsigned target, control;
-    std::vector<unsigned int> new_controls, control2;
+    std::vector<unsigned int> new_controls, control2, old_controls;
     control2.push_back( 2u ); /* use line 2 as control */
     
     copy_metadata( circ, circ_IBM );
@@ -228,6 +228,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
         if( !gate.controls().empty() )
         {
             control = gate.controls().front().line();
+            old_controls.clear();
+            old_controls.push_back( control );
         }
         
         if ( is_toffoli( gate ) )
@@ -255,49 +257,103 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5] )
                         append_hadamard( circ_IBM, target );
                         break;
                     case 3 : // swap target with 2
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        
-                        append_toffoli( circ_IBM, gate.controls(), 2u );
-                        
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
+                        if( !templ )
+                        {
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            
+                            append_toffoli( circ_IBM, gate.controls(), 2u );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                        }
+                        else // use the "template" transformation
+                        {
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, 2u );
+                        }
                         break;
                     case 4 : // swap control with 2
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, control );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, 2u );
-                        
-                        append_toffoli( circ_IBM, control2, target );
-                        
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, control );
-                        append_hadamard( circ_IBM, 2u );
-                        append_toffoli( circ_IBM, control2, control );
+                        if( !templ )
+                        {
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                        }
+                        else
+                        {
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            
+                        }
                         break;
                     case 5: // swap target with qubit 2 and interchange control and qubit 2
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        
-                        append_hadamard( circ_IBM, control );
-                        append_toffoli( circ_IBM, control2, control );
-                        append_hadamard( circ_IBM, control );
-                        
-                        append_toffoli( circ_IBM, new_controls, 2u );
-                        append_hadamard( circ_IBM, 2u );
-                        append_hadamard( circ_IBM, target );
-                        append_toffoli( circ_IBM, new_controls, 2u );
+                        if( !templ )
+                        {
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                        }
+                        else
+                        {
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, control2, control );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, control );
+                        }
                         break;
                         
                 }

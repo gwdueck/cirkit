@@ -25,16 +25,16 @@
  */
 
 /**
- * @file ibm.hpp
+ * @file rm_dup.hpp
  *
- * @brief Reversible circuit test
+ * @brief Remove quantum gates
  *
- * @author Gerhard Dueck
+ * @author Alexandre Amaral
  * @since  2.3
  */
 
-#ifndef CLI_IBM_COMMAND_HPP
-#define CLI_IBM_COMMAND_HPP
+#ifndef CLI_RM_DUP_COMMAND_HPP
+#define CLI_RM_DUP_COMMAND_HPP
 
 #include <string>
 #include <reversible/circuit.hpp>
@@ -42,12 +42,11 @@
 
 namespace cirkit
 {
-circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool templ );
 
-class ibm_command : public cirkit_command
+class rm_dup_command : public cirkit_command
 {
 public:
-  ibm_command( const environment::ptr& env );
+  rm_dup_command( const environment::ptr& env );
 
 protected:
   rules_t validity_rules() const;
