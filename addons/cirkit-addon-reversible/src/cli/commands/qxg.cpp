@@ -222,6 +222,7 @@ int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
             if( cost > higher_cost)
             {
                 higher_cost = cost;
+                higher_qtd_cnot = qtd_cnot;
                 index = i;
             }
             else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
@@ -230,10 +231,41 @@ int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
                 index = i;
             }
         }
-            
     }
     return index;
 }
+
+// //Search matrix for the qubit with higher cost
+// int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
+// {
+//     int cost, qtd_cnot; 
+//     int higher_cost = 0, index = 0, higher_qtd_cnot = 0;
+    
+//     for(int i=0; i<m1.size(); ++i)
+//     {
+//         cost = 0;
+//         qtd_cnot = 0;
+//         if (std::find(p.begin(), p.end(), i) == p.end())
+//         {
+//             for(int j=0; j<m1.size(); ++j)
+//             {
+//                 cost = m1[i][j]; //+ m1[j][i];
+//                 qtd_cnot = m2[i][j]; //+ m2[j][i];
+//                 if( cost > higher_cost)
+//                 {
+//                     higher_cost = cost;
+//                     index = i;
+//                 }
+//                 else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
+//                 {
+//                     higher_qtd_cnot = qtd_cnot;
+//                     index = i;
+//                 }
+//             }
+//         }
+//     }
+//     return index;
+// }
 
 //Create cnots matrix and cost matrix
 unsigned int initial_matrix(circuit circ, matrix& cnots, matrix& map_cost, const matrix& map)
@@ -703,20 +735,19 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     // std::cout << "cost matrix: " << std::endl;
     // print_matrix(map_cost);
     
-    srand (time(NULL));
-    unsigned int it = 0, i;
+    // srand (time(NULL));
+    unsigned int it = 0;
     do
     {
-        h = rand() % cnots.size();
-        i = rand() % cnots.size();
-        //h = higher_cost(map_cost, cnots, p);
+        // h = rand() % cnots.size();
+        // i = rand() % cnots.size();
+        h = higher_cost(map_cost, cnots, p);
         //std::cout << "Higher cost: " << h << std::endl;
-        //q = h;
-        //for(unsigned int i=0; i<cnots.size(); ++i)
-        //{
+        q = h;
+        for(unsigned int i=0; i<cnots.size(); ++i)
+        {
             manipulate_matrix( cnots, h, i, map_cost, perm, map );
             cost = matrix_cost(map_cost) + circ.num_gates();
-            // std::cout << "qubit: " << i << " cost: " << cost << std::endl;
             if(cost < lower_cost)
             {
                 q = i;
@@ -726,30 +757,18 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
                 for(int j=0; j<cnots.size(); ++j)
                     best_perm[j] = perm[j];
             }
-            //manipulate_matrix( cnots, i, h, map_cost, perm, map );
-        //}
-        //std::cout << "Chosen: " << q << std::endl;
-        //if(h == q)
-         //   p.push_back(h);
-        // if(p.size() == cnots.size())
-        //     break;
-        // for(unsigned int i=0; i<p.size(); ++i)
-        //     std::cout << "P: " << p[i] << std::endl;
-        //manipulate_matrix( cnots, h, q, map_cost, perm, map );
-        // std::cout << "=============================================" << std::endl;
+            manipulate_matrix( cnots, i, h, map_cost, perm, map );
+        }
+        if(h == q)
+           p.push_back(h);   
+        manipulate_matrix( cnots, h, q, map_cost, perm, map );
         it++;
-        // if(it%cnots.size() == 0)
-        // {
-        //     p.clear();
-        // }
-        // std::cout << "Esperando..." << std::endl;
-        // std::cin.get();
-    } while (it < 100000);
+        if(it % cnots.size() == 0)
+            p.clear();
+    } while (it < 3 * cnots.size());
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
     //circ_qx = remove_dup_gates( circ_qx );
-    //print_results(cnots, best_perm, lower_cost);
     //print_results(cnots, best_perm, circ_qx.num_gates());
-
     return circ_qx;
 }
 
