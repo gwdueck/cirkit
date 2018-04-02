@@ -202,39 +202,6 @@ void print_matrix( const matrix& m)
     }
 }
 
-//Search matrix for the qubit with higher cost
-int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
-{
-    int cost, qtd_cnot; 
-    int higher_cost = 0, index = 0, higher_qtd_cnot = 0;
-    
-    for(int i=0; i<m1.size(); ++i)
-    {
-        cost = 0;
-        qtd_cnot = 0;
-        if (std::find(p.begin(), p.end(), i) == p.end())
-        {
-            for(int j=0; j<m1.size(); ++j)
-            {
-                cost += m1[i][j] + m1[j][i];
-                qtd_cnot += m2[i][j] + m2[j][i];
-            }
-            if( cost > higher_cost)
-            {
-                higher_cost = cost;
-                higher_qtd_cnot = qtd_cnot;
-                index = i;
-            }
-            else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
-            {
-                higher_qtd_cnot = qtd_cnot;
-                index = i;
-            }
-        }
-    }
-    return index;
-}
-
 // //Search matrix for the qubit with higher cost
 // int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
 // {
@@ -249,23 +216,56 @@ int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
 //         {
 //             for(int j=0; j<m1.size(); ++j)
 //             {
-//                 cost = m1[i][j]; //+ m1[j][i];
-//                 qtd_cnot = m2[i][j]; //+ m2[j][i];
-//                 if( cost > higher_cost)
-//                 {
-//                     higher_cost = cost;
-//                     index = i;
-//                 }
-//                 else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
-//                 {
-//                     higher_qtd_cnot = qtd_cnot;
-//                     index = i;
-//                 }
+//                 cost += m1[i][j] + m1[j][i];
+//                 qtd_cnot += m2[i][j] + m2[j][i];
+//             }
+//             if( cost > higher_cost)
+//             {
+//                 higher_cost = cost;
+//                 higher_qtd_cnot = qtd_cnot;
+//                 index = i;
+//             }
+//             else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
+//             {
+//                 higher_qtd_cnot = qtd_cnot;
+//                 index = i;
 //             }
 //         }
 //     }
 //     return index;
 // }
+
+// //Search matrix for the pair qubit with higher cost
+int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
+{
+    int cost, qtd_cnot; 
+    int higher_cost = 0, index = 0, higher_qtd_cnot = 0;
+    
+    for(int i=0; i<m1.size(); ++i)
+    {
+        cost = 0;
+        qtd_cnot = 0;
+        if (std::find(p.begin(), p.end(), i) == p.end())
+        {
+            for(int j=0; j<m1.size(); ++j)
+            {
+                cost = m1[i][j]; //+ m1[j][i];
+                qtd_cnot = m2[i][j]; //+ m2[j][i];
+                if( cost > higher_cost)
+                {
+                    higher_cost = cost;
+                    index = i;
+                }
+                else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
+                {
+                    higher_qtd_cnot = qtd_cnot;
+                    index = i;
+                }
+            }
+        }
+    }
+    return index;
+}
 
 //Create cnots matrix and cost matrix
 unsigned int initial_matrix(circuit circ, matrix& cnots, matrix& map_cost, const matrix& map)
@@ -752,7 +752,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
             {
                 q = i;
                 lower_cost = cost;
-                std::cout << lower_cost << std::endl;
+                //std::cout << lower_cost << std::endl;
                 it = 0;
                 for(int j=0; j<cnots.size(); ++j)
                     best_perm[j] = perm[j];
