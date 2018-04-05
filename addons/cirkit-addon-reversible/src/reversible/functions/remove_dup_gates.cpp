@@ -55,7 +55,10 @@ circuit remove_dup_gates( const circuit& circ )
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
-                i = 0; // overkill, but to be safe
+                if(i>10)
+                    i = i - 10;
+                else
+                    i = 0; 
                 incr_i = false;
             }
             if ( !done && gates_can_merge( result[i], result[j], g) )
@@ -64,7 +67,10 @@ circuit remove_dup_gates( const circuit& circ )
                 result.remove_gate_at(j);
                 result[i] = g;
                 done = true;
-                i = 0; // overkill, but to be safe
+                if(i>10)
+                    i = i - 10;
+                else
+                    i = 0; 
                 incr_i = false;
             }
             if(!done && gates_can_move( result[i], result[j]) )
