@@ -35,6 +35,7 @@
 #include <reversible/circuit.hpp>
 #include <reversible/gate.hpp>
 #include <cli/reversible_stores.hpp>
+#include <reversible/functions/ibm_helper.hpp>
 
 using namespace boost::program_options;
 
@@ -82,30 +83,6 @@ bool permute_lines_command::execute()
     return true;
 }
 
-    
-    // permute the line in the circuit
-    // assume it is a qc circuit
-    void permute_lines( circuit& circ , int perm[])
-    {
-        unsigned target, control;
-        for ( auto& gate : circ )
-        {
-            assert( gate.targets().size() == 1 );
-            target = gate.targets().front();
-            gate.remove_target(target);
-            gate.add_target(perm[target]);
-            if( !gate.controls().empty() )
-            {
-                assert( gate.controls().size() == 1 );
-                control = gate.controls().front().line();
-                gate.remove_control( make_var(control) );
-                gate.add_control( make_var(perm[control]) );
-                
-            }
-            
-        }
-        
-    }
     
 }
 

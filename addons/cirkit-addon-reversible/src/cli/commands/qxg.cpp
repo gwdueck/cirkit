@@ -46,6 +46,7 @@
 #include <reversible/functions/remove_dup_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/copy_metadata.hpp>
+#include <reversible/functions/ibm_helper.hpp>
 
 typedef std::vector<std::vector<int>> matrix;
 

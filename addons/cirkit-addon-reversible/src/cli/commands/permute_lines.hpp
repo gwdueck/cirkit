@@ -41,7 +41,7 @@
 
 namespace cirkit
 {
-void permute_lines( circuit& circ , int perm[]);
+
     
 class permute_lines_command : public cirkit_command
 {

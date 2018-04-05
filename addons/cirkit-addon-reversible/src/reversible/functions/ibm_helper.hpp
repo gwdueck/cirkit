@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,38 +25,30 @@
  */
 
 /**
- * @file ibm.hpp
+ * @file ibm_helper.hpp
  *
- * @brief Reversible circuit test
+ * @brief some help functions for IBM QX
  *
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef CLI_IBM_COMMAND_HPP
-#define CLI_IBM_COMMAND_HPP
+#ifndef IBM_HELPER_HPP
+#define IBM_HELPER_HPP
 
-#include <string>
 #include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+
+int static const map_method_qx2[5][5] = {{0,1,1,3,3}, {2,0,1,3,3}, {2,2,0,2,2}, {3,3,1,0,1}, {3,3,1,2,0}};
+int static const map_method_qx4[5][5] = {{0,2,2,5,4}, {1,0,2,5,4}, {1,1,0,2,1}, {4,4,1,0,1}, {4,4,2,2,0}};
 
 namespace cirkit
 {
 
-class ibm_command : public cirkit_command
-{
-public:
-  ibm_command( const environment::ptr& env );
+void permute_lines( circuit& circ , int perm[]);
 
-protected:
-  rules_t validity_rules() const;
-  bool execute();
+circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool templ );
 
-public:
-  log_opt_t log() const;
-
-};
-
+int levels(const circuit& circ, circuit& result );
 }
 
 #endif
