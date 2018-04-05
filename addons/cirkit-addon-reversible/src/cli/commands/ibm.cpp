@@ -52,14 +52,7 @@
 #include <cli/commands/ibm.hpp>
 #include <reversible/functions/ibm_helper.hpp>
 
-/* map methods for CNOT gates are as follows:
- 0 - no mapping possible (eg CNOT(1,1)
- 1 - CNOT gate Exists
- 2 - target and controls must be interchanged
- 3 - map target to qubit 2
- 4 - map control to qubit 2
- 5 - map target to qubit 2 and interchange control and qubit 2
- */
+
 
 namespace cirkit
 {

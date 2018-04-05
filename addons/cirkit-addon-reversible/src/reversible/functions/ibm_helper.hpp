@@ -38,8 +38,25 @@
 
 #include <reversible/circuit.hpp>
 
-int static const map_method_qx2[5][5] = {{0,1,1,3,3}, {2,0,1,3,3}, {2,2,0,2,2}, {3,3,1,0,1}, {3,3,1,2,0}};
-int static const map_method_qx4[5][5] = {{0,2,2,5,4}, {1,0,2,5,4}, {1,1,0,2,1}, {4,4,1,0,1}, {4,4,2,2,0}};
+/* map methods for CNOT gates are as follows:
+ 0 - no mapping possible (eg CNOT(1,1)
+ 1 - CNOT gate Exists
+ 2 - target and controls must be interchanged
+ 3 - map target to qubit 2
+ 4 - map control to qubit 2
+ 5 - map target to qubit 2 and interchange control and qubit 2
+ */
+
+int static const map_method_qx2[5][5] ={{0,1,1,3,3},
+                                        {2,0,1,3,3},
+                                        {2,2,0,2,2},
+                                        {3,3,1,0,1},
+                                        {3,3,1,2,0}};
+int static const map_method_qx4[5][5] ={{0,2,2,5,4},
+                                        {1,0,2,5,4},
+                                        {1,1,0,2,1},
+                                        {4,4,1,0,1},
+                                        {4,4,2,2,0}};
 
 namespace cirkit
 {
