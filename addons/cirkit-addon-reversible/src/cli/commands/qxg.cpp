@@ -752,7 +752,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
             {
                 q = i;
                 lower_cost = cost;
-                //std::cout << lower_cost << std::endl;
+                //std::cout << "changed [" << h << "] [" << i << "] CUSTO: " << lower_cost << std::endl;
                 it = 0;
                 for(int j=0; j<cnots.size(); ++j)
                     best_perm[j] = perm[j];
@@ -760,11 +760,26 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
             manipulate_matrix( cnots, i, h, map_cost, perm, map );
         }
         if(h == q)
-           p.push_back(h);   
+        {
+            //std::cout << "Not better permutation found! [" << h << "] in the list" << std::endl;
+            if (std::find(p.begin(), p.end(), h) == p.end())
+                p.push_back(h);
+            else
+                p.clear();
+            // for (int i = 0; i < p.size(); ++i)
+            // {
+            //     std::cout << " " << p[i];
+            // }
+            // std::cout << std::endl;
+        }
+        //std::cout << "Swapping [" << h << "] [" << q << "]" << std::endl;  
         manipulate_matrix( cnots, h, q, map_cost, perm, map );
         it++;
-        if(it % cnots.size() == 0)
-            p.clear();
+        // if(it % cnots.size() == 0)
+        // {
+        //     std::cout << "limpando p..." << std::endl;
+        //     p.clear();
+        // }
     } while (it < 3 * cnots.size());
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
     //circ_qx = remove_dup_gates( circ_qx );
