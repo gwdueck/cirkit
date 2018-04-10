@@ -154,6 +154,7 @@ qxg_command::qxg_command( const environment::ptr& env )
      ( "qx4,4", "IBM QX4 matrix")
      ( "qx3,3", "IBM QX3 matrix")
      ( "QS1_1,20", "QS1_1 matrix")
+     ( "tabu,t", "Use tabu search")
     ;
   add_new_option();
 }
@@ -769,6 +770,7 @@ circuit tabu(circuit& circ, const matrix& map, const matrix& path, properties::p
     
     // srand (time(NULL));
     unsigned int it = 0;
+    tabu_list.clear();
     do
     { 
         neighborhood.clear();
@@ -776,37 +778,53 @@ circuit tabu(circuit& circ, const matrix& map, const matrix& path, properties::p
         {
             for(unsigned int j = i + 1; j < cnots.size(); ++j)
             {
+                p.clear();
                 manipulate_matrix( cnots, i, j, map_cost, perm, map );
                 cost = matrix_cost(map_cost) + circ.num_gates();
-                p.push_back = i;
-                p.push_back = j;
-                p.push_back = cost;
-                neighborhood.push(p);
-                // if(cost <= lower_cost && !in_tabu_list(tabu_list, perm))
-                // {
-                //     ii = i;
-                //     jj = j;
-                //     lower_cost = cost;
-                //     //std::cout << "changed [" << h << "] [" << i << "] CUSTO: " << lower_cost << std::endl;
-                //     p[cnots.size()] = cost;
-                //     for(int j=0; j<cnots.size(); ++j)
-                //         best_perm[j] = perm[j];
-                // }
+                p.push_back(i);
+                p.push_back(j);
+                p.push_back(cost);
+                neighborhood.push_back(p);
+                if(cost < lower_cost)
+                {
+                    std::cout << cost << "    " << it<< std::endl;
+                    it = 0;
+                    ii = i;
+                    jj = j;
+                    lower_cost = cost; 
+                    for(int j=0; j<cnots.size(); ++j)
+                        best_perm[j] = perm[j];
+                }
                 manipulate_matrix( cnots, j, i, map_cost, perm, map );
             }
         }
         sort_matrix(neighborhood, 2);
+        // for(int j =0; j< 3; ++j)
+        //     std::cout << " " << neighborhood[0][j];
+        // std::cout << std::endl;
         for (int i = 0; i < neighborhood.size(); ++i)
         {
+            manipulate_matrix( cnots, neighborhood[i][0], neighborhood[i][1], map_cost, perm, map );
             if(!in_tabu_list(tabu_list, perm))
             {
-                manipulate_matrix( cnots, p[0], p[1], map_cost, perm, map );
+                // std::cout << "Swapping [" << neighborhood[i][0] << "] [" << neighborhood[i][1] << "]" << std::endl;
+                // for(int j =0; j< perm.size(); ++j)
+                //     std::cout << " " << perm[j];
+                // std::cout << std::endl;
                 tabu_list.push_back(perm);
+                break;
+            }
+            else
+            {
+                //std::cout << "fdsafdsafdsafds" << std::endl;
+                manipulate_matrix( cnots, neighborhood[i][1], neighborhood[i][0], map_cost, perm, map );
             }
         }
-        //std::cout << "Swapping [" << h << "] [" << q << "]" << std::endl;  
+        //std::cout << "Swapping [" << h << "] [" << q << "]" << std::endl;
+        if(it % 10000 == 0)
+            std::cout << tabu_list.size() << std::endl;
         it++;
-    } while (it < 1 * cnots.size());
+    } while(true); //while (it < 10000);
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
     //circ_qx = remove_dup_gates( circ_qx );
     //print_results(cnots, best_perm, circ_qx.num_gates());
@@ -947,12 +965,15 @@ bool qxg_command::execute()
             std::cout << "Only up to 16 variables!" << std::endl;
             return true;
         }
-        circ_qx = tabu(circ, map_qx3, path_qx3, statistics);
+        if( is_set("tabu") )
+            circ_qx = tabu(circ, map_qx3, path_qx3, statistics);
+        else
+            circ_qx = qxg(circ, map_qx3, path_qx3, statistics);
         std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         print_runtime();
-        circ_qx = optimize_circuit(circ_qx, statistics);
-        std::cout << "After: " << circ_qx.num_gates() << std::endl;
-        print_runtime();
+        // circ_qx = optimize_circuit(circ_qx, statistics);
+        // std::cout << "After: " << circ_qx.num_gates() << std::endl;
+        // print_runtime();
     }
     else
     {
