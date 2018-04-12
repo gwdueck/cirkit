@@ -745,7 +745,6 @@ circuit tabu(circuit& circ, const matrix& map, const matrix& path, properties::p
     matrix map_cost;
     matrix neighborhood;
 
-    //std::cout << "Usando tabu" << std::endl;
     for (int i = 0; i < map.size(); ++i)
         p.push_back(0);
     
@@ -759,16 +758,10 @@ circuit tabu(circuit& circ, const matrix& map, const matrix& path, properties::p
     p.clear();
     cost = initial_matrix(circ, cnots, map_cost, map);
     cost = cost + circ.num_gates();
-    //std::cout << circ.num_gates() << std::endl;
-    // std::cout << "initial cost: " << cost << std::endl;
+
     std::cout << "initial gates: " << circ.num_gates() << std::endl;
     lower_cost = cost;
-    // std::cout << "cnots matrix: " << std::endl;
-    // print_matrix(cnots);
-    // std::cout << "cost matrix: " << std::endl;
-    // print_matrix(map_cost);
-    
-    srand (time(NULL));
+
     unsigned int it = 0;
     tabu_list.clear();
     do
@@ -779,7 +772,7 @@ circuit tabu(circuit& circ, const matrix& map, const matrix& path, properties::p
             for(unsigned int j = i + 1; j < cnots.size(); ++j)
             {
                 p.clear();
-                manipulate_matrix( cnots, rand() % cnots.size(), rand() % cnots.size(), map_cost, perm, map );
+                manipulate_matrix( cnots, i, j, map_cost, perm, map );
                 cost = matrix_cost(map_cost) + circ.num_gates();
                 p.push_back(i);
                 p.push_back(j);
@@ -788,54 +781,29 @@ circuit tabu(circuit& circ, const matrix& map, const matrix& path, properties::p
                 manipulate_matrix( cnots, j, i, map_cost, perm, map );
             }
         }
-        sort_matrix(neighborhood, 2);
-        std::cout << "LISTA INICIO" << std::endl;
-        for(int j =0; j< 10; ++j)
-            std::cout << " " << neighborhood[j][2];
-        std::cout << std::endl;
-        std::cout << "LISTA FIM" << std::endl;
+        sort_matrix(neighborhood, 2);      
         for (int i = 0; i < neighborhood.size(); ++i)
         {
             manipulate_matrix( cnots, neighborhood[i][0], neighborhood[i][1], map_cost, perm, map );
             if(!in_tabu_list(tabu_list, perm))
             {
-                // for(int j =0; j< perm.size(); ++j)
-                //     std::cout << " " << perm[j];
-                // std::cout << std::endl;
                 tabu_list.push_back(perm);
                 cost = neighborhood[i][2];
-                std::cout << "Swapping [" << neighborhood[i][0] << "] [" << neighborhood[i][1] << "]" << std::endl;
                 if(cost < lower_cost)
                 {
-                    std::cout << "CUSTO: " << cost << std::endl;
-                    // it = 0;
-                    // ii = i;
-                    // jj = j;
-                    it = 0;
                     lower_cost = cost; 
                     for(int j=0; j<cnots.size(); ++j)
-                    {
-                        //std::cout << " " << perm[j];
                         best_perm[j] = perm[j];
-                    }
-                    //std::cout << std::endl;
                 }
                 break;
             }
             else
-            {
-                //std::cout << "fdsafdsafdsafds" << std::endl;
                 manipulate_matrix( cnots, neighborhood[i][1], neighborhood[i][0], map_cost, perm, map );
-            }
         }
-        //std::cout << "Swapping [" << h << "] [" << q << "]" << std::endl;
-        // if(it % 10000 == 0)
-        //     std::cout << tabu_list.size() << std::endl;
         it++;
-    } while(it < 100);
+    } while(it < 1000);
     circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
-    //circ_qx = remove_dup_gates( circ_qx );
-    //print_results(cnots, best_perm, circ_qx.num_gates());
+
     return circ_qx;
 }
 
@@ -912,7 +880,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
             // }
             // std::cout << std::endl;
         }
-        std::cout << "Swapping [" << h << "] [" << q << "]" << std::endl;  
+        //std::cout << "Swapping [" << h << "] [" << q << "] : " << lower_cost << std::endl;
         manipulate_matrix( cnots, h, q, map_cost, perm, map );
         it++;
         // if(it % cnots.size() == 0)
