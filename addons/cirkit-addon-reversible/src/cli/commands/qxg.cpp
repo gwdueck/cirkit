@@ -90,6 +90,40 @@ static const matrix path_qx3={{0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {0,0,0,-1,0,0,0,0,0,0,0,0,0,-1,0,-1},
                             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0}};
 
+static const matrix path_qx5={{0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
+                            {1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+                            {0,-1,0,1,0,0,0,0,0,0,0,0,0,0,0,-1},
+                            {0,0,-1,0,1,0,0,0,0,0,0,0,0,0,1,0},
+                            {0,0,0,-1,0,-1,0,0,0,0,0,0,0,-1,0,0},
+                            {0,0,0,0,1,0,-1,0,0,0,0,0,-1,0,0,0},
+                            {0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,0},
+                            {0,0,0,0,0,0,-1,0,-1,0,1,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,1,0,-1,0,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0},
+                            {0,0,0,0,0,0,0,-1,0,-1,0,-1,0,0,0,0},
+                            {0,0,0,0,0,0,-1,0,0,0,1,0,-1,0,0,0},
+                            {0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0},
+                            {0,0,0,0,1,0,0,0,0,0,0,0,-1,0,1,0},
+                            {0,0,0,-1,0,0,0,0,0,0,0,0,0,-1,0,-1},
+                            {1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0}};
+
+static const matrix map_qx5={{0, 4, 10, 24, 38, 52, 74, 80, 94, 88, 66, 52, 46, 32, 10, 4},
+                            {0, 0, 0, 10, 24, 46, 60, 66, 88, 102, 80, 66, 60, 46, 24, 18},
+                            {10, 4, 0, 0, 10, 32, 46, 52, 74, 88, 66, 52, 46, 32, 10, 4},
+                            {24, 18, 4, 0, 0, 18, 32, 38, 60, 74, 52, 38, 32, 18, 0, 18},
+                            {38, 32, 18, 4, 0, 4, 18, 24, 46, 60, 38, 24, 18, 4, 10, 32},
+                            {52, 46, 32, 18, 0, 0, 4, 10, 32, 46, 24, 10, 4, 10, 24, 46},
+                            {66, 60, 46, 32, 10, 0, 0, 0, 18, 32, 10, 0, 18, 24, 38, 60},
+                            {80, 74, 60, 46, 24, 10, 4, 0, 4, 18, 0, 10, 32, 38, 52, 74},
+                            {94, 88, 74, 60, 38, 24, 18, 0, 0, 4, 10, 24, 46, 52, 66, 88},
+                            {80, 102, 80, 74, 52, 38, 32, 10, 0, 0, 0, 18, 32, 38, 52, 74},
+                            {66, 88, 66, 60, 38, 24, 18, 4, 10, 4, 0, 4, 18, 24, 38, 60},
+                            {52, 74, 52, 46, 24, 10, 4, 10, 24, 18, 0, 0, 4, 10, 24, 46},
+                            {38, 60, 38, 32, 10, 0, 18, 24, 38, 32, 10, 0, 0, 0, 10, 32},
+                            {24, 46, 24, 18, 0, 10, 32, 38, 52, 46, 24, 10, 4, 0, 0, 18},
+                            {10, 32, 10, 4, 10, 24, 46, 52, 66, 60, 38, 24, 18, 4, 0, 4},
+                            {0, 18, 0, 10, 24, 38, 60, 66, 80, 74, 52, 38, 32, 18, 0, 0}};
+
 static const matrix map_qx20= {{0, 0, 10, 66, 52, 0, 10, 10, 38, 52, 10, 10, 24, 24, 38, 24, 24, 24, 38, 38},
                                 {0, 0, 0, 52, 38, 10, 0, 0, 24, 38, 10, 10, 10, 10, 24, 24, 24, 24, 24, 24},
                                 {10, 0, 0, 52, 38, 24, 10, 0, 24, 38, 24, 24, 10, 10, 24, 38, 24, 24, 24, 24},
@@ -153,6 +187,7 @@ qxg_command::qxg_command( const environment::ptr& env )
     opts.add_options()
      ( "qx4,4", "IBM QX4 matrix")
      ( "qx3,3", "IBM QX3 matrix")
+     ( "qx5,5", "IBM QX5 matrix")
      ( "QS1_1,20", "QS1_1 matrix")
      ( "tabu,t", "Use tabu search")
     ;
@@ -250,8 +285,8 @@ int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
         {
             for(int j=0; j<m1.size(); ++j)
             {
-                cost = m1[i][j]; //+ m1[j][i];
-                qtd_cnot = m2[i][j]; //+ m2[j][i];
+                cost = m1[i][j] + m1[j][i];
+                qtd_cnot = m2[i][j] + m2[j][i];
                 if( cost > higher_cost)
                 {
                     higher_cost = cost;
@@ -856,6 +891,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         {
             manipulate_matrix( cnots, h, i, map_cost, perm, map );
             cost = matrix_cost(map_cost) + circ.num_gates();
+            //std::cout << "[" << h << "] " << "[" << i << "] :" << cost << std::endl;
             if(cost < lower_cost)
             {
                 q = i;
@@ -867,6 +903,11 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
             }
             manipulate_matrix( cnots, i, h, map_cost, perm, map );
         }
+        //std::cin.get();
+        // print_matrix(cnots);
+        // std::cout << "cost" << std::endl;
+        // print_matrix(map_cost);
+        // std::cin.get();
         if(h == q)
         {
             //std::cout << "Not better permutation found! [" << h << "] in the list" << std::endl;
@@ -882,6 +923,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         }
         //std::cout << "Swapping [" << h << "] [" << q << "] : " << lower_cost << std::endl;
         manipulate_matrix( cnots, h, q, map_cost, perm, map );
+        //p.push_back(q);
         it++;
         // if(it % cnots.size() == 0)
         // {
@@ -948,9 +990,23 @@ bool qxg_command::execute()
             circ_qx = qxg(circ, map_qx3, path_qx3, statistics);
         std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         print_runtime();
-        // circ_qx = optimize_circuit(circ_qx, statistics);
-        // std::cout << "After: " << circ_qx.num_gates() << std::endl;
-        // print_runtime();
+        circ_qx = optimize_circuit(circ_qx, statistics);
+        std::cout << "After: " << circ_qx.num_gates() << std::endl;
+        print_runtime();
+    }
+    else if ( is_set( "qx5" ) )
+    {
+        if(circ.lines() > 16)
+        {
+            std::cout << "Only up to 16 variables!" << std::endl;
+            return true;
+        }
+        circ_qx = qxg(circ, map_qx5, path_qx5, statistics);
+        std::cout << "Before: " << circ_qx.num_gates() << std::endl;
+        print_runtime();
+        circ_qx = optimize_circuit(circ_qx, statistics);
+        std::cout << "After: " << circ_qx.num_gates() << std::endl;
+        print_runtime();
     }
     else
     {
