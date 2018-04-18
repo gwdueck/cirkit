@@ -38,6 +38,8 @@
 namespace cirkit
 {
 
+using boost::program_options::value;
+
 /******************************************************************************
  * Types                                                                      *
  ******************************************************************************/
@@ -54,7 +56,7 @@ graph_command::graph_command( const environment::ptr& env )
     : cirkit_command( env, "Manipulate the graph for IBMs architectures" )
 {
     opts.add_options()
-    ( "read,r", /*value( &filename ),*/ "read graph from a file" )
+    ( "read,r", value( &filename ), "read graph from a file" )
     ( "delete,d",  "delete current graph" )
     ( "print,p",  "print current graph" )
     ( "create,c",  "create the transformation matrix" )
