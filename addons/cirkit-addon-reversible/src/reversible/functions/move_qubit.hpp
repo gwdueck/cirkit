@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,41 +25,53 @@
  */
 
 /**
- * @file ibm.hpp
+ * @file move_qubit.hpp
  *
- * @brief Reversible circuit optimization for IBM quantum computer architectures 
+ * @brief Move a qubit from a to b (this is a partial swap)
  *
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef CLI_IBM_COMMAND_HPP
-#define CLI_IBM_COMMAND_HPP
+#ifndef MOVE_QUBIT_HPP
+#define MOVE_QUBIT_HPP
 
 #include <string>
-#include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+
+
 
 namespace cirkit
 {
+    /* cab = move control from a to b given cnot(a,b)
+     cba = move control from a to b given cnot(b,a)
+     tab = move target from a to b given cnot(a,b)
+     tba = move target from a to b given cnot(b,a)
+     flip =
+     (appended by i = inverse)
+     */
+     enum move_qubit_type { cab, cba, tab, tba, cabi, cbai, tabi, tbai, nop, flip };
+    
+    
+    class MoveQubit{
+    private:
+        
+        static const std::string type_name[10];
+        static const int move_cost[10];
+        move_qubit_type mv_type;
+        int v,w;
+    public:
+        MoveQubit() {};
+        MoveQubit( move_qubit_type, int, int );
+        void set( move_qubit_type, int, int );
+        void print();
+        int cost();
+    };
+    
 
-class ibm_command : public cirkit_command
-{
-public:
-  ibm_command( const environment::ptr& env );
-
-protected:
-  rules_t validity_rules() const;
-  bool execute();
-
-public:
-  log_opt_t log() const;
-
-};
 
 }
 
-#endif
+#endif /* MOVE_QUBIT_HPP */
 
 // Local Variables:
 // c-basic-offset: 2

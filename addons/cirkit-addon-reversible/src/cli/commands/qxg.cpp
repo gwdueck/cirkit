@@ -46,6 +46,7 @@
 #include <reversible/functions/remove_dup_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/copy_metadata.hpp>
+#include <reversible/functions/ibm_helper.hpp>
 
 using namespace boost::program_options;
 
@@ -461,7 +462,7 @@ void invert_cnot(circuit& circ, const unsigned int control, const unsigned int t
     append_toffoli( circ, controls, control );
     append_hadamard( circ, control );
     append_hadamard( circ, target );
-    return circ;
+//    return circ;
 }
 
 void swap_gates_seven(circuit& circ, const unsigned int control, const unsigned int target)
@@ -475,7 +476,7 @@ void swap_gates_seven(circuit& circ, const unsigned int control, const unsigned 
     append_hadamard( circ, control );
     append_hadamard( circ, target );
     append_toffoli( circ, controls, target );
-    return circ;
+//    return circ;
 }
 
 void swap_gates_five(circuit& circ, const unsigned int control, const unsigned int target, const unsigned hadamard)
@@ -487,7 +488,7 @@ void swap_gates_five(circuit& circ, const unsigned int control, const unsigned i
     append_hadamard( circ, target );
     append_toffoli( circ, controls, target );
     append_hadamard( circ, hadamard );
-    return circ;
+//    return circ;
 }
 
 void swap_gates_five_back(circuit& circ, const unsigned int control, const unsigned int target, const unsigned hadamard)
@@ -948,8 +949,7 @@ bool qxg_command::execute()
     auto& circuits = env->store<circuit>();
     circuit aux = circuits.current();
     circuit circ_qx, circ;
-    copy_circuit(aux, circ);
-    //auto settings = make_settings();
+    copy_circuit(aux, circ);    //auto settings = make_settings();
 
     // unsigned int path_size;
     // if((map_qx3[12][0] - 4) % 7 == 0)

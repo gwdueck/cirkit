@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,44 +25,35 @@
  */
 
 /**
- * @file ibm.hpp
+ * @file IBMgraph.hpp
  *
- * @brief Reversible circuit optimization for IBM quantum computer architectures 
+ * @brief Data structure to represent IBM quantum computer architecture
  *
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef CLI_IBM_COMMAND_HPP
-#define CLI_IBM_COMMAND_HPP
 
+#ifndef IBMgraph_hpp
+#define IBMgraph_hpp
+
+#include <iostream>
+#include <fstream>
+#include <vector>
 #include <string>
-#include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+#include "functions/trans_path.hpp"
 
 namespace cirkit
 {
 
-class ibm_command : public cirkit_command
-{
-public:
-  ibm_command( const environment::ptr& env );
+bool **graph_adjacency = NULL;
+int graph_size = 0;
+std::vector<TransPath> path_list;
 
-protected:
-  rules_t validity_rules() const;
-  bool execute();
-
-public:
-  log_opt_t log() const;
-
-};
+bool read_graph( const std::string& filename );
+void print_graph( );
+void delete_graph( );
+void create_trans( );
 
 }
-
-#endif
-
-// Local Variables:
-// c-basic-offset: 2
-// eval: (c-set-offset 'substatement-open 0)
-// eval: (c-set-offset 'innamespace 0)
-// End:
+#endif /* IBMgraph_hpp */

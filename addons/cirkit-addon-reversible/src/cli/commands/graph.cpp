@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2017  EPFL
+ * Copyright (C) 2015-2016  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,20 +24,16 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "permute_lines.hpp"
-
-#include <cmath>
-#include <vector>
-
+#include "graph.hpp"
 #include <alice/rules.hpp>
-
-#include <core/utils/string_utils.hpp>
-#include <reversible/circuit.hpp>
-#include <reversible/gate.hpp>
 #include <cli/reversible_stores.hpp>
-#include <reversible/functions/ibm_helper.hpp>
+#include <reversible/circuit.hpp>
 
-using namespace boost::program_options;
+#include <fstream>
+#include <core/utils/string_utils.hpp>
+#include <reversible/IBMgraph.hpp>
+
+
 
 namespace cirkit
 {
@@ -54,36 +50,44 @@ namespace cirkit
  * Public functions                                                           *
  ******************************************************************************/
 
-permute_lines_command::permute_lines_command( const environment::ptr& env )
-  : cirkit_command( env, "Permute the lines of a circuit" )
+graph_command::graph_command( const environment::ptr& env )
+    : cirkit_command( env, "Manipulate the graph for IBMs architectures" )
 {
-  opts.add_options()
-    ( "permutation,p", value( &permutation ), "Create permute_lines from permutation (starts with 0, space separated)" )
-    ( "new,n",                                "Add a new entry to the store; if not set, the current entry is overriden" )
+    opts.add_options()
+    ( "read,r", /*value( &filename ),*/ "read graph from a file" )
+    ( "delete,d",  "delete current graph" )
+    ( "print,p",  "print current graph" )
+    ( "create,c",  "create the transformation matrix" )
     ;
 }
 
-command::rules_t permute_lines_command::validity_rules() const
+    
+bool graph_command::execute()
 {
-  return {has_store_element<circuit>( env )};
-}
 
-bool permute_lines_command::execute()
-{
-    auto& circuits = env->store<circuit>();
-    std::vector<int> perm;
-    parse_string_list( perm, permutation );
-    circuit circ_working = circuits.current();
-    permute_lines( circ_working , &perm[0] );
-    if ( is_set( "new" ) )
+    if( is_set( "read" ) )
     {
-        circuits.extend();
+        read_graph( filename );
     }
-    circuits.current() = circ_working;
+    if( is_set( "print" )){
+        print_graph( );
+    }
+    if( is_set( "delete" )){
+        delete_graph( );
+    }
+    if( is_set( "create" )){
+        create_trans( );
+    }
     return true;
 }
 
-    
+command::log_opt_t graph_command::log() const
+{
+  return log_opt_t({{"runtime", statistics->get<double>( "runtime" )}});
+}
+
+
+
 }
 
 // Local Variables:

@@ -7,6 +7,7 @@ set(reversible_programs
   example2
   example3
   example4
+  my_example
   pidd_debugging
   window_optimization)
 
