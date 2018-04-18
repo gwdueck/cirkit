@@ -46,7 +46,10 @@
 namespace cirkit
 {
 
-bool **graph_adjacency = NULL;
+bool **graph_adjacency = NULL;  // graph structure
+int **trans_cost = NULL;        // the cost of each cnot
+TransPath **trans_path = NULL;  // the transformation path or a given cnot
+
 int graph_size = 0;
 std::vector<TransPath> path_list;
 

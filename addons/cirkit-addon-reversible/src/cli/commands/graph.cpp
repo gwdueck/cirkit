@@ -71,14 +71,14 @@ bool graph_command::execute()
     {
         read_graph( filename );
     }
-    if( is_set( "print" )){
+    if( is_set( "print" ) ){
         print_graph( );
     }
-    if( is_set( "delete" )){
-        delete_graph( );
-    }
-    if( is_set( "create" )){
+    if( is_set( "create" ) ){
         create_trans( );
+    }
+    if( is_set( "delete" ) ){
+        delete_graph( );
     }
     return true;
 }
