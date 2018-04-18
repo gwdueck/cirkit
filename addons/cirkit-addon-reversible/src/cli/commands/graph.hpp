@@ -48,14 +48,15 @@ public:
   graph_command( const environment::ptr& env );
 
 protected:
-//  rules_t validity_rules() const;
+  //rules_t validity_rules() const;
   bool execute();
 
 public:
   log_opt_t log() const;
     
 private:
-    std::string filename = "graph.txt";
+    //std::string filename = "graph.txt";
+    std::string filename;
 
 };
 
