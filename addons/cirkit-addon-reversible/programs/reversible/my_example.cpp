@@ -138,7 +138,7 @@ void all_stats(const circuit& circ, std::string fname ){
     }
     outfile << " \\\\ \\hline\n";
     outfile.close();
-
+    
 }
 
 // Local Variables:

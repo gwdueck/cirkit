@@ -104,6 +104,7 @@
 #include <cli/commands/alex.hpp>
 #include <cli/commands/permute_lines.hpp>
 #include <cli/commands/reduce.hpp>
+#include <cli/commands/graph.hpp>
 
 using namespace cirkit;
 
@@ -198,13 +199,14 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( revgen );
   ADD_COMMAND( stg_as );
 
-  cli.set_category( "Dealing with IBM's Q5" );
+  cli.set_category( "Dealing with IBM's Q Architectures" );
     
     ADD_COMMAND( ibm );
     ADD_COMMAND( permute_lines );
     ADD_COMMAND( levels );
     ADD_COMMAND( reduce );
     ADD_COMMAND( qxg );
+    ADD_COMMAND( graph );
 
   cli.set_category( "Various" );
 
