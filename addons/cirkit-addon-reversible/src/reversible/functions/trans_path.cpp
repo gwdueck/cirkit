@@ -47,6 +47,15 @@ namespace cirkit
         }
         return res;
     }
+    
+    // add the cost of the inverse path
+    int TransPath::costPlus(){
+        int res = 0;
+        for ( auto &p : tpath ) {
+            res += p.cost();
+        }
+        return 2*res - tpath.back().cost();
+    }
 }
 
 // Local Variables:

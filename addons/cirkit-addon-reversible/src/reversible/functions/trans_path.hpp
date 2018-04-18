@@ -50,6 +50,7 @@ namespace cirkit
         void clear() { tpath.clear(); };
         void remove_last(){ tpath.pop_back(); };
         int cost();
+        int costPlus();
     };
 
 }

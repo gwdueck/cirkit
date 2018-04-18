@@ -150,13 +150,6 @@ namespace cirkit
             std::cout << "========\n";
             p.dump();
         }
-        /*
-        MoveQubit mymq;
-        mymq.set( cab, 1, 0);
-        mytp.add(mymq);
-        mymq.set( tba, 0, 2);
-        mytp.add(mymq);
-        mytp.dump();
-         */
+        
     }
 }
