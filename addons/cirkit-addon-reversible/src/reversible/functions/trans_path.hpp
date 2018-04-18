@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,41 +25,37 @@
  */
 
 /**
- * @file ibm.hpp
+ * @file trans_path.hpp
  *
- * @brief Reversible circuit optimization for IBM quantum computer architectures 
+ * @brief path of transformation to implement a singel cnot gate
  *
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef CLI_IBM_COMMAND_HPP
-#define CLI_IBM_COMMAND_HPP
+#ifndef TRANS_PATH_HPP
+#define TRANS_PATH_HPP
 
-#include <string>
-#include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+#include <vector>
+#include "move_qubit.hpp"
 
 namespace cirkit
 {
-
-class ibm_command : public cirkit_command
-{
-public:
-  ibm_command( const environment::ptr& env );
-
-protected:
-  rules_t validity_rules() const;
-  bool execute();
-
-public:
-  log_opt_t log() const;
-
-};
+    class TransPath{
+    private:
+        std::vector<MoveQubit> tpath;
+    public:
+        void add( MoveQubit );
+        void dump();
+        void clear() { tpath.clear(); };
+        void remove_last(){ tpath.pop_back(); };
+        int cost();
+        int costPlus();
+    };
 
 }
 
-#endif
+#endif /* TRANS_PATH_HPP */
 
 // Local Variables:
 // c-basic-offset: 2

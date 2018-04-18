@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,42 +24,31 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file ibm.hpp
- *
- * @brief Reversible circuit optimization for IBM quantum computer architectures 
- *
- * @author Gerhard Dueck
- * @since  2.3
- */
-
-#ifndef CLI_IBM_COMMAND_HPP
-#define CLI_IBM_COMMAND_HPP
-
-#include <string>
-#include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+#include "move_qubit.hpp"
+#include <iostream>
 
 namespace cirkit
 {
-
-class ibm_command : public cirkit_command
-{
-public:
-  ibm_command( const environment::ptr& env );
-
-protected:
-  rules_t validity_rules() const;
-  bool execute();
-
-public:
-  log_opt_t log() const;
-
-};
-
+    const std::string MoveQubit::type_name[10] = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip" };
+    const int MoveQubit::move_cost[10] = {6, 5, 5, 6, 6, 5, 5, 6, 0, 4};
+    MoveQubit::MoveQubit( move_qubit_type t, int a, int b){
+        mv_type = t;
+        v = a;
+        w = b;
+    }
+    void MoveQubit::set( move_qubit_type t, int a, int b){
+        mv_type = t;
+        v = a;
+        w = b;
+    }
+    void MoveQubit::print(){
+        std::cout << type_name[mv_type] << " " << v << " " << w << std::endl;
+    }
+    
+    int MoveQubit::cost(){
+        return move_cost[mv_type];
+    }
 }
-
-#endif
 
 // Local Variables:
 // c-basic-offset: 2

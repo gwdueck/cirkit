@@ -25,35 +25,38 @@
  */
 
 /**
- * @file ibm.hpp
+ * @file graph.hpp
  *
- * @brief Reversible circuit optimization for IBM quantum computer architectures 
+ * @brief graph maniputation for IBM quantum computer architectures
  *
  * @author Gerhard Dueck
  * @since  2.3
  */
 
-#ifndef CLI_IBM_COMMAND_HPP
-#define CLI_IBM_COMMAND_HPP
+#ifndef CLI_GRAPH_HPP
+#define CLI_GRAPH_HPP
 
-#include <string>
-#include <reversible/circuit.hpp>
 #include <cli/cirkit_command.hpp>
+#include <reversible/circuit.hpp>
 
 namespace cirkit
 {
 
-class ibm_command : public cirkit_command
+class graph_command : public cirkit_command
 {
 public:
-  ibm_command( const environment::ptr& env );
+  graph_command( const environment::ptr& env );
 
 protected:
-  rules_t validity_rules() const;
+  //rules_t validity_rules() const;
   bool execute();
 
 public:
   log_opt_t log() const;
+    
+private:
+    //std::string filename = "graph.txt";
+    std::string filename;
 
 };
 
