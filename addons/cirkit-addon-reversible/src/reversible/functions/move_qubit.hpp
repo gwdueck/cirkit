@@ -51,7 +51,8 @@ namespace cirkit
      */
      enum move_qubit_type { cab, cba, tab, tba, cabi, cbai, tabi, tbai, nop, flip };
     
-    
+    move_qubit_type invert_type( move_qubit_type a);
+
     class MoveQubit{
     private:
         
@@ -65,6 +66,7 @@ namespace cirkit
         void set( move_qubit_type, int, int );
         void print();
         int cost();
+        void invert();
     };
     
 

@@ -42,11 +42,25 @@ namespace cirkit
         w = b;
     }
     void MoveQubit::print(){
-        std::cout << type_name[mv_type] << " " << v << " " << w << std::endl;
+        std::cout << type_name[mv_type] << " " << v << " " << w << "; ";
     }
     
     int MoveQubit::cost(){
         return move_cost[mv_type];
+    }
+    
+    move_qubit_type invert_type( move_qubit_type a){
+        if( a <= tba ){
+            return static_cast<move_qubit_type>( a + 4);
+        }
+        if( a <= tbai ){
+            return static_cast<move_qubit_type>( a - 4);
+        }
+        return a;
+    }
+    
+    void MoveQubit::invert(){
+        mv_type = invert_type( mv_type );
     }
 }
 
