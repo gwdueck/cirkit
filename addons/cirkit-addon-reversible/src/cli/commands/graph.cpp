@@ -60,12 +60,18 @@ graph_command::graph_command( const environment::ptr& env )
     ( "delete,d",  "delete current graph" )
     ( "print,p",  "print current graph" )
     ( "create,c",  "create the transformation matrix" )
+    ( "verbose,v", "verbose mode")
     ;
 }
 
     
 bool graph_command::execute()
 {
+    bool verbose = false;
+    if( is_set( "verbose" ) )
+    {
+        verbose = true;
+    }
 
     if( is_set( "read" ) )
     {
@@ -75,7 +81,7 @@ bool graph_command::execute()
         print_graph( );
     }
     if( is_set( "create" ) ){
-        create_trans( );
+        create_trans( verbose );
     }
     if( is_set( "delete" ) ){
         delete_graph( );

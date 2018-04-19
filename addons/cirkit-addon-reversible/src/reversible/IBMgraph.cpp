@@ -157,6 +157,7 @@ namespace cirkit
             }
         }
         trans_cost[v][w] = best_cost;
+        best_tp.addInverse();
         trans_path[v][w] = best_tp;
     }
     
@@ -170,7 +171,7 @@ namespace cirkit
         }
     }
     
-    void create_trans()
+    void create_trans( bool verbose )
     {
         allocate_data_stuctures();
         path_list.clear();
@@ -200,13 +201,27 @@ namespace cirkit
                 }
             }
         }
-        for( int v = 0; v < graph_size; v++)
+        if ( verbose )
         {
-            for( int w = 0; w < graph_size; w++)
+            for( int v = 0; v < graph_size; v++)
             {
-                std::cout << trans_cost[v][w] << " ";
+                for( int w = 0; w < graph_size; w++)
+                {
+                    std::cout << trans_cost[v][w] << " ";
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
+            for( int v = 0; v < graph_size; v++)
+            {
+                for( int w = 0; w < graph_size; w++)
+                {
+                    if( v != w )
+                    {
+                        std::cout << "cnot(" << v << "," << w << ") = ";
+                        trans_path[v][w].print();
+                    }
+                }
+            }
         }
     }
 }

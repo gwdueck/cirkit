@@ -56,7 +56,7 @@ std::vector<TransPath> path_list;
 bool read_graph( const std::string& filename );
 void print_graph( );
 void delete_graph( );
-void create_trans( );
+void create_trans( bool verbose );
 
 }
 #endif /* IBMgraph_hpp */
