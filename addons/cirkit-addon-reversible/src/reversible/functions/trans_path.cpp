@@ -33,7 +33,7 @@ namespace cirkit
     void TransPath::add( MoveQubit q ){
         tpath.push_back( q );
     }
-    void TransPath::dump(){
+    void TransPath::print(){
         for ( auto &p : tpath ) {
             p.print();
         }
@@ -46,6 +46,26 @@ namespace cirkit
             res += p.cost();
         }
         return res;
+    }
+    
+    // add the cost of the inverse path
+    int TransPath::costPlus(){
+        int res = 0;
+        for ( auto &p : tpath ) {
+            res += p.cost();
+        }
+        return 2*res - tpath.back().cost();
+    }
+    
+    
+    void TransPath::addInverse(){
+        MoveQubit q;
+        for(int i = tpath.size() - 2; i >= 0; i-- )
+        {
+            q = tpath[i];
+            q.invert();
+            tpath.push_back( q );
+        }
     }
 }
 

@@ -70,8 +70,13 @@ namespace cirkit
     void delete_graph( ){
         for( int i = 0; i < graph_size; i++ ){
             delete [] graph_adjacency[i];
+            delete [] trans_path[i];
+            delete [] trans_cost[i];
+            
         }
         delete [] graph_adjacency;
+        delete [] trans_path;
+        delete [] trans_cost;
         graph_size = 0;
     }
     
@@ -131,32 +136,92 @@ namespace cirkit
         }
     }
     
-    void create_trans()
+    /* Precondition: the path_list contains all paths from v to w
+     Postcondition: the best path and its cost will be stored in:
+        - trans_cost[v][w]
+        - trans_path[v][w]
+     */
+    
+    void set_best_path(int v, int w )
     {
+        TransPath tp, best_tp;
+        int best_cost;
+        best_tp = path_list[0];
+        best_cost = best_tp.costPlus();
+        for ( auto &p : path_list )
+        {
+            if(p.costPlus() < best_cost )
+            {
+                best_cost = p.costPlus();
+                best_tp = p;
+            }
+        }
+        trans_cost[v][w] = best_cost;
+        best_tp.addInverse();
+        trans_path[v][w] = best_tp;
+    }
+    
+    void allocate_data_stuctures(){
+        trans_cost = new int*[graph_size];
+        trans_path = new TransPath*[graph_size];
+        for(int i = 0; i < graph_size ; i++ )
+        {
+            trans_cost[i] = new int[graph_size];
+            trans_path[i] = new TransPath[graph_size];
+        }
+    }
+    
+    void create_trans( bool verbose )
+    {
+        allocate_data_stuctures();
         path_list.clear();
         bool visited[graph_size];
         for( int i = 0; i < graph_size ; i++ )
         {
             visited[i] = false;
         }
-        path_list.clear();
-        TransPath tp;
-        int v = 0, w = 4;
-        visited[v] = true;
-        visited[w] = true;
-        find_all_paths( v,  w, tp, visited );
         
-        for ( auto &p : path_list ) {
-            std::cout << "========\n";
-            p.dump();
+        TransPath tp;
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+            {
+                if( v == w )
+                {
+                    trans_cost[v][w] = 0;
+                }
+                else{
+                    for( int i = 0; i < graph_size ; i++ ) visited[i] = false;
+                    visited[v] = true;
+                    visited[w] = true;
+                    path_list.clear();
+                    tp.clear();
+                    find_all_paths( v,  w, tp, visited );
+                    set_best_path( v,  w );
+                }
+            }
         }
-        /*
-        MoveQubit mymq;
-        mymq.set( cab, 1, 0);
-        mytp.add(mymq);
-        mymq.set( tba, 0, 2);
-        mytp.add(mymq);
-        mytp.dump();
-         */
+        if ( verbose )
+        {
+            for( int v = 0; v < graph_size; v++)
+            {
+                for( int w = 0; w < graph_size; w++)
+                {
+                    std::cout << trans_cost[v][w] << " ";
+                }
+                std::cout << std::endl;
+            }
+            for( int v = 0; v < graph_size; v++)
+            {
+                for( int w = 0; w < graph_size; w++)
+                {
+                    if( v != w )
+                    {
+                        std::cout << "cnot(" << v << "," << w << ") = ";
+                        trans_path[v][w].print();
+                    }
+                }
+            }
+        }
     }
 }

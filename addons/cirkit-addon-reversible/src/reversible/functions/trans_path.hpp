@@ -46,10 +46,12 @@ namespace cirkit
         std::vector<MoveQubit> tpath;
     public:
         void add( MoveQubit );
-        void dump();
+        void print();
         void clear() { tpath.clear(); };
         void remove_last(){ tpath.pop_back(); };
         int cost();
+        int costPlus();
+        void addInverse();
     };
 
 }
