@@ -150,7 +150,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_hadamard( circ_IBM, 2u );
                         }
                         break;
-                    case 4 : // swap control with 2
+                    case 4 : // map control to qubit 2, given CNOT(2,c) -- CBA(c,2)
                         if( !templ )
                         {
                             append_toffoli( circ_IBM, control2, control );
@@ -216,6 +216,34 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                            // append_hadamard( circ_IBM, 2u );
                             append_hadamard( circ_IBM, target );
                             append_hadamard( circ_IBM, control );
+                        }
+                        break;
+                    case 6 : // map control to qubit 2, given CNOT(c,2) -- CAB(c,2)
+                        if( !templ )
+                        {
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            
+                        }
+                        else
+                        {
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
                         }
                         break;
                         
