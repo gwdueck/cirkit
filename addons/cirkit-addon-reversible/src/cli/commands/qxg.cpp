@@ -840,7 +840,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     matrix cnots, map_cost, aux;
 
     for (int i = 0; i < map.size(); ++i)
-        p.push_back(0);
+        p.push_back(-1);
     
     for (int i = 0; i < map.size(); ++i)
     {
@@ -850,7 +850,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         best_perm.push_back(i);
         aux.push_back(p);
     }
-    p.clear();
+    //p.clear();
 
     cost = initial_matrix(circ, cnots, map_cost, map);
     cost = cost + circ.num_gates();
@@ -868,127 +868,80 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
        		aux[i][j] = cnots[i][j];
     
     std::map<int, int> qubit;
-    unsigned x, y;
-    h = 0;
-    for (int i = 0; i < cnots.size(); ++i)
-  		for (int j = 0; j < cnots.size(); ++j)
-  		{
-  			if( aux[i][j] >= h )
-  			{
-  				h = aux[i][j];
-  				x = i;
-  				y = j;
-  			}
-  		}
-  	std::cout << "A " << x << " " << y << std::endl;
-  	qubit[x] = y;
-  	std::cout << "B" << std::endl;
-  	aux[x][y] = 0;
-  	std::cout << qubit.begin()->first << " " << qubit.begin()->second << std::endl;
-  // 	for (auto& t: qubit) {
-  //   std::cout << t.first << ": " << t.second << '\n';
-  // }
-  	// aux[i][j] = 0;
-  	return circ_qx;
-    // while(p != cnots.size() - 1)
-    // {
-    // 	for (int i = 0; i < cnots.size(); ++i)
-    //   		for (int j = 0; j < cnots.size(); ++j)
-    //   		{
-    //   			if( aux[i][j] >= h )
-    //   			{
-    //   				h = aux[i][j]
-    //   				qubit[i] = y;
-    //   			}
-    //   		}
-    //   	aux[i][j] = 0;
-    //   	for (int i = 0; i < cnots.size(); ++i)
-    //   	{
-    //   		if(std::find(p.begin(), p.end(), i) == p.end())
-    //   		{
-    //   			for (int j = 0; j < cnots.size(); ++j)
-	   //    		{
-	   //    			if(std::find(p.begin(), p.end(), j) == p.end())
-	   //    			{
-
-	   //    			}
-	      			
-	   //    		}
-    //   		}
-    //   }
-    // }
-
-
-
-
-
-
-    // std::sort(p.begin(), p.end(), std::greater<int>());
-    // for (int i = 0; i < p.size(); ++i)
-    // {
-    // 	std::cout << " " << p[i];
-    // }
-    // std::cout << std::endl;
-
-    // for (int i = 0; i < cnots.size(); ++i)
-    // {
-    // 	for (int j = 0; j < cnots.size(); ++j)
-    // 	{
-    		
-    // 	}
-    // }
-
-
-    // while(p.size() > 0)
-    // {
-    //     h = std::distance(p.begin(), std::max_element(p.begin(), p.end()));
-    //     if(p[h] == 0)
-    //         break;
-    //     int mele = std::count(p.begin(), p.end(), *std::max_element(p.begin(), p.end()));
-    //     std::cout << "numero::::: " << mele << std::endl;
-    //     for(unsigned int k=0; k<mele; ++k)
-    //     {
-    //         h = std::distance(p.begin(), std::max_element(p.begin(), p.end()));
-    //         if(p[h] == 0)
-    //             break;
-    //         //std::cout << "MAIOR: " << h << std::endl;
-    //         for(unsigned int i=0; i<cnots.size(); ++i)
-    //         {
-    //             manipulate_matrix( cnots, h, i, map_cost, perm, map );
-    //             cost = matrix_cost(map_cost) + circ.num_gates();
-    //             if(cost < lower_cost)
-    //             {
-    //                 q = i;
-    //                 c = h;
-    //                 lower = true;
-    //                 lower_cost = cost;
-    //                 for(int j=0; j<cnots.size(); ++j)
-    //                     best_perm[j] = perm[j];
-    //             }
-    //             manipulate_matrix( cnots, i, h, map_cost, perm, map );
-    //         }
-    //         p.erase(p.begin()+h);
-    //         print_vector(p);
-    //     }
-    //     if(lower)
-    //     {
-    //         lower = false;
-    //         std::cout << "Swapping [" << c << "] [" << q << "] : " << lower_cost << std::endl;
-    //         manipulate_matrix( cnots, c, q, map_cost, perm, map );
-    //         p.clear();
-    //         pmatrix(cnots, map_cost);
-    //         p = qubit_cost(map_cost, cnots);
-    //         print_vector(p);
-    //     }
-        // else
-        // {
-        //     p.erase(p.begin()+h);
-        //     print_vector(p);
-        // }
-    //}
-    //circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
-    //circ_qx = remove_dup_gates( circ_qx );
-    //print_results(cnots, best_perm, circ_qx.num_gates());
+    unsigned x, y, xx, yy;
+    
+    while(qubit.size() < cnots.size()-1)
+    {	
+    	h = 0;
+    	for (int i = 0; i < cnots.size(); ++i)
+	    {
+	  		for (int j = 0; j < cnots.size(); ++j)
+	  		{
+	  			if( aux[i][j] >= h )
+	  			{
+	  				h = aux[i][j];
+	  				x = i;
+	  				y = j;
+	  			}
+	  		}
+	  	}
+	  	std::cout << "Maior valor: ";
+	  	std::cout << x << " " << y << std::endl;
+	  	//qubit[x] = y;
+	  	aux[x][y] = 0;
+	  	//std::cout << qubit.begin()->first << " " << qubit.begin()->second << std::endl;
+	  	h = 1000;
+	  	if(qubit.find(x) == qubit.end() && qubit.find(y) == qubit.end())
+	  	{
+	  		for (int i = 0; i < cnots.size(); ++i)
+		    {
+		  		for (int j = 0; j < cnots.size(); ++j)
+		  		{
+		  			if( i != j && map[i][j] < h )
+		  			{
+		  				h = map[i][j];
+		  				xx = i;
+		  				yy = j;
+		  			}
+		  		}
+		  	}
+		  	qubit[x] = xx;
+		  	qubit[y] = yy;
+		  	p[x] = xx;
+		  	p[y] = yy;
+	  	}
+	  	else if(qubit.find(x) != qubit.end())
+	  	{
+	  		int i = qubit.find(x)->second;
+	  		for (int j = 0; j < cnots.size(); ++j)
+	  		{
+	  			if( i != j && qubit.find(x) != qubit.end() && map[i][j] < h )
+	  			{
+	  				h = map[i][j];
+	  				xx = i;
+	  				yy = j;
+	  			}
+	  		}
+	  		qubit[y] = yy;
+	  	}
+		else if(qubit.find(y) != qubit.end())
+	  	{
+	  		int j = qubit.find(y)->second;
+	  		for (int i = 0; i < cnots.size(); ++i)
+		    {
+	  			if( i != j && map[i][j] < h )
+	  			{
+	  				h = map[i][j];
+	  				xx = i;
+	  				yy = j;
+	  			}
+		  	}
+		  	qubit[x] = xx;
+	  	}
+	  	std::cout << "Trocar por: ";
+	  	std::cout << xx << " " << yy << std::endl;
+	  	std::cin.get();
+    }
     print_results(cnots, perm, cost);
     return circ_qx;
 }
