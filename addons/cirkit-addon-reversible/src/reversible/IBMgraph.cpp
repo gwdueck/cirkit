@@ -80,7 +80,7 @@ namespace cirkit
         graph_size = 0;
     }
     
-    // When a path is found add it to global vector of paths.
+    // When a path is found add it to the global vector of paths.
     void find_all_paths( int v, int w, TransPath &tp, bool *visited )
     {
         bool done = false;

@@ -43,10 +43,10 @@
  0 - no mapping possible (eg CNOT(1,1))
  1 - CNOT gate Exists
  2 - target and controls must be interchanged -- FLIP(c,t)
- 3 - map target to qubit 2 -- TBA(t,2)
- 4 - map control to qubit 2, given CNOT(2,c) -- CBA(c,2)
- 5 - map target to qubit 2 and interchange control and qubit 2 -- TAB(t,2) FLIP(c,2)
- 6 - map control to qubit 2, given CNOT(c,2) -- CAB(c,2)
+ 3 - map target to qubit 2 given CNOT(c,2) and CNOT(t,2) -- TBA(t,2)
+ 4 - map control to qubit 2, given CNOT(2,c) and CNOT(2,t) -- CBA(c,2)
+ 5 - map target to qubit 2 and interchange control and qubit 2, given CNOT(c,2) and CNOT(2,t)  -- TAB(t,2) FLIP(c,2)
+ 6 - map control to qubit 2, given CNOT(c,2) and CNOT(2,t) -- CAB(c,2)
  */
 
 int static const map_method_qx2[5][5] ={{0,1,1,3,3},
