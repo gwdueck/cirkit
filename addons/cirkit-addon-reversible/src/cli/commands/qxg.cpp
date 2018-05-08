@@ -837,20 +837,20 @@ matrix permute_matrix(matrix& cnots, const std::vector<int>& key, const std::vec
 		for (int j = 0; j < cnots.size(); ++j)
 			aux[j][value[i]] = cnots[j][key[i]];
 
-	print_matrix(aux);
-	std::cout << std::endl;
+	// print_matrix(aux);
+	// std::cout << std::endl;
 
 	for (int i = 0; i < cnots.size(); ++i)
 		for (int j = 0; j < cnots.size(); ++j)
 			cnots[value[i]][j] = aux[key[i]][j];
 
-	print_matrix(cnots);
+	// print_matrix(cnots);
 	return cnots;
 }
 
-void permute_cost(const matrix& cnots, const matrix& map)
+unsigned permute_cost(const matrix& cnots, const matrix& map)
 {
-	unsigned cost = 0;
+	unsigned int cost = 0;
 	for (int i = 0; i < cnots.size(); ++i)
 	{
 		for (int j = 0; j < cnots.size(); ++j)
@@ -859,14 +859,114 @@ void permute_cost(const matrix& cnots, const matrix& map)
 		}
 	}
 	std::cout << "cost is: " << cost << std::endl;
+    return cost;
+}
+
+std::pair<int,int> get_position_higher_value_matrix(matrix& m)
+{
+    unsigned int h = 0, x, y;
+    for (int i = 0; i < m.size(); ++i)
+    {
+        for (int j = 0; j < m.size(); ++j)
+        {
+            if( m[i][j] >= h )
+            {
+                h = m[i][j];
+                x = i;
+                y = j;
+            }
+        }
+    }
+    return std::make_pair (x,y);
+}
+
+std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std::map<int, int>& permutation, std::vector<int> p)
+{
+    std::map<int, int>::iterator p1, p2;
+    p1 = permutation.find(qubit.first);
+    p2 = permutation.find(qubit.second);
+    if(p1 != permutation.end() && p2 != permutation.end())
+    {
+        //Do nothing
+        // std::cout << "Do nothing" << std::endl;
+        return std::make_pair(p1->second,p2->second);
+    }
+    else if(p1 == permutation.end() && p2 == permutation.end())
+    {
+        unsigned int l = 1000, x, y;
+        for (int i = 0; i < map.size(); ++i)
+        {
+            for (int j = 0; j < map.size(); ++j)
+            {
+                if(i != j && map[i][j] < l && std::find(p.begin(), p.end(), i) == p.end() && std::find(p.begin(), p.end(), j) == p.end())
+                {
+                    l = map[i][j];
+                    x = i;
+                    y = j;
+                }
+            }
+        }
+        // std::cout << "nenhum " << x << " " << y << std::endl;
+        return std::make_pair(x,y);
+    }
+    else if(p1 == permutation.end() && p2 != permutation.end())
+    {
+        unsigned int l = 1000, x, y;
+        y = p2->second;
+        for(int i = 0; i < map.size(); ++i)
+        {
+            if(map[i][y] < l && std::find(p.begin(), p.end(), i) == p.end())
+            {
+                l = map[i][y];
+                x = i;
+            }    
+        }
+        // std::cout << "sem controle " << x << " " << y << std::endl;
+        return std::make_pair(x,y);
+    }
+    else if(p1 != permutation.end() && p2 == permutation.end())
+    {
+        unsigned int l = 1000, x, y;
+        x = p1->second;
+        for(int j = 0; j < map.size(); ++j)
+        {
+            if(map[x][j] < l && std::find(p.begin(), p.end(), j) == p.end())
+            {
+                l = map[x][j];
+                y = j;
+            }    
+        }
+        // std::cout << "sem alvo " << x << " " << y << std::endl;
+        return std::make_pair(x,y);
+    }
+    
+}
+
+std::map<int, int> complete_permutation(std::map<int, int>& permutation, unsigned int s)
+{
+    std::vector<int> x, y;
+    for (int i = 0; i < s; ++i)
+    {
+        x.push_back(i);
+        y.push_back(i);
+    }
+    for(auto it : permutation)
+    {
+        x.erase(std::remove(x.begin(), x.end(), it.first), x.end());
+        y.erase(std::remove(y.begin(), y.end(), it.second), y.end());
+    }
+    permutation.insert(std::pair<int, int>(x[0], y[0]));
+    return permutation;
 }
 
 circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
 {
     properties_timer t( statistics );
     circuit circ_qx;
-    unsigned int cost, h;
-    std::vector <int> p, key, value;
+    unsigned int cost;
+    std::vector <int> p;
+    std::pair<int,int> qubit1, qubit2;
+    std::map<int, int> permutation;
     matrix cnots, map_cost, aux;
 
     for (int i = 0; i < map.size(); ++i)
@@ -880,137 +980,190 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     }
     p.clear();
 
-    for (int i = 0; i < map.size(); ++i)
-        p.push_back(-1);
-
     cost = initial_matrix(circ, cnots, map_cost, map);
-    // cost = cost + circ.num_gates();
-    // lower_cost = cost;
-    // std::cout << "initial cost: " << cost << std::endl;
-    // std::cout << "initial gates: " << circ.num_gates() << std::endl;
-    // std::cout<< "cnots" << std::endl;
-    // print_matrix(cnots);
-    // std::cout<< "cost" << std::endl;
-    // print_matrix(map_cost);
- 
     
     for (int i = 0; i < cnots.size(); ++i)
-      	for (int j = 0; j < cnots.size(); ++j)
-       		aux[i][j] = cnots[i][j];
+        for (int j = 0; j < cnots.size(); ++j)
+            aux[i][j] = cnots[i][j];
     
-    unsigned x, y, xx, yy;
-    bool up = false;
-    while(key.size() < cnots.size()-1)
-    {	
-    	h = 0;
-    	up = false;
-    	for (int i = 0; i < cnots.size(); ++i)
-	    {
-	  		for (int j = 0; j < cnots.size(); ++j)
-	  		{
-	  			if( aux[i][j] >= h )
-	  			{
-	  				h = aux[i][j];
-	  				x = i;
-	  				y = j;
-	  			}
-	  		}
-	  	}
-	  	// std::cout << "Maior valor: ";
-	  	// std::cout << x << " " << y << std::endl;
-	  	//qubit[x] = y;
-	  	aux[x][y] = 0;
-	  	//std::cout << qubit.begin()->first << " " << qubit.begin()->second << std::endl;
-	  	h = 1000;
-	  	if(std::find(key.begin(), key.end(), x) == key.end() && std::find(key.begin(), key.end(), y) == key.end())
-	  	{
-	  		//std::cout << "ambos nao estao na lista" << std::endl;
-	  		for (int i = 0; i < cnots.size(); ++i)
-		    {
-		  		for (int j = 0; j < cnots.size(); ++j)
-		  		{
-		  			if( i != j && map[i][j] < h )
-		  			{
-		  				h = map[i][j];
-		  				xx = i;
-		  				yy = j;
-		  			}
-		  		}
-		  	}
-		  	key.push_back(x);
-		  	value.push_back(xx);
-		  	key.push_back(y);
-		  	value.push_back(yy);
-	  	}
-	  	else if(std::find(key.begin(), key.end(), x) != key.end() && std::find(key.begin(), key.end(), y) != key.end())
-	  	{
-	  		std::cout << "ambos estao na lista" << std::endl;
-	  	}
-	  	else if(std::find(key.begin(), key.end(), x) != key.end())
-	  	{
-	  		//std::cout << "x esta na lista " << x << std::endl;
-	  		int i = value[std::distance(key.begin(), std::find(key.begin(), key.end(), x))];
-	  		for (int j = 0; j < cnots.size(); ++j)
-	  		{
-	  			//std::cout << "valor de j: " << j << " valor de i travado: " << i << std::endl;
-	  			if( i != j && std::find(value.begin(), value.end(), j) == value.end() && map[i][j] < h )
-	  			{
-	  				//std::cout << "ENTROU valor de j: " << j << " valor de i travado: " << i << std::endl;
-	  				h = map[i][j];
-	  				xx = i;
-	  				yy = j;
-	  				up = true;
-	  			}
-	  		}
-	  		if(up)
-	  		{
-	  			key.push_back(y);
-		  		value.push_back(yy);
-	  		}
-	  	}
-		else if(std::find(key.begin(), key.end(), y) != key.end())
-	  	{
-	  		//std::cout << "y esta na lista " << y << std::endl;
-	  		int j = value[std::distance(key.begin(), std::find(key.begin(), key.end(), y))];
-	  		for (int i = 0; i < cnots.size(); ++i)
-		    {
-	  			//std::cout << "valor de i: " << i << " valor de j travado: " << j << std::endl;
-	  			if( i != j && std::find(value.begin(), value.end(), i) == value.end() && map[i][j] < h )
-	  			{
-	  				//std::cout << "ENTROU valor de j: " << j << " valor de i travado: " << i << std::endl;
-	  				h = map[i][j];
-	  				xx = i;
-	  				yy = j;
-	  				up = true;
-	  			}
-		  	}
-		  	if(up)
-		  	{
-		  		key.push_back(x);
-		  		value.push_back(xx);	
-		  	}
-	  	}
-	  // 	if(up)
-	  // 	{
-		 //  	std::cout << "Trocar por: ";
-		 //  	std::cout << xx << " " << yy << std::endl;
-		 // }
+    while(permutation.size() < cnots.size() - 1)
+    {   
+        qubit1 = get_position_higher_value_matrix(aux);
+        // std::cout << "Maior valor: ";
+        // std::cout << "[" << qubit1.first << "][" << qubit1.second << "]: " << aux[qubit1.first][qubit1.second] << std::endl;
+        aux[qubit1.first][qubit1.second] = 0;
+        // std::cin.get();
+        qubit2 = get_mapping(map, qubit1, permutation, p);
+        // std::cout << "Mapeado:" << std::endl;
+        // std::cout << "[" << qubit2.first << "][" << qubit2.second << "]: " << map[qubit2.first][qubit2.second] << std::endl;
+        permutation.insert(std::pair<int, int>(qubit1.first, qubit2.first));
+        permutation.insert(std::pair<int, int>(qubit1.second, qubit2.second));
+        p.push_back(qubit2.first);
+        p.push_back(qubit2.second);
+        // std::cin.get();
     }
-    //print_results(cnots, perm, cost);
-    for (int i = 0; i < map.size(); ++i)
-    {
-    	if(std::find(key.begin(), key.end(), i) == key.end())
-    		key.push_back(i);
-    	if(std::find(value.begin(), value.end(), i) == value.end())
-    		value.push_back(i);
-    }
-    for (int i = 0; i < map.size(); ++i)
-       	std::cout << " " << value[std::distance(key.begin(), std::find(key.begin(), key.end(), i))];
-    std::cout << std::endl;
-    cnots = permute_matrix(cnots, key, value, aux);
-    permute_cost(cnots, map);
+
+    permutation = complete_permutation(permutation, cnots.size());
+    for(auto it : permutation)
+        std::cout << " " << it.first << " => " << it.second << std::endl;
+   
+    // cnots = permute_matrix(cnots, key, value, aux);
+    // cost = permute_cost(cnots, map);
+    // std::cout << "total cost is: " << cost + circ.num_gates() << std::endl;
     return circ_qx;
 }
+
+// circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
+// {
+//     properties_timer t( statistics );
+//     circuit circ_qx;
+//     unsigned int cost, h;
+//     std::vector <int> p, key, value;
+//     matrix cnots, map_cost, aux;
+
+//     for (int i = 0; i < map.size(); ++i)
+//         p.push_back(0);
+    
+//     for (int i = 0; i < map.size(); ++i)
+//     {
+//         cnots.push_back(p);
+//         map_cost.push_back(p);
+//         aux.push_back(p);
+//     }
+//     p.clear();
+
+//     for (int i = 0; i < map.size(); ++i)
+//         p.push_back(-1);
+
+//     cost = initial_matrix(circ, cnots, map_cost, map);
+//     // cost = cost + circ.num_gates();
+//     // lower_cost = cost;
+//     // std::cout << "initial cost: " << cost << std::endl;
+//     // std::cout << "initial gates: " << circ.num_gates() << std::endl;
+//     // std::cout<< "cnots" << std::endl;
+//     // print_matrix(cnots);
+//     // std::cout<< "cost" << std::endl;
+//     // print_matrix(map_cost);
+ 
+    
+//     for (int i = 0; i < cnots.size(); ++i)
+//       	for (int j = 0; j < cnots.size(); ++j)
+//        		aux[i][j] = cnots[i][j];
+    
+//     unsigned x, y, xx, yy;
+//     bool up = false;
+//     while(key.size() < cnots.size()-1)
+//     {	
+//     	h = 0;
+//     	up = false;
+//     	for (int i = 0; i < cnots.size(); ++i)
+// 	    {
+// 	  		for (int j = 0; j < cnots.size(); ++j)
+// 	  		{
+// 	  			if( aux[i][j] >= h )
+// 	  			{
+// 	  				h = aux[i][j];
+// 	  				x = i;
+// 	  				y = j;
+// 	  			}
+// 	  		}
+// 	  	}
+// 	  	// std::cout << "Maior valor: ";
+// 	  	// std::cout << x << " " << y << std::endl;
+// 	  	//qubit[x] = y;
+// 	  	aux[x][y] = 0;
+// 	  	//std::cout << qubit.begin()->first << " " << qubit.begin()->second << std::endl;
+// 	  	h = 1000;
+// 	  	if(std::find(key.begin(), key.end(), x) == key.end() && std::find(key.begin(), key.end(), y) == key.end())
+// 	  	{
+// 	  		//std::cout << "ambos nao estao na lista" << std::endl;
+// 	  		for (int i = 0; i < cnots.size(); ++i)
+// 		    {
+// 		  		for (int j = 0; j < cnots.size(); ++j)
+// 		  		{
+// 		  			if( i != j && map[i][j] < h )
+// 		  			{
+// 		  				h = map[i][j];
+// 		  				xx = i;
+// 		  				yy = j;
+// 		  			}
+// 		  		}
+// 		  	}
+// 		  	key.push_back(x);
+// 		  	value.push_back(xx);
+// 		  	key.push_back(y);
+// 		  	value.push_back(yy);
+// 	  	}
+// 	  	else if(std::find(key.begin(), key.end(), x) != key.end() && std::find(key.begin(), key.end(), y) != key.end())
+// 	  	{
+// 	  		//std::cout << "ambos estao na lista" << std::endl;
+// 	  	}
+// 	  	else if(std::find(key.begin(), key.end(), x) != key.end())
+// 	  	{
+// 	  		//std::cout << "x esta na lista " << x << std::endl;
+// 	  		int i = value[std::distance(key.begin(), std::find(key.begin(), key.end(), x))];
+// 	  		for (int j = 0; j < cnots.size(); ++j)
+// 	  		{
+// 	  			//std::cout << "valor de j: " << j << " valor de i travado: " << i << std::endl;
+// 	  			if( i != j && std::find(value.begin(), value.end(), j) == value.end() && map[i][j] < h )
+// 	  			{
+// 	  				//std::cout << "ENTROU valor de j: " << j << " valor de i travado: " << i << std::endl;
+// 	  				h = map[i][j];
+// 	  				xx = i;
+// 	  				yy = j;
+// 	  				up = true;
+// 	  			}
+// 	  		}
+// 	  		if(up)
+// 	  		{
+// 	  			key.push_back(y);
+// 		  		value.push_back(yy);
+// 	  		}
+// 	  	}
+// 		else if(std::find(key.begin(), key.end(), y) != key.end())
+// 	  	{
+// 	  		//std::cout << "y esta na lista " << y << std::endl;
+// 	  		int j = value[std::distance(key.begin(), std::find(key.begin(), key.end(), y))];
+// 	  		for (int i = 0; i < cnots.size(); ++i)
+// 		    {
+// 	  			//std::cout << "valor de i: " << i << " valor de j travado: " << j << std::endl;
+// 	  			if( i != j && std::find(value.begin(), value.end(), i) == value.end() && map[i][j] < h )
+// 	  			{
+// 	  				//std::cout << "ENTROU valor de j: " << j << " valor de i travado: " << i << std::endl;
+// 	  				h = map[i][j];
+// 	  				xx = i;
+// 	  				yy = j;
+// 	  				up = true;
+// 	  			}
+// 		  	}
+// 		  	if(up)
+// 		  	{
+// 		  		key.push_back(x);
+// 		  		value.push_back(xx);	
+// 		  	}
+// 	  	}
+// 	  // 	if(up)
+// 	  // 	{
+// 		 //  	std::cout << "Trocar por: ";
+// 		 //  	std::cout << xx << " " << yy << std::endl;
+// 		 // }
+//     }
+//     //print_results(cnots, perm, cost);
+//     for (int i = 0; i < map.size(); ++i)
+//     {
+//     	if(std::find(key.begin(), key.end(), i) == key.end())
+//     		key.push_back(i);
+//     	if(std::find(value.begin(), value.end(), i) == value.end())
+//     		value.push_back(i);
+//     }
+//     for (int i = 0; i < map.size(); ++i)
+//        	std::cout << " " << value[std::distance(key.begin(), std::find(key.begin(), key.end(), i))];
+//     std::cout << std::endl;
+//     cnots = permute_matrix(cnots, key, value, aux);
+//     cost = permute_cost(cnots, map);
+//     std::cout << "total cost is: " << cost + circ.num_gates() << std::endl;
+//     return circ_qx;
+// }
 
 circuit optimize_circuit(circuit& circ,  properties::ptr& statistics)
 {
