@@ -831,33 +831,23 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
 //     return circ_qx;
 // }
 
-matrix permute_matrix(matrix& cnots, const std::vector<int>& key, const std::vector<int>& value, matrix& aux )
+matrix permute_matrix(matrix& cnots, const std::map<int, int>& permutation, matrix& aux)
 {
-	for (int i = 0; i < cnots.size(); ++i)
-		for (int j = 0; j < cnots.size(); ++j)
-			aux[j][value[i]] = cnots[j][key[i]];
-
-	// print_matrix(aux);
-	// std::cout << std::endl;
-
-	for (int i = 0; i < cnots.size(); ++i)
-		for (int j = 0; j < cnots.size(); ++j)
-			cnots[value[i]][j] = aux[key[i]][j];
-
-	// print_matrix(cnots);
-	return cnots;
+    for(auto it : permutation)
+        for (int j = 0; j < cnots.size(); ++j)
+            aux[it.second][j] = cnots[it.first][j];
+    for(auto it : permutation)
+        for (int i = 0; i < cnots.size(); ++i)
+            cnots[i][it.second] = aux[i][it.first];
+    return cnots;
 }
 
 unsigned permute_cost(const matrix& cnots, const matrix& map)
 {
 	unsigned int cost = 0;
 	for (int i = 0; i < cnots.size(); ++i)
-	{
 		for (int j = 0; j < cnots.size(); ++j)
-		{
 			cost += cnots[i][j] * map[i][j];
-		}
-	}
 	std::cout << "cost is: " << cost << std::endl;
     return cost;
 }
@@ -1007,9 +997,9 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     for(auto it : permutation)
         std::cout << " " << it.first << " => " << it.second << std::endl;
    
-    // cnots = permute_matrix(cnots, key, value, aux);
-    // cost = permute_cost(cnots, map);
-    // std::cout << "total cost is: " << cost + circ.num_gates() << std::endl;
+    cnots = permute_matrix(cnots, permutation, aux);
+    cost = permute_cost(cnots, map);
+    std::cout << "total cost is: " << cost + circ.num_gates() << std::endl;
     return circ_qx;
 }
 
