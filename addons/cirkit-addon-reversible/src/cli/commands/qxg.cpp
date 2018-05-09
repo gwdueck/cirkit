@@ -848,8 +848,7 @@ unsigned permute_cost(const matrix& cnots, const matrix& map)
 	for (int i = 0; i < cnots.size(); ++i)
 		for (int j = 0; j < cnots.size(); ++j)
 			cost += cnots[i][j] * map[i][j];
-	std::cout << "cost is: " << cost << std::endl;
-    return cost;
+	return cost;
 }
 
 std::pair<int,int> get_position_higher_value_matrix(matrix& m)
@@ -950,6 +949,14 @@ std::map<int, int> complete_permutation(std::map<int, int>& permutation, unsigne
     return permutation;
 }
 
+matrix copy_matrix(matrix& aux, const matrix& m)
+{
+	for (int i = 0; i < m.size(); ++i)
+        for (int j = 0; j < m.size(); ++j)
+            aux[i][j] = m[i][j];
+    return aux;
+}
+
 circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
 {
     properties_timer t( statistics );
@@ -972,10 +979,13 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     p.clear();
 
     cost = initial_matrix(circ, cnots, map_cost, map);
+    // std::cout << "added initial cost: " << cost << std::endl;
+    // std::cout << "total initial cost: " << cost + circ.num_gates() << std::endl;
+    std::cout << cost + circ.num_gates();
+    aux = copy_matrix(aux, cnots); //Algorithm greedy 1
+    // aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
+
     
-    for (int i = 0; i < cnots.size(); ++i)
-        for (int j = 0; j < cnots.size(); ++j)
-            aux[i][j] = cnots[i][j];
     
     while(permutation.size() < cnots.size() - 1)
     {   
@@ -996,12 +1006,14 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     }
 
     permutation = complete_permutation(permutation, cnots.size());
-    for(auto it : permutation)
-        std::cout << " " << it.first << " => " << it.second << std::endl;
-   
     cnots = permute_matrix(cnots, permutation, aux);
     cost = permute_cost(cnots, map);
-    std::cout << "total cost is: " << cost + circ.num_gates() << std::endl;
+    // std::cout << "added final cost: " << cost << std::endl;
+    // std::cout << "total final cost: " << cost + circ.num_gates() << std::endl;
+    std::cout << "\t" << cost + circ.num_gates() << std::endl;
+    // for(auto it : permutation)
+    // 	std::cout << " " << it.second;
+    // std::cout << std::endl;
     return circ_qx;
 }
 
@@ -1191,9 +1203,9 @@ bool qxg_command::execute()
             return true;
         }
         circ_qx = qxg(circ, map_qx20, path_qx20, statistics);
-        print_runtime();
+        // print_runtime();
         circ_qx = optimize_circuit(circ_qx, statistics);
-        print_runtime();
+        // print_runtime();
         std::cout << "After: " << circ_qx.num_gates() << std::endl;
     }
     else if ( is_set( "qx3" ) )
@@ -1205,7 +1217,7 @@ bool qxg_command::execute()
         }
         circ_qx = qxg(circ, map_qx3, map_qx3, statistics);
         std::cout << "Before: " << circ_qx.num_gates() << std::endl;
-        print_runtime();
+        // print_runtime();
         // circ_qx = optimize_circuit(circ_qx, statistics);
         // std::cout << "After: " << circ_qx.num_gates() << std::endl;
         // print_runtime();
@@ -1218,8 +1230,8 @@ bool qxg_command::execute()
             return true;
         }
         circ_qx = qxg(circ, map_qx5, map_qx5, statistics);
-        std::cout << "Before: " << circ_qx.num_gates() << std::endl;
-        print_runtime();
+        // std::cout << "Before: " << circ_qx.num_gates() << std::endl;
+        // print_runtime();
         // circ_qx = optimize_circuit(circ_qx, statistics);
         // std::cout << "After: " << circ_qx.num_gates() << std::endl;
         // print_runtime();
@@ -1235,7 +1247,7 @@ bool qxg_command::execute()
             circ_qx = qxg(circ, map_qx4, map_qx4, statistics);
         else
             circ_qx = qxg(circ, map_qx2, map_qx2, statistics);
-        print_runtime();
+        // print_runtime();
         //circ_qx = optimize_circuit(circ_qx, statistics);
     }
     if ( is_set( "new" ) )
