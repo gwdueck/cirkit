@@ -982,8 +982,8 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     // std::cout << "added initial cost: " << cost << std::endl;
     // std::cout << "total initial cost: " << cost + circ.num_gates() << std::endl;
     std::cout << cost + circ.num_gates();
-    aux = copy_matrix(aux, cnots); //Algorithm greedy 1
-    // aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
+    // aux = copy_matrix(aux, cnots); //Algorithm greedy 1
+    aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
 
     
     
@@ -1204,9 +1204,9 @@ bool qxg_command::execute()
         }
         circ_qx = qxg(circ, map_qx20, path_qx20, statistics);
         // print_runtime();
-        circ_qx = optimize_circuit(circ_qx, statistics);
+        // circ_qx = optimize_circuit(circ_qx, statistics);
         // print_runtime();
-        std::cout << "After: " << circ_qx.num_gates() << std::endl;
+        // std::cout << "After: " << circ_qx.num_gates() << std::endl;
     }
     else if ( is_set( "qx3" ) )
     {
@@ -1216,7 +1216,7 @@ bool qxg_command::execute()
             return true;
         }
         circ_qx = qxg(circ, map_qx3, map_qx3, statistics);
-        std::cout << "Before: " << circ_qx.num_gates() << std::endl;
+        // std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         // print_runtime();
         // circ_qx = optimize_circuit(circ_qx, statistics);
         // std::cout << "After: " << circ_qx.num_gates() << std::endl;
