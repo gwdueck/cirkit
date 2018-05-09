@@ -945,7 +945,8 @@ std::map<int, int> complete_permutation(std::map<int, int>& permutation, unsigne
         x.erase(std::remove(x.begin(), x.end(), it.first), x.end());
         y.erase(std::remove(y.begin(), y.end(), it.second), y.end());
     }
-    permutation.insert(std::pair<int, int>(x[0], y[0]));
+    for (int i = 0; i < x.size(); ++i)
+        permutation.insert(std::pair<int, int>(x[i], y[i]));
     return permutation;
 }
 
@@ -979,6 +980,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     while(permutation.size() < cnots.size() - 1)
     {   
         qubit1 = get_position_higher_value_matrix(aux);
+        if(aux[qubit1.first][qubit1.second] == 0) break;
         // std::cout << "Maior valor: ";
         // std::cout << "[" << qubit1.first << "][" << qubit1.second << "]: " << aux[qubit1.first][qubit1.second] << std::endl;
         aux[qubit1.first][qubit1.second] = 0;
@@ -1201,7 +1203,7 @@ bool qxg_command::execute()
             std::cout << "Only up to 16 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx3, path_qx3, statistics);
+        circ_qx = qxg(circ, map_qx3, map_qx3, statistics);
         std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         print_runtime();
         // circ_qx = optimize_circuit(circ_qx, statistics);
@@ -1215,7 +1217,7 @@ bool qxg_command::execute()
             std::cout << "Only up to 16 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx5, path_qx5, statistics);
+        circ_qx = qxg(circ, map_qx5, map_qx5, statistics);
         std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         print_runtime();
         // circ_qx = optimize_circuit(circ_qx, statistics);
