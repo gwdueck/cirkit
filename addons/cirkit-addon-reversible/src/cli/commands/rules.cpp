@@ -325,6 +325,74 @@ void apply_rule_Dseven ( circuit& circ, circuit::const_iterator& itGate, circuit
 	insert_toffoli ( circ, n, g.controls(), target );
 }
 
+//Insert control rule
+bool verify_rule_Dfive( const gate& ga, const gate& gb )
+{	
+	if( targets_same_line( ga, gb ) )
+		if( ga.controls().size() == 1 && gb.controls().size() == 1 )
+			if( !controls_same_line( ga, gb ) )
+				return true;
+	return false;
+
+}
+
+//inseting because of tabu ... I'll take a closer look 
+void apply_rule_Dfive( circuit::const_iterator& itGate, circuit::const_iterator& nextGate )
+{
+	unsigned l;
+	for( auto& v : itGate->controls() )
+		if( std::find(nextGate->controls().begin(), nextGate->controls().end(), v ) == nextGate->controls().end() )
+		{
+			l = v.line();
+			v.set_polarity( !v.polarity() ); 
+			nextGate->add_control( v );
+			v.set_polarity( !v.polarity() );
+		}
+	for( auto& z : nextGate->controls() )
+		if( std::find(itGate->controls().begin(), itGate->controls().end(), z ) == itGate->controls().end() )		
+			if( z.line() != l )
+			{
+				//std::cout << z.line() << l << std::endl;
+				z.set_polarity( !z.polarity() ); 
+				itGate->add_control( z );
+				z.set_polarity( !z.polarity() );
+			}
+}
+
+//Remove control rule
+bool verify_rule_Dfivee( const gate& ga, const gate& gb )
+{	
+	unsigned l = 0;
+	if( targets_same_line( ga, gb ) )
+		if( ga.controls().size() == 2 && gb.controls().size() == 2 )
+			for( const auto& v : ga.controls() )
+				for( const auto& z : gb.controls() )
+					if( v.line() == z.line() && v.polarity() != z.polarity() )
+						++l;
+	if( l == 2 )
+		return true;
+	else
+		return false;
+	return false;
+}
+
+void apply_rule_Dfivee( circuit::const_iterator& itGate, circuit::const_iterator& nextGate )
+{
+	bool l = false;
+	for( auto& v : itGate->controls() )
+		for( auto& z : nextGate->controls() )
+			if( v.line() == z.line() && v.polarity() != z.polarity() )
+			{
+				if( l )
+					itGate->remove_control( v );
+				else
+				{
+					nextGate->remove_control( z );
+					l = true;
+				}
+			}	
+}
+
 }
 
 // Local Variables:

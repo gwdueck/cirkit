@@ -25,9 +25,9 @@
  */
 
 /**
- * @file alex.hpp
+ * @file rules.hpp
  *
- * @brief Test
+ * @brief Some rules
  *
  * @author A.G.A.
  * @2
@@ -64,6 +64,11 @@ namespace cirkit
 	bool verify_rule_Dsix ( const gate& ga, const gate& gb );
 	bool verify_rule_Dseven ( const gate& ga, const gate& gb );
 	void apply_rule_Dseven ( circuit& circ, circuit::const_iterator& itGate, circuit::const_iterator& nextGate );
+
+	bool verify_rule_Dfive( const gate& ga, const gate& gb );
+	void apply_rule_Dfive( circuit::const_iterator& itGate, circuit::const_iterator& nextGate );
+	bool verify_rule_Dfivee( const gate& ga, const gate& gb );
+	void apply_rule_Dfivee( circuit::const_iterator& itGate, circuit::const_iterator& nextGate );
 }
 
 #endif

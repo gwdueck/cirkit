@@ -40,8 +40,10 @@
 #include <reversible/functions/reverse_circuit.hpp>
 
 #include <cli/commands/rules.hpp>
+#include <cli/commands/perm.hpp>
 
 #include <core/utils/program_options.hpp>
+#include <reversible/utils/permutation.hpp>
 
 using boost::program_options::value;
 
@@ -294,23 +296,32 @@ void testing( circuit& circ, const circuit orig )
 bool alex_command::execute()
 {
 	auto& circuits = env->store<circuit>();
-	if ( is_set( "random" ) )
-		selectRandom = true;
-	if( env->store<circuit>().current_index() >= 0 )
-	{
-	 	circuit circ, orig;
-	 	circ = circuits.current();
-	 	copy_circuit( circ, orig );
-	 	reverse_circuit( orig );
-	 	testing( circ, orig );
-	 	circuit_is_the_same( circ, orig );
-	 	circuits.current() = circ;
-	}
-	else
-	{
-		std::cout << "no circuit in store" << std::endl;
-	}
-	//selectRandom = false;
+	circuit circ;
+	circ = circuits.current();
+	std::vector<unsigned> ppp;
+	ppp = circuit_to_permutation(circ);
+
+	for (int i = 0; i < ppp.size(); ++i)
+		std::cout << " " << ppp[i];
+	std::cout << std::endl;
+
+	// if ( is_set( "random" ) )
+	// 	selectRandom = true;
+	// if( env->store<circuit>().current_index() >= 0 )
+	// {
+	//  	circuit circ, orig;
+	//  	circ = circuits.current();
+	//  	copy_circuit( circ, orig );
+	//  	reverse_circuit( orig );
+	//  	testing( circ, orig );
+	//  	circuit_is_the_same( circ, orig );
+	//  	circuits.current() = circ;
+	// }
+	// else
+	// {
+	// 	std::cout << "no circuit in store" << std::endl;
+	// }
+	// //selectRandom = false;
 	return true;
 }
 

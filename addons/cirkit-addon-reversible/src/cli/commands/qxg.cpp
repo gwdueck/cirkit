@@ -50,7 +50,7 @@
 
 using namespace boost::program_options;
 
-typedef std::vector<std::vector<int>> matrix;
+using matrix = std::vector<std::vector<int>>;
 
 //Matrix with the cost of each possible cnot (QX2)
 static const matrix map_qx2 = { {0,0,0,10,10},
@@ -981,10 +981,13 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     cost = initial_matrix(circ, cnots, map_cost, map);
     // std::cout << "added initial cost: " << cost << std::endl;
     // std::cout << "total initial cost: " << cost + circ.num_gates() << std::endl;
-    std::cout << cost + circ.num_gates();
+    std::cout << circ.num_gates();
     // aux = copy_matrix(aux, cnots); //Algorithm greedy 1
     aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
-
+    // std::cout << "cnots" << std::endl;
+    // print_matrix(cnots);
+    // std::cout << "cost" << std::endl;
+    // print_matrix(aux);
     
     
     while(permutation.size() < cnots.size() - 1)
