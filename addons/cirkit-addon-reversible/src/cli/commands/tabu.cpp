@@ -62,6 +62,7 @@ tabu_command::tabu_command(const environment::ptr& env)
     ( "n",value_with_default(&neighboorhod),	"Select the size of the neighboorhod" )
     ( "o",value_with_default(&overlap),			"Select the size of the overlap (%)" )
     ( "verbose,v",								"be verbose")
+    ( "step,s",									"be verbose and stpe-by-step")
     ;
     add_new_option();
 }
@@ -83,6 +84,117 @@ bool changed_circuit(circuit circ)
 		return false;
 	}
 	return true;
+}
+
+void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin, unsigned end )
+{
+	for( circuit::const_iterator itGate = circ.begin() + begin, nextGate = ++( circ.begin() + begin );  nextGate != circ.begin() + end; ++itGate, ++nextGate )
+	{
+		unsigned itGateIndex = itGate - circ.begin();
+		unsigned nextGateIndex = nextGate - circ.begin();
+		gate ga, gb;
+		
+		std::sort( itGate->controls().begin(), itGate->controls().end() );
+		std::sort( nextGate->controls().begin(), nextGate->controls().end() );
+		
+		ga.controls() = itGate->controls();
+		gb.controls() = nextGate->controls();
+		ga.targets() = itGate->targets();
+		gb.targets() = nextGate->targets();
+		
+		if( verify_rule_Done( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(1);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(-2);
+			x.push_back( v );
+		}
+	
+		apply_rule_Rfive( ga, gb );
+
+		if( verify_rule_Dtwo( ga, gb ) ) 
+		{
+			std::vector<int> v;
+			v.push_back(2);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(0);
+			x.push_back( v );
+		}
+
+		if( verify_rule_Dthree( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(3);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(-1);
+			x.push_back( v );
+		}
+		
+		if( verify_rule_Dfour( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(14);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(-1);
+			x.push_back( v );
+		}
+
+		if( verify_rule_Rfour( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(4);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(0);
+			x.push_back( v );
+		}
+		
+		if( verify_rule_Dfive( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(5);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(0);
+			x.push_back( v );
+		}
+		
+		if( verify_rule_Dfivee( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(-5);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(0);
+			x.push_back( v );
+		}
+
+		if( verify_rule_Dsix( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(6);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(0);
+			x.push_back( v );
+		}
+
+		if( verify_rule_Dseven( ga, gb ) )
+		{
+			std::vector<int> v;
+			v.push_back(7);
+			v.push_back(itGateIndex);
+			v.push_back(nextGateIndex);
+			v.push_back(1);
+			x.push_back( v );
+		}
+	}
+
 }
 
 void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin, unsigned end, bool verbose )
@@ -214,6 +326,60 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 
 }
 
+void apply_rule( circuit& circ, std::vector<std::vector<int>> x, unsigned y )
+{
+	circuit::const_iterator itGate = circ.begin(), nextGate = circ.begin();
+	switch( x[y][0] )
+	{
+		case 1:
+			apply_rule_Done( circ, x[y][1], x[y][2] );
+			break;
+		case 2:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			apply_rule_Dtwo( itGate, nextGate );
+			break;
+		case 3:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			apply_rule_Dthree( circ, itGate, nextGate );
+			break;
+		case 4:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			swap_gates( itGate, nextGate );
+			break;
+		case 5:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			apply_rule_Dfive( itGate, nextGate );
+			break;
+		case -5:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			apply_rule_Dfivee( itGate, nextGate );
+			break;
+		case 6:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			swap_gates( itGate, nextGate );
+			break;
+		case 7:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			apply_rule_Dseven( circ, itGate, nextGate );
+			break;
+		case 14:
+			std::advance( itGate, x[y][1] );
+			std::advance( nextGate, x[y][2] );
+			apply_rule_Dfour( circ, itGate, nextGate );
+			break;
+		default:
+			std::cout << "Something got wrong!" << std::endl;
+			break;
+	}
+}
+
 void apply_rule( circuit& circ, std::vector<std::vector<int>> x, unsigned y, bool verbose )
 {
 	circuit::const_iterator itGate = circ.begin(), nextGate = circ.begin();
@@ -221,95 +387,59 @@ void apply_rule( circuit& circ, std::vector<std::vector<int>> x, unsigned y, boo
 	{
 		case 1:
 			apply_rule_Done( circ, x[y][1], x[y][2] );
-			// std::cout << "Rule D1 applied" << std::endl;
+			std::cout << "Rule D1 applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case 2:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			apply_rule_Dtwo( itGate, nextGate );
-			// std::cout << "Rule D2 applied" << std::endl;
+			std::cout << "Rule D2 applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case 3:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			apply_rule_Dthree( circ, itGate, nextGate );
-			// std::cout << "Rule D3 applied" << std::endl;
+			std::cout << "Rule D3 applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case 4:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			swap_gates( itGate, nextGate );
-			// std::cout << "Rule swap applied" << std::endl;
+			std::cout << "Rule swap applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case 5:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			apply_rule_Dfive( itGate, nextGate );
-			// std::cout << "Rule D5 applied" << std::endl;
+			std::cout << "Rule D5 applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case -5:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			apply_rule_Dfivee( itGate, nextGate );
-			// std::cout << "Rule D5.1 applied" << std::endl;
+			std::cout << "Rule D5.1 applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case 6:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			swap_gates( itGate, nextGate );
-			// std::cout << "Rule swap applied" << std::endl;
+			std::cout << "Rule swap applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case 7:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			apply_rule_Dseven( circ, itGate, nextGate );
-			// std::cout << "Rule D7 applied" << std::endl;
+			std::cout << "Rule D7 applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		case 14:
 			std::advance( itGate, x[y][1] );
 			std::advance( nextGate, x[y][2] );
 			apply_rule_Dfour( circ, itGate, nextGate );
-			// std::cout << "Rule D4 applied" << std::endl;
+			std::cout << "Rule D4 applied " << x[y][1] + 1 << " " << x[y][2] + 1 << std::endl;
 			break;
 		default:
 			std::cout << "Something got wrong!" << std::endl;
 			break;
-	}
-	if(verbose)
-	{
-		switch( x[y][0] )
-		{
-			case 1:
-				std::cout << "Rule D1 applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case 2:
-				std::cout << "Rule D2 applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case 3:
-				std::cout << "Rule D3 applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case 4:
-				std::cout << "Rule swap applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case 5:
-				std::cout << "Rule D5 applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case -5:
-				std::cout << "Rule D5.1 applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case 6:
-				std::cout << "Rule swap applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case 7:
-				std::cout << "Rule D7 applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			case 14:
-				std::cout << "Rule D4 applied " << x[y][1] << " " << x[y][2] << std::endl;
-				break;
-			default:
-				std::cout << "Something got wrong!" << std::endl;
-				break;
-		}
 	}
 }
 
@@ -347,7 +477,6 @@ void choosing_rule(circuit& circ, matrix x, matrix& tp, bool verbose)
 		{
 			if(x[k][0] == tp[i][0] && x[k][1] == tp[i][1] && x[k][2] == tp[i][2])
 			{
-				++tp[i][3];
 				insert = false;
 				break;
 			}
@@ -360,6 +489,41 @@ void choosing_rule(circuit& circ, matrix x, matrix& tp, bool verbose)
 			break;
 		}
 	}
+	for(unsigned i = 0; i < tp.size(); ++i)
+		++tp[i][3];
+}
+
+//Function to decide which rule must be applied
+void choosing_rule(circuit& circ, matrix x, matrix& tp)
+{
+	bool insert;
+	//std::cout << t.size() << std::endl;
+	for(unsigned k = 0; k < x.size(); ++k)
+	{
+		if(x[k][3] < 0)
+		{
+			apply_rule(circ, x, k);
+			break;
+		}
+		insert = true;
+		for(unsigned i = 0; i < tp.size(); ++i)
+		{
+			if(x[k][0] == tp[i][0] && x[k][1] == tp[i][1] && x[k][2] == tp[i][2])
+			{
+				insert = false;
+				break;
+			}
+		}
+		if(insert)
+		{
+			x[k][3] = 0;
+			tp.push_back( x[k] );
+			apply_rule( circ, x, k );
+			break;
+		}
+	}
+	for(unsigned i = 0; i < tp.size(); ++i)
+		++tp[i][3];
 }
 
 //Update the tabu list (penalization)
@@ -393,7 +557,7 @@ bool update_circuit(circuit& circ, circuit& min)
 	return false;
 }
 
-void tabu_search( circuit& circ, unsigned overlap, unsigned neighboorhod, const properties::ptr& statistics, bool verbose )
+void tabu_search( circuit& circ, unsigned overlap, unsigned neighboorhod, const properties::ptr& statistics )
 {
 	properties_timer t( statistics );
 	unsigned stop = 0, begin, end;
@@ -431,31 +595,102 @@ void tabu_search( circuit& circ, unsigned overlap, unsigned neighboorhod, const 
 		//std::cout << "begin: " << begin << " end: " << end << std::endl;
 	 	stop = 0;
 	 	unsigned int improvement = circ.num_gates();
+	 	tp.clear();
 	 	while(stop < neighboorhod * 50)
 	 	{
-	 		if(verbose)
-	 			std::cout << circ << std::endl;
-	 		list_rules(circ, x, begin, end, verbose);
+	 		list_rules(circ, x, begin, end);
 	 		sortrows(x, 3);
-	 		if(verbose)
-	 		{
-		 		std::cout << "++++++++++ INICIO LISTA DE REGRAS +++++++++++" << std::endl;
-	 			print_matrix( x );
-	 		}
-	 		choosing_rule(circ, x, tp, verbose);
+	 		choosing_rule(circ, x, tp);
 	 		update_tabu_list(tp, neighboorhod);
-	 		if(verbose)
-	 		{
-	 			std::cout << "++++++++++ INICIO LISTA TABU  +++++++++++" << std::endl;
-	 			print_matrix( tp );	 			
-	 		}
 	 		if(!update_circuit(circ, min))
 	 			++stop;
 	 		else
 	 			stop = 0;
 	 		x.clear();
-	 		if(verbose)
-	 			std::cin.get();
+
+	 		if(end > circ.num_gates())
+				end = circ.num_gates();
+			if(circ.num_gates() == 0)
+			{
+				finish = true;
+				break;
+			}
+	 	}
+	 	clear_circuit(circ);
+	 	copy_circuit(min, circ);
+	 	improvement = improvement - min.num_gates();
+	 	//std::cout << "improvement: " << improvement << std::endl;
+	 	//std::cin.get();
+	 	begin = begin + (neighboorhod - overlap) - improvement;
+	 	end = begin + neighboorhod;
+	}
+	clear_circuit(circ);
+	copy_circuit(min, circ);
+}
+
+void tabu_search( circuit& circ, unsigned overlap, unsigned neighboorhod, const properties::ptr& statistics, bool verbose, bool step )
+{
+	properties_timer t( statistics );
+	unsigned stop = 0, begin, end;
+	bool finish = false;
+	matrix x; //list of possible rules of the current iteration
+	matrix tp; //tabu list with the penalization
+	circuit orig, min;
+
+	copy_circuit( circ, orig );
+ 	copy_circuit( circ, min );
+ 	reverse_circuit( orig );
+ 	begin = 0;
+	end = neighboorhod;
+	overlap = (overlap * neighboorhod) * 0.01;
+
+	while(!finish)
+	{ 	
+		if(end > circ.num_gates())
+		{
+			end = circ.num_gates();
+			if(end < neighboorhod)
+			{
+				begin = 0;
+			}
+			else
+			{
+				begin = end - neighboorhod;
+			}
+			finish = true;
+		}
+		else if(int(begin) < 0)
+		{
+			begin = 0;
+		}
+		//std::cout << "begin: " << begin << " end: " << end << std::endl;
+	 	stop = 0;
+	 	tp.clear();
+	 	unsigned int improvement = circ.num_gates();
+	 	while(stop < neighboorhod * 50)
+	 	{
+	 		std::cout << "++++++++++ ITERATION " << stop << " +++++++++++" << std::endl;
+	 		std::cout << circ << std::endl;
+	 		list_rules(circ, x, begin, end, verbose);
+	 		sortrows(x, 3);
+	 		std::cout << "++++++++++ BEGIN LIST OF RULES +++++++++++" << std::endl;
+ 			print_matrix( x );
+	 		choosing_rule(circ, x, tp, verbose);
+	 		update_tabu_list(tp, neighboorhod);
+ 			std::cout << "++++++++++ BEGIN TABU LIST +++++++++++" << std::endl;
+ 			print_matrix( tp );
+	 		if(!update_circuit(circ, min))
+	 		{
+	 			++stop;
+	 		}
+	 		else
+	 		{
+	 			stop = 0;
+	 			std::cout << "++++++++++ CIRCUIT UPDATED +++++++++++" << std::endl;
+	 		}
+	 		x.clear();
+	 		if(step)
+ 				std::cin.get();
 
 	 		if(end > circ.num_gates())
 				end = circ.num_gates();
@@ -480,23 +715,28 @@ void tabu_search( circuit& circ, unsigned overlap, unsigned neighboorhod, const 
 
 bool tabu_command::execute()
 {
-	auto& circuits = env->store<circuit>();	
-	circuit circ = circuits.current();;
+	circuit aux, circ;
+	auto& circuits = env->store<circuit>();
+	aux = circuits.current();
+	copy_circuit(aux, circ);
  	unsigned int initialgates = circ.num_gates();
- 	bool verbose = false;
- 	if ( is_set("verbose") )
- 		verbose = true;
- 	tabu_search( circ, overlap, neighboorhod, statistics, verbose );
- 	
+
+ 	if ( is_set("verbose") && is_set("step") )
+ 		tabu_search( circ, overlap, neighboorhod, statistics, true, true );
+ 	else if ( is_set("verbose") && !is_set("step") )
+ 		tabu_search( circ, overlap, neighboorhod, statistics, true, false );
+ 	else
+ 		tabu_search( circ, overlap, neighboorhod, statistics);
 	if ( is_set( "new" ) )
         circuits.extend();    
  	circuits.current() = circ;
 
-    std::cout << initialgates << "	" << circ.num_gates() << std::endl;
+    std::cout << " Begin gates: " << initialgates <<std::endl; 
+    std::cout << " Final gates: " << circ.num_gates() << std::endl;
     print_runtime();
     
     if (!changed_circuit(circ))
-    	std::cout << "PAU" << std::endl;
+    	std::cout << "BRRRRRR" << std::endl;
 
 	return true;
 }
