@@ -483,14 +483,14 @@ void choosing_rule(circuit& circ, matrix x, matrix& tp, bool verbose)
 		}
 		if(insert)
 		{
+			for(unsigned i = 0; i < tp.size(); ++i)
+				++tp[i][3];
 			x[k][3] = 0;
 			tp.push_back( x[k] );
 			apply_rule( circ, x, k, verbose );
 			break;
 		}
 	}
-	for(unsigned i = 0; i < tp.size(); ++i)
-		++tp[i][3];
 }
 
 //Function to decide which rule must be applied
@@ -516,14 +516,15 @@ void choosing_rule(circuit& circ, matrix x, matrix& tp)
 		}
 		if(insert)
 		{
+			for(unsigned i = 0; i < tp.size(); ++i)
+				++tp[i][3];
 			x[k][3] = 0;
 			tp.push_back( x[k] );
 			apply_rule( circ, x, k );
 			break;
 		}
 	}
-	for(unsigned i = 0; i < tp.size(); ++i)
-		++tp[i][3];
+	
 }
 
 //Update the tabu list (penalization)
