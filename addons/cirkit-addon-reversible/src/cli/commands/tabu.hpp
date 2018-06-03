@@ -52,10 +52,11 @@ protected:
   rules_t validity_rules() const;
 
 private:
-	unsigned iteration = 500u;
-	unsigned penalization = 10u;
-	unsigned neighboorhod = 10u;
-	unsigned overlap = 70u;
+  unsigned int iteration = 500u;
+	unsigned int opt = 0u;
+	unsigned int penalization = 10u;
+	unsigned int neighborhood = 10u;
+	unsigned int overlap = 70u;
 	
 public:
   log_opt_t log() const;
