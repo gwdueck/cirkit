@@ -90,8 +90,8 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 {
 	for( circuit::const_iterator itGate = circ.begin() + begin, nextGate = ++( circ.begin() + begin );  nextGate != circ.begin() + end; ++itGate, ++nextGate )
 	{
-		unsigned itGateIndex = itGate - circ.begin();
-		unsigned nextGateIndex = nextGate - circ.begin();
+		unsigned int itGateIndex = itGate - circ.begin();
+		unsigned int nextGateIndex = nextGate - circ.begin();
 		gate ga, gb;
 		
 		std::sort( itGate->controls().begin(), itGate->controls().end() );
@@ -101,6 +101,10 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		gb.controls() = nextGate->controls();
 		ga.targets() = itGate->targets();
 		gb.targets() = nextGate->targets();
+
+		std::cout << "tamanho gate a: " << ga.controls().size() << std::endl;
+		std::cout << "tamanho gate b: " << gb.controls().size() << std::endl;
+
 		
 		if( verify_rule_Done( ga, gb ) )
 		{
@@ -108,6 +112,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(1);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(-2);
 			v.push_back(-2);
 			x.push_back( v );
 		}
@@ -121,6 +126,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
+			v.push_back(0);
 			x.push_back( v );
 		}
 
@@ -130,6 +136,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(3);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(-1);
 			v.push_back(-1);
 			x.push_back( v );
 		}
@@ -141,6 +148,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(-1);
+			v.push_back(-1);
 			x.push_back( v );
 		}
 
@@ -150,6 +158,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(4);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(0);
 			v.push_back(0);
 			x.push_back( v );
 		}
@@ -161,6 +170,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
+			v.push_back(0);
 			x.push_back( v );
 		}
 		
@@ -170,6 +180,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(-5);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(0);
 			v.push_back(0);
 			x.push_back( v );
 		}
@@ -181,6 +192,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
+			v.push_back(0);
 			x.push_back( v );
 		}
 
@@ -190,6 +202,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(7);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(1);
 			v.push_back(1);
 			x.push_back( v );
 		}
@@ -222,6 +235,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(-2);
+			v.push_back(-2);
 			x.push_back( v );
 		}
 	
@@ -236,6 +250,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
+			v.push_back(0);
 			x.push_back( v );
 		}
 
@@ -247,6 +262,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(3);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(-1);
 			v.push_back(-1);
 			x.push_back( v );
 		}
@@ -260,6 +276,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(-1);
+			v.push_back(-1);
 			x.push_back( v );
 		}
 
@@ -271,6 +288,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(4);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(0);
 			v.push_back(0);
 			x.push_back( v );
 		}
@@ -284,6 +302,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
+			v.push_back(0);
 			x.push_back( v );
 		}
 		
@@ -295,6 +314,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(-5);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(0);
 			v.push_back(0);
 			x.push_back( v );
 		}
@@ -308,6 +328,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
+			v.push_back(0);
 			x.push_back( v );
 		}
 
@@ -319,6 +340,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(7);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
+			v.push_back(1);
 			v.push_back(1);
 			x.push_back( v );
 		}
