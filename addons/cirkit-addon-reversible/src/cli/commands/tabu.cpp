@@ -123,7 +123,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 	{
 		unsigned int itGateIndex = itGate - circ.begin();
 		unsigned int nextGateIndex = nextGate - circ.begin();
-		unsigned int gaCost, gbCost; //Quantum cost of the gates
+		int gaCost, gbCost; //Quantum cost of the gates
 		unsigned int gaControls, gbControls; //Controls of the gates
 
 		
@@ -147,7 +147,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D1] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be removed.\t\tCost=-2" << std::endl;
+				std::cout  << "[D1] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be removed.\t\tCost=-2;\t\tQCost:" << -1*(gaCost + gbCost) << std::endl;
 			v.push_back(1);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
@@ -162,7 +162,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[R5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\tNo cost change" << std::endl;
+				std::cout  << "[R5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\tNo cost change;" << std::endl;
 			v.push_back(2);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
@@ -175,7 +175,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D3] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost" << std::endl;
+				std::cout  << "[D3] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*(gaCost-1) << std::endl;
 			v.push_back(3);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
@@ -187,16 +187,24 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		if( verify_rule_Dfour( ga, gb ) )
 		{
 			std::vector<int> v;
-			if(verbose)
-				std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost" << std::endl;
+			// if(verbose)
+			// 	std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost" << std::endl;
 			v.push_back(14);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(-1);
 			if(gaControls > gbControls)
+			{
 				v.push_back(-1*gaCost);
+				if(verbose)
+					std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*gaCost << std::endl;
+			}
 			else
+			{
+				if(verbose)
+					std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*gbCost << std::endl;
 				v.push_back(-1*gbCost);
+			}
 			x.push_back( v );
 		}
 
@@ -204,7 +212,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[R4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\tNo cost change" << std::endl;
+				std::cout  << "[R4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\tNo cost change;" << std::endl;
 			v.push_back(4);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
@@ -217,7 +225,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can insert controls.\t\tNo cost change" << std::endl;
+				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can insert controls.\t\tNo cost change;\tQCost:" << quantum_cost(gaControls+1) + quantum_cost(gbControls+1) << std::endl;
 			v.push_back(5);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
@@ -230,7 +238,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can remove controls.\t\tNo cost change" << std::endl;
+				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can remove controls.\t\tNo cost change;\tQCost:" << -1*(quantum_cost(gaControls+1) + quantum_cost(gbControls+1)) <<std::endl;
 			v.push_back(-5);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
@@ -243,7 +251,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D6] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\tNo cost change" << std::endl;
+				std::cout  << "[D6] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\tNo cost change;" << std::endl;
 			v.push_back(6);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
@@ -256,7 +264,7 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D7] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\t++Cost" << std::endl;
+				std::cout  << "[D7] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\t++Cost;\t\tQCost:" << quantum_cost(gaControls + gbControls) << std::endl;
 			v.push_back(7);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
