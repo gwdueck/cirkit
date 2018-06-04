@@ -87,34 +87,50 @@ bool changed_circuit(circuit circ)
 	return true;
 }
 
-unsigned int quantum_cost(unsigned int control)
+int ncv_cost(unsigned int control)
 {
 	//Assuming negative control with the same cost
 	switch (control){
 		case 0:
 			return 1;
-			break;
 		case 1:
 			return 1;
-			break;
 		case 2:
 			return 5;
-			break;
 		case 3:
-			return 13;
-			break;
+			return 20;
 		case 4:
-			return 29;
-			break;
-		case 5:
-			return 61;
-			break;
-		case 6:
-			return 125;
-			break;
+			return 50;
 		default:
-			return control;		
+			return 40*(control-3);		
 	}
+}
+
+int t_depth(unsigned int control)
+{
+	//Assuming negative control with the same cost
+	switch (control){
+		case 0:
+			return 0;
+		case 1:
+			return 0;
+		case 2:
+			return 3;
+		case 3:
+			return 12;
+		case 4:
+			return 30;
+		default:
+			return 24*(control-3);		
+	}
+}
+
+unsigned int circuit_ncv_cost(circuit& circ)
+{
+	unsigned int cost = 0;
+	for (auto g : circ)
+ 		cost += ncv_cost(g.controls().size());
+ 	return cost;
 }
 
 void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin, unsigned end, bool verbose )
@@ -123,10 +139,9 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 	{
 		unsigned int itGateIndex = itGate - circ.begin();
 		unsigned int nextGateIndex = nextGate - circ.begin();
-		int gaCost, gbCost; //Quantum cost of the gates
+		int gaNCVCost, gbNCVCost, gaTdepth, gbTdepth; //Quantum cost of the gates
 		unsigned int gaControls, gbControls; //Controls of the gates
 
-		
 		gate ga, gb;
 		
 		std::sort( itGate->controls().begin(), itGate->controls().end() );
@@ -140,19 +155,21 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		gaControls = ga.controls().size();
 		gbControls = gb.controls().size();
 
-		gaCost = quantum_cost(ga.controls().size());
-		gbCost = quantum_cost(gb.controls().size());
-		
+		gaNCVCost = ncv_cost(ga.controls().size());
+		gbNCVCost = ncv_cost(gb.controls().size());
+		gaTdepth = t_depth(ga.controls().size());
+		gbTdepth = t_depth(gb.controls().size());
+
 		if( verify_rule_Done( ga, gb ) )
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D1] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be removed.\t\tCost=-2;\t\tQCost:" << -1*(gaCost + gbCost) << std::endl;
+				std::cout  << "[D1] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be removed.\t\tCost=-2;\t\tQCost:" << -1*(gaNCVCost + gbNCVCost) << std::endl;
 			v.push_back(1);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(-2);
-			v.push_back(-1*(gaCost + gbCost));
+			v.push_back(-1*(gaNCVCost + gbNCVCost));
 			x.push_back( v );
 		}
 	
@@ -175,12 +192,12 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D3] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*(gaCost-1) << std::endl;
+				std::cout  << "[D3] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*(gaNCVCost-1) << std::endl;
 			v.push_back(3);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(-1);
-			v.push_back(-1*(gaCost-1));
+			v.push_back(-1*(gaNCVCost-1));
 			x.push_back( v );
 		}
 		
@@ -195,15 +212,15 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 			v.push_back(-1);
 			if(gaControls > gbControls)
 			{
-				v.push_back(-1*gaCost);
+				v.push_back(-1*gaNCVCost);
 				if(verbose)
-					std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*gaCost << std::endl;
+					std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*gaNCVCost << std::endl;
 			}
 			else
 			{
 				if(verbose)
-					std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*gbCost << std::endl;
-				v.push_back(-1*gbCost);
+					std::cout  << "[D4] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be merged.\t\t\t--Cost;\t\tQCost:" << -1*gbNCVCost << std::endl;
+				v.push_back(-1*gbNCVCost);
 			}
 			x.push_back( v );
 		}
@@ -225,12 +242,12 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can insert controls.\t\tNo cost change;\tQCost:" << quantum_cost(gaControls+1) + quantum_cost(gbControls+1) << std::endl;
+				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can insert controls.\t\tNo cost change;\tQCost:" << ncv_cost(gaControls+1) + ncv_cost(gbControls+1) << std::endl;
 			v.push_back(5);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
-			v.push_back(quantum_cost(gaControls+1) + quantum_cost(gbControls+1));
+			v.push_back(ncv_cost(gaControls+1) + ncv_cost(gbControls+1));
 			x.push_back( v );
 		}
 		
@@ -238,12 +255,12 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can remove controls.\t\tNo cost change;\tQCost:" << -1*(quantum_cost(gaControls+1) + quantum_cost(gbControls+1)) <<std::endl;
+				std::cout  << "[D5] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can remove controls.\t\tNo cost change;\tQCost:" << -1*(ncv_cost(gaControls+1) + ncv_cost(gbControls+1)) <<std::endl;
 			v.push_back(-5);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(0);
-			v.push_back(-1*(quantum_cost(gaControls+1) + quantum_cost(gbControls+1)));
+			v.push_back(-1*(ncv_cost(gaControls+1) + ncv_cost(gbControls+1)));
 			x.push_back( v );
 		}
 
@@ -264,12 +281,12 @@ void list_rules( circuit circ, std::vector<std::vector<int>>& x, unsigned begin,
 		{
 			std::vector<int> v;
 			if(verbose)
-				std::cout  << "[D7] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\t++Cost;\t\tQCost:" << quantum_cost(gaControls + gbControls) << std::endl;
+				std::cout  << "[D7] Gates ( " << itGateIndex << " - " << itGateIndex + 1 << " ) can be interchanged.\t\t++Cost;\t\tQCost:" << ncv_cost(gaControls + gbControls) << std::endl;
 			v.push_back(7);
 			v.push_back(itGateIndex);
 			v.push_back(nextGateIndex);
 			v.push_back(1);
-			v.push_back(quantum_cost(gaControls + gbControls));
+			v.push_back(ncv_cost(gaControls + gbControls));
 			x.push_back( v );
 		}
 	}
@@ -396,23 +413,11 @@ void apply_rule( circuit& circ, std::vector<std::vector<int>> x, unsigned y, boo
 //Sort the vector of the rules
 void sortrows(matrix& x, int col)
 {    
-	if(col > 4)
-	{
-		std::sort(	x.begin(),
-              		x.end(),
-              		[col](const std::vector<int>& lhs, const std::vector<int>& rhs) {
-                  		return lhs[col] < rhs[col];
-              });
-	}
-	else
-	{
-		std::sort(	x.begin(),
-              		x.end(),
-              		[col](const std::vector<int>& lhs, const std::vector<int>& rhs) {
-                  		return lhs[col] < rhs[col];
-              });
-	}
-	
+	std::sort(	x.begin(),
+	      		x.end(),
+	      		[col](const std::vector<int>& lhs, const std::vector<int>& rhs) {
+	          		return lhs[col] < rhs[col];
+	      });
 }
 
 //Print vector
@@ -508,19 +513,25 @@ void update_tabu_list(matrix& tp, int penalization)
 }
 
 //Save the minimum circuit found
-bool update_circuit(circuit& circ, circuit& min)
+bool update_circuit(circuit& circ, circuit& min, unsigned opt)
 {
-	if(circ.num_gates() > min.num_gates() + 3)
-	{
-		clear_circuit(circ);
-		copy_circuit(min, circ);	
-	}
-	else if(circ.num_gates() < min.num_gates())
-	{
-		clear_circuit(min);
-		copy_circuit(circ, min);
-		//std::cout << " Minimo: " << min.num_gates() << std::endl;
-		return true;
+	switch(opt){
+		case 0:
+			if(circ.num_gates() < min.num_gates())
+			{
+				clear_circuit(min);
+				copy_circuit(circ, min);
+				//std::cout << " Minimo: " << min.num_gates() << std::endl;
+				return true;
+			}
+		default:
+			if(circuit_ncv_cost(circ) < circuit_ncv_cost(min))
+			{
+				clear_circuit(min);
+				copy_circuit(circ, min);
+				//std::cout << " Minimo: " << min.num_gates() << std::endl;
+				return true;
+			}
 	}
 	return false;
 }
@@ -570,7 +581,7 @@ void tabu_search( circuit& circ, unsigned overlap, unsigned neighborhood, const 
 	 		sortrows(x, opt+3);
 	 		choosing_rule(circ, x, tp);
 	 		update_tabu_list(tp, neighborhood);
-	 		if(!update_circuit(circ, min))
+	 		if(!update_circuit(circ, min, opt))
 	 			++stop;
 	 		else
 	 			stop = 0;
@@ -649,7 +660,7 @@ void tabu_search( circuit& circ, unsigned overlap, unsigned neighborhood, const 
  			std::cout << "++++++++++ BEGIN TABU LIST +++++++++++" << std::endl;
  			print_list( tp );
  			std::cout << "++++++++++   END TABU LIST +++++++++++" << std::endl;	
-	 		if(!update_circuit(circ, min))
+	 		if(!update_circuit(circ, min, opt))
 	 		{
 	 			++stop;
 	 		}
@@ -691,8 +702,8 @@ bool tabu_command::execute()
 	copy_circuit(aux, circ);
  	unsigned int InitialGatesCost, InitialQuantumCost = 0, FinalQuantumCost = 0;
  	InitialGatesCost = circ.num_gates();
- 	for (auto g : circ)
- 		InitialQuantumCost += quantum_cost(g.controls().size());
+ 	
+ 	InitialQuantumCost = circuit_ncv_cost(circ);
 
  	if ( is_set("verbose") && is_set("step") )
  		tabu_search( circ, overlap, neighborhood, statistics, opt, true, true );
@@ -704,13 +715,12 @@ bool tabu_command::execute()
         circuits.extend();    
  	circuits.current() = circ;
 
- 	for (auto g : circ)
- 		FinalQuantumCost += quantum_cost(g.controls().size());
+ 	FinalQuantumCost = circuit_ncv_cost(circ);
 
     std::cout << " Begin gates: " << InitialGatesCost <<std::endl; 
     std::cout << " Final gates: " << circ.num_gates() << std::endl;
     std::cout << " Begin quantum cost: " << InitialQuantumCost <<std::endl; 
-    std::cout << " Final gates: " << FinalQuantumCost << std::endl;
+    std::cout << " Final quantum cost: " << FinalQuantumCost << std::endl;
     print_runtime();
     
     if (!changed_circuit(circ))
