@@ -35,6 +35,7 @@
 #include <reversible/functions/add_circuit.hpp>
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/copy_metadata.hpp>
 #include <reversible/functions/clear_circuit.hpp>
 #include <reversible/functions/is_identity.hpp>
 #include <reversible/functions/reverse_circuit.hpp>
@@ -293,17 +294,56 @@ void testing( circuit& circ, const circuit orig )
 		std::cout << "Number of gates-> Start: " << start << " Min: " << min << " Max: " << max << std::endl;
 }
 
-bool alex_command::execute()
+void print_perm(std::vector<unsigned>& ppp)
 {
-	auto& circuits = env->store<circuit>();
-	circuit circ;
-	circ = circuits.current();
-	std::vector<unsigned> ppp;
-	ppp = circuit_to_permutation(circ);
-
 	for (int i = 0; i < ppp.size(); ++i)
 		std::cout << " " << ppp[i];
 	std::cout << std::endl;
+}
+
+std::string vector_to_string(std::vector<unsigned>& ppp)
+{
+	std::string p;
+	for (int i = 0; i < ppp.size(); ++i)
+		p.append(std::to_string(ppp[i]));
+	return p;
+}
+
+bool alex_command::execute()
+{
+	auto& circuits = env->store<circuit>();
+	circuit circ, aux;
+	circ = circuits.current();
+	
+	std::vector<unsigned> ppp;
+	std::vector<std::string> m;
+	std::string p;
+
+	copy_metadata(circ, aux);
+	// ppp = circuit_to_permutation(circ);
+	// print_perm(ppp);
+
+	unsigned int y = 0;
+	unsigned int total = circ.num_gates();
+	for(auto g : circ)
+	{
+		++y;
+		std::cout << "\r" << (y*100)/total << "%";
+		std::cout.flush();
+		aux.append_gate() = g;
+		ppp = circuit_to_permutation(aux);
+		p = vector_to_string(ppp);
+		auto x = std::find(m.begin(), m.end(), p); 
+		if(x != m.end())
+			std::cout << "\nEncontrou igual! " << y << " " << (x-m.begin())+1 << std::endl;
+		m.push_back(p);
+	}
+	std::cout << std::endl;
+
+	//imprimir o vetor com as permutacoes
+	// for (int i = 0; i < m.size(); ++i)
+	// 	std::cout << m[i] << std::endl;
+
 
 	// if ( is_set( "random" ) )
 	// 	selectRandom = true;
