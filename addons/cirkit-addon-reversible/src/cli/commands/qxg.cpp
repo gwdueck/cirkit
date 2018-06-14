@@ -981,21 +981,17 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     cost = initial_matrix(circ, cnots, map_cost, map);
     // std::cout << "added initial cost: " << cost << std::endl;
     // std::cout << "total initial cost: " << cost + circ.num_gates() << std::endl;
-<<<<<<< HEAD
     std::cout << cost + circ.num_gates();
     aux = copy_matrix(aux, cnots); //Algorithm greedy 1
     // aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
 
-=======
-    std::cout << circ.num_gates();
     // aux = copy_matrix(aux, cnots); //Algorithm greedy 1
     aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
     // std::cout << "cnots" << std::endl;
     // print_matrix(cnots);
     // std::cout << "cost" << std::endl;
     // print_matrix(aux);
->>>>>>> a15f9df722c9ae8add1fa584888c39fdd3bfce72
-    
+  
     
     while(permutation.size() < cnots.size() - 1)
     {   
