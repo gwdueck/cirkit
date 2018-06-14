@@ -105,6 +105,8 @@
 #include <cli/commands/permute_lines.hpp>
 #include <cli/commands/reduce.hpp>
 #include <cli/commands/graph.hpp>
+#include <cli/commands/tabu.hpp>
+
 
 using namespace cirkit;
 
@@ -225,6 +227,7 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( alex );
   ADD_COMMAND( invert );
   ADD_COMMAND( rm_dup );
+  ADD_COMMAND( tabu );
 
 
 ALICE_END

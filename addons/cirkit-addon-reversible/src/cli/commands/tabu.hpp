@@ -25,57 +25,46 @@
  */
 
 /**
- * @file move_qubit.hpp
+ * @file tabu.hpp
  *
- * @brief Move a qubit from a to b (this is a partial swap)
+ * @brief Tabu Search to optimize reversible circuit
  *
- * @author Gerhard Dueck
- * @since  2.3
+ * @author A.G.A.
+ * @2
  */
 
-#ifndef MOVE_QUBIT_HPP
-#define MOVE_QUBIT_HPP
+#ifndef CLI_TABU_COMMAND_HPP
+#define CLI_TABU_COMMAND_HPP
 
-#include <string>
-
-
+#include <reversible/circuit.hpp>
+#include <cli/cirkit_command.hpp>
 
 namespace cirkit
 {
-    /* cab = move control from a to b given cnot(a,b)
-     cba = move control from a to b given cnot(b,a)
-     tab = move target from a to b given cnot(a,b)
-     tba = move target from a to b given cnot(b,a)
-     flip =
-     (appended by i = inverse)
-     */
-     enum move_qubit_type { cab, cba, tab, tba, cabi, cbai, tabi, tbai, nop, flip };
-    static move_qubit_type inverse_type[10] = {cabi, cbai, tabi, tbai, cab, cba, tab, tba, nop, flip };
-        
-    
-    inline move_qubit_type invert_type( move_qubit_type a);
 
-    class MoveQubit{
-    private:
-        
-        static const std::string type_name[10];
-        static const int move_cost[10];
-        move_qubit_type mv_type;
-        int v,w;
+class tabu_command : public cirkit_command
+    {
     public:
-        MoveQubit() {};
-        MoveQubit( move_qubit_type, int, int );
-        void set( move_qubit_type, int, int );
-        void print();
-        int cost();
-        void invert();
-    };
-    
+        tabu_command( const environment::ptr& env );
 
+protected:
+  bool execute();
+  rules_t validity_rules() const;
+
+private:
+  unsigned int iteration = 500u;
+	unsigned int opt = 0u;
+	unsigned int penalization = 10u;
+	unsigned int neighborhood = 10u;
+	unsigned int overlap = 70u;
+	
+public:
+  log_opt_t log() const;
+};
 
 }
 
-#endif /* MOVE_QUBIT_HPP */
+#endif
 
 // Local Variables:
 // c-basic-offset: 2

@@ -35,13 +35,16 @@
 #include <reversible/functions/add_circuit.hpp>
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/copy_metadata.hpp>
 #include <reversible/functions/clear_circuit.hpp>
 #include <reversible/functions/is_identity.hpp>
 #include <reversible/functions/reverse_circuit.hpp>
 
 #include <cli/commands/rules.hpp>
+#include <cli/commands/perm.hpp>
 
 #include <core/utils/program_options.hpp>
+#include <reversible/utils/permutation.hpp>
 
 using boost::program_options::value;
 
@@ -291,26 +294,74 @@ void testing( circuit& circ, const circuit orig )
 		std::cout << "Number of gates-> Start: " << start << " Min: " << min << " Max: " << max << std::endl;
 }
 
+void print_perm(std::vector<unsigned>& ppp)
+{
+	for (int i = 0; i < ppp.size(); ++i)
+		std::cout << " " << ppp[i];
+	std::cout << std::endl;
+}
+
+std::string vector_to_string(std::vector<unsigned>& ppp)
+{
+	std::string p;
+	for (int i = 0; i < ppp.size(); ++i)
+		p.append(std::to_string(ppp[i]));
+	return p;
+}
+
 bool alex_command::execute()
 {
 	auto& circuits = env->store<circuit>();
-	if ( is_set( "random" ) )
-		selectRandom = true;
-	if( env->store<circuit>().current_index() >= 0 )
+	circuit circ, aux;
+	circ = circuits.current();
+	
+	std::vector<unsigned> ppp;
+	std::vector<std::string> m;
+	std::string p;
+
+	copy_metadata(circ, aux);
+	// ppp = circuit_to_permutation(circ);
+	// print_perm(ppp);
+
+	unsigned int y = 0;
+	unsigned int total = circ.num_gates();
+	for(auto g : circ)
 	{
-	 	circuit circ, orig;
-	 	circ = circuits.current();
-	 	copy_circuit( circ, orig );
-	 	reverse_circuit( orig );
-	 	testing( circ, orig );
-	 	circuit_is_the_same( circ, orig );
-	 	circuits.current() = circ;
+		++y;
+		std::cout << "\r" << (y*100)/total << "%";
+		std::cout.flush();
+		aux.append_gate() = g;
+		ppp = circuit_to_permutation(aux);
+		p = vector_to_string(ppp);
+		auto x = std::find(m.begin(), m.end(), p); 
+		if(x != m.end())
+			std::cout << "\nEncontrou igual! " << y << " " << (x-m.begin())+1 << std::endl;
+		m.push_back(p);
 	}
-	else
-	{
-		std::cout << "no circuit in store" << std::endl;
-	}
-	//selectRandom = false;
+	std::cout << std::endl;
+
+	//imprimir o vetor com as permutacoes
+	// for (int i = 0; i < m.size(); ++i)
+	// 	std::cout << m[i] << std::endl;
+
+
+	// if ( is_set( "random" ) )
+	// 	selectRandom = true;
+	// if( env->store<circuit>().current_index() >= 0 )
+	// {
+	//  	circuit circ, orig;
+	//  	circ = circuits.current();
+	//  	copy_circuit( circ, orig );
+	//  	reverse_circuit( orig );
+	//  	testing( circ, orig );
+	//  	circuit_is_the_same( circ, orig );
+	//  	circuits.current() = circ;
+	// }
+	// else
+	// {
+	// 	std::cout << "no circuit in store" << std::endl;
+	// }
+	// //selectRandom = false;
 	return true;
 }
 

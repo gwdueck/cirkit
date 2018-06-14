@@ -49,14 +49,16 @@ namespace cirkit
         return move_cost[mv_type];
     }
     
-    move_qubit_type invert_type( move_qubit_type a){
-        if( a <= tba ){
+    inline move_qubit_type invert_type( move_qubit_type a){
+        /*if( a <= tba ){
             return static_cast<move_qubit_type>( a + 4);
         }
         if( a <= tbai ){
             return static_cast<move_qubit_type>( a - 4);
         }
         return a;
+         */
+        return inverse_type[a];
     }
     
     void MoveQubit::invert(){

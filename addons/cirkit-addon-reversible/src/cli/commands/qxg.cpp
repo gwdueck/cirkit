@@ -50,7 +50,7 @@
 
 using namespace boost::program_options;
 
-typedef std::vector<std::vector<int>> matrix;
+using matrix = std::vector<std::vector<int>>;
 
 //Matrix with the cost of each possible cnot (QX2)
 static const matrix map_qx2 = { {0,0,0,10,10},
@@ -981,10 +981,20 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     cost = initial_matrix(circ, cnots, map_cost, map);
     // std::cout << "added initial cost: " << cost << std::endl;
     // std::cout << "total initial cost: " << cost + circ.num_gates() << std::endl;
+<<<<<<< HEAD
     std::cout << cost + circ.num_gates();
     aux = copy_matrix(aux, cnots); //Algorithm greedy 1
     // aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
 
+=======
+    std::cout << circ.num_gates();
+    // aux = copy_matrix(aux, cnots); //Algorithm greedy 1
+    aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
+    // std::cout << "cnots" << std::endl;
+    // print_matrix(cnots);
+    // std::cout << "cost" << std::endl;
+    // print_matrix(aux);
+>>>>>>> a15f9df722c9ae8add1fa584888c39fdd3bfce72
     
     
     while(permutation.size() < cnots.size() - 1)
@@ -1207,6 +1217,9 @@ bool qxg_command::execute()
         circ_qx = optimize_circuit(circ_qx, statistics);
         // print_runtime();
         std::cout << "After: " << circ_qx.num_gates() << std::endl;
+        // circ_qx = optimize_circuit(circ_qx, statistics);
+        // print_runtime();
+        // std::cout << "After: " << circ_qx.num_gates() << std::endl;
     }
     else if ( is_set( "qx3" ) )
     {
@@ -1217,6 +1230,7 @@ bool qxg_command::execute()
         }
         circ_qx = qxg(circ, map_qx3, map_qx3, statistics);
         std::cout << "Before: " << circ_qx.num_gates() << std::endl;
+        // std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         // print_runtime();
         // circ_qx = optimize_circuit(circ_qx, statistics);
         // std::cout << "After: " << circ_qx.num_gates() << std::endl;
