@@ -50,8 +50,10 @@ namespace cirkit
      (appended by i = inverse)
      */
      enum move_qubit_type { cab, cba, tab, tba, cabi, cbai, tabi, tbai, nop, flip };
+    static move_qubit_type inverse_type[10] = {cabi, cbai, tabi, tbai, cab, cba, tab, tba, nop, flip };
+        
     
-    move_qubit_type invert_type( move_qubit_type a);
+    inline move_qubit_type invert_type( move_qubit_type a);
 
     class MoveQubit{
     private:
