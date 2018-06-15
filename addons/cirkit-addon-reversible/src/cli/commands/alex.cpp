@@ -29,7 +29,7 @@
 #include <iostream>
 
 #include <reversible/io/read_realization.hpp>
-
+#include <alice/rules.hpp>
 //#include <reversible/cli/stores.hpp>
 #include <cli/reversible_stores.hpp>
 #include <reversible/circuit.hpp>
@@ -68,6 +68,11 @@ alex_command::alex_command( const environment::ptr& env )
     ;
 
 }
+
+// command::rules_t alex_command::validity_rules() const
+// {
+//   return {has_store_element<circuit>( env )};
+// }
 
 //Circuit is the same truth table?
 void circuit_is_the_same( circuit circ, circuit orig )
@@ -314,18 +319,27 @@ std::string vector_to_string(std::vector<unsigned>& ppp)
 
 bool alex_command::execute()
 {
-	// auto& circuits = env->store<circuit>();
-	circuit circ, aux;
-	// circ = circuits.current();
-	
-	read_realization( circ, filename);
-	
 	std::vector<unsigned> ppp;
 	std::vector<std::string> m;
 	std::string p;
+	circuit circ, aux;
 
-	// circ.set_circuit_name( );
+
+	if( is_set("filename") )
+		read_realization( circ, filename);
+	else
+	{
+		if( env->store<circuit>().size() == 0 )
+		{
+			std::cout << "[e] no current circuit available" << std::endl;
+			return true;
+		}
+		auto& circuits = env->store<circuit>();
+		circ = circuits.current();
+	}
+
 	std::cout << "NOME: " << filename << std::endl;
+	filename.clear();
 	copy_metadata(circ, aux);
 
 	// ppp = circuit_to_permutation(circ);
