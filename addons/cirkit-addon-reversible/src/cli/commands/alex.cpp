@@ -28,6 +28,8 @@
 
 #include <iostream>
 
+#include <reversible/io/read_realization.hpp>
+
 //#include <reversible/cli/stores.hpp>
 #include <cli/reversible_stores.hpp>
 #include <reversible/circuit.hpp>
@@ -61,6 +63,7 @@ alex_command::alex_command( const environment::ptr& env )
 {
 	opts.add_options()
     ( "random,r",          					"Select random rules automatically" )
+    ( "filename,f",value(&filename),         					"filename" )
     //( "iterations,t", value(&iteration),	"Select number of iterations" )
     ;
 
@@ -311,15 +314,20 @@ std::string vector_to_string(std::vector<unsigned>& ppp)
 
 bool alex_command::execute()
 {
-	auto& circuits = env->store<circuit>();
+	// auto& circuits = env->store<circuit>();
 	circuit circ, aux;
-	circ = circuits.current();
+	// circ = circuits.current();
+	
+	read_realization( circ, filename);
 	
 	std::vector<unsigned> ppp;
 	std::vector<std::string> m;
 	std::string p;
 
+	// circ.set_circuit_name( );
+	std::cout << "NOME: " << filename << std::endl;
 	copy_metadata(circ, aux);
+
 	// ppp = circuit_to_permutation(circ);
 	// print_perm(ppp);
 

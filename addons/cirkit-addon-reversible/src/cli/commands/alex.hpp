@@ -60,9 +60,9 @@ class alex_command : public cirkit_command
 
 protected:
   bool execute();
-  
-private:
 
+private:
+  std::string filename;
 };
 
 }
