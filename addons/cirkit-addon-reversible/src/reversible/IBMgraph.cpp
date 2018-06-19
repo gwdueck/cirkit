@@ -219,6 +219,7 @@ namespace cirkit
                     {
                         std::cout << "cnot(" << v << "," << w << ") = ";
                         trans_path[v][w].print();
+                        trans_path[v][w].opt();
                     }
                 }
             }

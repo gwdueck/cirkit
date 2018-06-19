@@ -40,6 +40,12 @@ namespace cirkit
         std::cout << "cost = " << cost() << std::endl;
     }
     
+    int TransPath::opt(){
+        for (int i = 0; i < tpath.size()/2; ++i){
+            std::cout << "AAAAAAAA: " << tpath[i].opt() << std::endl;
+        }
+    }
+
     int TransPath::cost(){
         int res = 0;
         for ( auto &p : tpath ) {
