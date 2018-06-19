@@ -41,9 +41,23 @@ namespace cirkit
     }
     
     int TransPath::opt(){
+        int total = 0;
         for (int i = 0; i < tpath.size()/2; ++i){
-            std::cout << "AAAAAAAA: " << tpath[i].opt() << std::endl;
+            // std::cout << "AA: " << tpath[i].opt() << " AAA: " << tpath[i+1].opt() << std::endl;
+            if( tpath[i].opt() == 1 && tpath[i+1].opt() == 0)
+                total += 4;
+            else if( tpath[i].opt() == 1 && tpath[i+1].opt() == 3)
+                total += 4;
+            else if( tpath[i].opt() == 1 && tpath[i+1].opt() == 9)
+                total += 4;
+            else if( tpath[i].opt() == 2 && tpath[i+1].opt() == 0)
+                total += 4;
+            else if( tpath[i].opt() == 2 && tpath[i+1].opt() == 3)
+                total += 4;
+            else if( tpath[i].opt() == 2 && tpath[i+1].opt() == 9)
+                total += 4;
         }
+        return total;
     }
 
     int TransPath::cost(){

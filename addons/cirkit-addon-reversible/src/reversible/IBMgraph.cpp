@@ -211,6 +211,15 @@ namespace cirkit
                 }
                 std::cout << std::endl;
             }
+            std::cout << "== Optimization ==" << std::endl;
+            for( int v = 0; v < graph_size; v++)
+            {
+                for( int w = 0; w < graph_size; w++)
+                {
+                    std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
+                }
+                std::cout << std::endl;
+            }
             for( int v = 0; v < graph_size; v++)
             {
                 for( int w = 0; w < graph_size; w++)
@@ -219,7 +228,7 @@ namespace cirkit
                     {
                         std::cout << "cnot(" << v << "," << w << ") = ";
                         trans_path[v][w].print();
-                        trans_path[v][w].opt();
+                        std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
             }
