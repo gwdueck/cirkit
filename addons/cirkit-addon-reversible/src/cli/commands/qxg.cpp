@@ -744,93 +744,6 @@ circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<
     return circ_qx;
 }
 
-
-// circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
-// {
-//     properties_timer t( statistics );
-//     circuit circ_qx;
-//     unsigned int cost, lower_cost, h, c, q;
-//     std::vector <int> p, perm, best_perm;
-//     matrix cnots, map_cost, aux;
-
-//     for (int i = 0; i < map.size(); ++i)
-//         p.push_back(0);
-    
-//     for (int i = 0; i < map.size(); ++i)
-//     {
-//         cnots.push_back(p);
-//         map_cost.push_back(p);
-//         perm.push_back(i);
-//         best_perm.push_back(i);
-//         aux.push_back(p);
-//     }
-//     p.clear();
-
-//     cost = initial_matrix(circ, cnots, map_cost, map);
-//     cost = cost + circ.num_gates();
-//     lower_cost = cost;
-//     std::cout << "initial cost: " << cost << std::endl;
-//     std::cout << "initial gates: " << circ.num_gates() << std::endl;
-//     pmatrix(cnots, map_cost);
-    
-//     bool lower = false;
-//     p = qubit_cost(map_cost, cnots);
-//     print_vector(p);
-
-//     while(p.size() > 0)
-//     {
-//         h = std::distance(p.begin(), std::max_element(p.begin(), p.end()));
-//         if(p[h] == 0)
-//             break;
-//         int mele = std::count(p.begin(), p.end(), *std::max_element(p.begin(), p.end()));
-//         std::cout << "numero::::: " << mele << std::endl;
-//         for(unsigned int k=0; k<mele; ++k)
-//         {
-//             h = std::distance(p.begin(), std::max_element(p.begin(), p.end()));
-//             if(p[h] == 0)
-//                 break;
-//             //std::cout << "MAIOR: " << h << std::endl;
-//             for(unsigned int i=0; i<cnots.size(); ++i)
-//             {
-//                 manipulate_matrix( cnots, h, i, map_cost, perm, map );
-//                 cost = matrix_cost(map_cost) + circ.num_gates();
-//                 if(cost < lower_cost)
-//                 {
-//                     q = i;
-//                     c = h;
-//                     lower = true;
-//                     lower_cost = cost;
-//                     for(int j=0; j<cnots.size(); ++j)
-//                         best_perm[j] = perm[j];
-//                 }
-//                 manipulate_matrix( cnots, i, h, map_cost, perm, map );
-//             }
-//             p.erase(p.begin()+h);
-//             print_vector(p);
-//         }
-//         if(lower)
-//         {
-//             lower = false;
-//             std::cout << "Swapping [" << c << "] [" << q << "] : " << lower_cost << std::endl;
-//             manipulate_matrix( cnots, c, q, map_cost, perm, map );
-//             p.clear();
-//             pmatrix(cnots, map_cost);
-//             p = qubit_cost(map_cost, cnots);
-//             print_vector(p);
-//         }
-//         // else
-//         // {
-//         //     p.erase(p.begin()+h);
-//         //     print_vector(p);
-//         // }
-//     }
-//     //circ_qx = matrix_to_circuit(circ, cnots, best_perm, map, path);
-//     //circ_qx = remove_dup_gates( circ_qx );
-//     //print_results(cnots, best_perm, circ_qx.num_gates());
-//     print_results(cnots, best_perm, lower_cost);
-//     return circ_qx;
-// }
-
 matrix permute_matrix(matrix& cnots, const std::map<int, int>& permutation, matrix& aux)
 {
     for(auto it : permutation)
@@ -979,8 +892,9 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     p.clear();
 
     cost = initial_matrix(circ, cnots, map_cost, map);
-    std::cout << "number of gates: " << circ.num_gates() << std::endl;
-    std::cout << "initial permutation: " << cost << std::endl;
+    std::cout << "number of gates:\t" << circ.num_gates() << "\tinitial permutation:\t" << cost;
+    // std::cout << "number of gates: " << circ.num_gates() << std::endl;
+    // std::cout << "initial permutation: " << cost << std::endl;
     aux = copy_matrix(aux, cnots); //Algorithm greedy 1
     // aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
         
@@ -999,10 +913,10 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     permutation = complete_permutation(permutation, cnots.size());
     cnots = permute_matrix(cnots, permutation, aux);
     cost = permute_cost(cnots, map);
-    std::cout << "final permutation: " << cost << std::endl;
-    // for(auto it : permutation)
-    // 	std::cout << " " << it.second;
-    // std::cout << std::endl;
+    std::cout << "\tfinal permutation:\t" << cost << "\t";
+    for(auto it : permutation)
+    	std::cout << " " << it.second;
+    std::cout << std::endl;
     return circ_qx;
 }
 
