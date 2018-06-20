@@ -121,7 +121,7 @@ namespace cirkit
             {
                 tp.add( MoveQubit( tab, w, i ));
                 visited[i] = true;
-                find_all_paths( v,  i, tp, visited );
+                find_all_paths( v,  i, tp, visited );           
                 tp.remove_last();
                 visited[i] = false;
             }
@@ -180,7 +180,7 @@ namespace cirkit
         {
             visited[i] = false;
         }
-        
+
         TransPath tp;
         for( int v = 0; v < graph_size; v++)
         {
@@ -196,6 +196,8 @@ namespace cirkit
                     visited[w] = true;
                     path_list.clear();
                     tp.clear();
+                    std::cout << "parando aqui" << std::endl;
+                    return;
                     find_all_paths( v,  w, tp, visited );
                     set_best_path( v,  w );
                 }
