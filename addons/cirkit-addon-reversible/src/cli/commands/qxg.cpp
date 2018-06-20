@@ -979,198 +979,33 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     p.clear();
 
     cost = initial_matrix(circ, cnots, map_cost, map);
-    // std::cout << "added initial cost: " << cost << std::endl;
-    // std::cout << "total initial cost: " << cost + circ.num_gates() << std::endl;
-    std::cout << cost + circ.num_gates();
+    std::cout << "number of gates: " << circ.num_gates() << std::endl;
+    std::cout << "initial permutation: " << cost << std::endl;
     aux = copy_matrix(aux, cnots); //Algorithm greedy 1
     // aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
-    // std::cout << "cnots" << std::endl;
-    // print_matrix(cnots);
-    // std::cout << "cost" << std::endl;
-    // print_matrix(aux);
-  
-    
+        
     while(permutation.size() < cnots.size() - 1)
     {   
         qubit1 = get_position_higher_value_matrix(aux);
         if(aux[qubit1.first][qubit1.second] == 0) break;
-        // std::cout << "Maior valor: ";
-        // std::cout << "[" << qubit1.first << "][" << qubit1.second << "]: " << aux[qubit1.first][qubit1.second] << std::endl;
         aux[qubit1.first][qubit1.second] = 0;
-        // std::cin.get();
         qubit2 = get_mapping(map, qubit1, permutation, p);
-        // std::cout << "Mapeado:" << std::endl;
-        // std::cout << "[" << qubit2.first << "][" << qubit2.second << "]: " << map[qubit2.first][qubit2.second] << std::endl;
         permutation.insert(std::pair<int, int>(qubit1.first, qubit2.first));
         permutation.insert(std::pair<int, int>(qubit1.second, qubit2.second));
         p.push_back(qubit2.first);
         p.push_back(qubit2.second);
-        // std::cin.get();
     }
 
     permutation = complete_permutation(permutation, cnots.size());
     cnots = permute_matrix(cnots, permutation, aux);
     cost = permute_cost(cnots, map);
-    // std::cout << "added final cost: " << cost << std::endl;
-    // std::cout << "total final cost: " << cost + circ.num_gates() << std::endl;
-    std::cout << "\t" << cost + circ.num_gates() << std::endl;
+    std::cout << "final permutation: " << cost << std::endl;
     // for(auto it : permutation)
     // 	std::cout << " " << it.second;
     // std::cout << std::endl;
     return circ_qx;
 }
 
-// circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
-// {
-//     properties_timer t( statistics );
-//     circuit circ_qx;
-//     unsigned int cost, h;
-//     std::vector <int> p, key, value;
-//     matrix cnots, map_cost, aux;
-
-//     for (int i = 0; i < map.size(); ++i)
-//         p.push_back(0);
-    
-//     for (int i = 0; i < map.size(); ++i)
-//     {
-//         cnots.push_back(p);
-//         map_cost.push_back(p);
-//         aux.push_back(p);
-//     }
-//     p.clear();
-
-//     for (int i = 0; i < map.size(); ++i)
-//         p.push_back(-1);
-
-//     cost = initial_matrix(circ, cnots, map_cost, map);
-//     // cost = cost + circ.num_gates();
-//     // lower_cost = cost;
-//     // std::cout << "initial cost: " << cost << std::endl;
-//     // std::cout << "initial gates: " << circ.num_gates() << std::endl;
-//     // std::cout<< "cnots" << std::endl;
-//     // print_matrix(cnots);
-//     // std::cout<< "cost" << std::endl;
-//     // print_matrix(map_cost);
- 
-    
-//     for (int i = 0; i < cnots.size(); ++i)
-//       	for (int j = 0; j < cnots.size(); ++j)
-//        		aux[i][j] = cnots[i][j];
-    
-//     unsigned x, y, xx, yy;
-//     bool up = false;
-//     while(key.size() < cnots.size()-1)
-//     {	
-//     	h = 0;
-//     	up = false;
-//     	for (int i = 0; i < cnots.size(); ++i)
-// 	    {
-// 	  		for (int j = 0; j < cnots.size(); ++j)
-// 	  		{
-// 	  			if( aux[i][j] >= h )
-// 	  			{
-// 	  				h = aux[i][j];
-// 	  				x = i;
-// 	  				y = j;
-// 	  			}
-// 	  		}
-// 	  	}
-// 	  	// std::cout << "Maior valor: ";
-// 	  	// std::cout << x << " " << y << std::endl;
-// 	  	//qubit[x] = y;
-// 	  	aux[x][y] = 0;
-// 	  	//std::cout << qubit.begin()->first << " " << qubit.begin()->second << std::endl;
-// 	  	h = 1000;
-// 	  	if(std::find(key.begin(), key.end(), x) == key.end() && std::find(key.begin(), key.end(), y) == key.end())
-// 	  	{
-// 	  		//std::cout << "ambos nao estao na lista" << std::endl;
-// 	  		for (int i = 0; i < cnots.size(); ++i)
-// 		    {
-// 		  		for (int j = 0; j < cnots.size(); ++j)
-// 		  		{
-// 		  			if( i != j && map[i][j] < h )
-// 		  			{
-// 		  				h = map[i][j];
-// 		  				xx = i;
-// 		  				yy = j;
-// 		  			}
-// 		  		}
-// 		  	}
-// 		  	key.push_back(x);
-// 		  	value.push_back(xx);
-// 		  	key.push_back(y);
-// 		  	value.push_back(yy);
-// 	  	}
-// 	  	else if(std::find(key.begin(), key.end(), x) != key.end() && std::find(key.begin(), key.end(), y) != key.end())
-// 	  	{
-// 	  		//std::cout << "ambos estao na lista" << std::endl;
-// 	  	}
-// 	  	else if(std::find(key.begin(), key.end(), x) != key.end())
-// 	  	{
-// 	  		//std::cout << "x esta na lista " << x << std::endl;
-// 	  		int i = value[std::distance(key.begin(), std::find(key.begin(), key.end(), x))];
-// 	  		for (int j = 0; j < cnots.size(); ++j)
-// 	  		{
-// 	  			//std::cout << "valor de j: " << j << " valor de i travado: " << i << std::endl;
-// 	  			if( i != j && std::find(value.begin(), value.end(), j) == value.end() && map[i][j] < h )
-// 	  			{
-// 	  				//std::cout << "ENTROU valor de j: " << j << " valor de i travado: " << i << std::endl;
-// 	  				h = map[i][j];
-// 	  				xx = i;
-// 	  				yy = j;
-// 	  				up = true;
-// 	  			}
-// 	  		}
-// 	  		if(up)
-// 	  		{
-// 	  			key.push_back(y);
-// 		  		value.push_back(yy);
-// 	  		}
-// 	  	}
-// 		else if(std::find(key.begin(), key.end(), y) != key.end())
-// 	  	{
-// 	  		//std::cout << "y esta na lista " << y << std::endl;
-// 	  		int j = value[std::distance(key.begin(), std::find(key.begin(), key.end(), y))];
-// 	  		for (int i = 0; i < cnots.size(); ++i)
-// 		    {
-// 	  			//std::cout << "valor de i: " << i << " valor de j travado: " << j << std::endl;
-// 	  			if( i != j && std::find(value.begin(), value.end(), i) == value.end() && map[i][j] < h )
-// 	  			{
-// 	  				//std::cout << "ENTROU valor de j: " << j << " valor de i travado: " << i << std::endl;
-// 	  				h = map[i][j];
-// 	  				xx = i;
-// 	  				yy = j;
-// 	  				up = true;
-// 	  			}
-// 		  	}
-// 		  	if(up)
-// 		  	{
-// 		  		key.push_back(x);
-// 		  		value.push_back(xx);	
-// 		  	}
-// 	  	}
-// 	  // 	if(up)
-// 	  // 	{
-// 		 //  	std::cout << "Trocar por: ";
-// 		 //  	std::cout << xx << " " << yy << std::endl;
-// 		 // }
-//     }
-//     //print_results(cnots, perm, cost);
-//     for (int i = 0; i < map.size(); ++i)
-//     {
-//     	if(std::find(key.begin(), key.end(), i) == key.end())
-//     		key.push_back(i);
-//     	if(std::find(value.begin(), value.end(), i) == value.end())
-//     		value.push_back(i);
-//     }
-//     for (int i = 0; i < map.size(); ++i)
-//        	std::cout << " " << value[std::distance(key.begin(), std::find(key.begin(), key.end(), i))];
-//     std::cout << std::endl;
-//     cnots = permute_matrix(cnots, key, value, aux);
-//     cost = permute_cost(cnots, map);
-//     std::cout << "total cost is: " << cost + circ.num_gates() << std::endl;
-//     return circ_qx;
-// }
 
 circuit optimize_circuit(circuit& circ,  properties::ptr& statistics)
 {
@@ -1184,19 +1019,6 @@ bool qxg_command::execute()
     circuit aux = circuits.current();
     circuit circ_qx, circ;
     copy_circuit(aux, circ);    //auto settings = make_settings();
-
-    // unsigned int path_size;
-    // if((map_qx3[12][0] - 4) % 7 == 0)
-    //     path_size = ((map_qx3[12][0] - 4) / 14) + 2;
-    // else if((map_qx3[12][0] + 4) % 7 == 0)
-    //     path_size = ((map_qx3[12][0] + 4) / 14) + 2;
-
-    // std::cout << path_size << std::endl;
-    // std::vector<int> permute;
-    // permute.push_back(12);
-    // find_path(map_qx3, 12, 0, permute, path_qx3, path_size);
-    // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
-    // return true;
 
     if ( is_set( "QS1_1" ) )
     {
