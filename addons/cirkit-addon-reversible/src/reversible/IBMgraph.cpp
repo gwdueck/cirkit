@@ -174,13 +174,6 @@ namespace cirkit
     
     void create_trans( bool verbose )
     {
-        // TransPath tp;
-        // std::vector<TransPath> teste;
-        // tp.add( MoveQubit( nop, 0, 0 ));
-        // teste.push_back( tp );
-        // tp.remove_last();
-        // return;
-
         allocate_data_stuctures();
         path_list.clear();
         bool visited[graph_size];
