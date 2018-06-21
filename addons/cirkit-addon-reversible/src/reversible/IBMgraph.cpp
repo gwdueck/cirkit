@@ -30,6 +30,7 @@
 
 namespace cirkit
 {
+    std::vector<TransPath> path_list;
     
     bool read_graph( const std::string& filename )
     {
@@ -173,6 +174,13 @@ namespace cirkit
     
     void create_trans( bool verbose )
     {
+        // TransPath tp;
+        // std::vector<TransPath> teste;
+        // tp.add( MoveQubit( nop, 0, 0 ));
+        // teste.push_back( tp );
+        // tp.remove_last();
+        // return;
+
         allocate_data_stuctures();
         path_list.clear();
         bool visited[graph_size];
@@ -196,8 +204,6 @@ namespace cirkit
                     visited[w] = true;
                     path_list.clear();
                     tp.clear();
-                    std::cout << "parando aqui" << std::endl;
-                    return;
                     find_all_paths( v,  w, tp, visited );
                     set_best_path( v,  w );
                 }

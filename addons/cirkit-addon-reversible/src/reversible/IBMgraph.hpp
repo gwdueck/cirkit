@@ -46,17 +46,17 @@
 namespace cirkit
 {
 
-bool **graph_adjacency = NULL;  // graph structure
-int **trans_cost = NULL;        // the cost of each cnot
-TransPath **trans_path = NULL;  // the transformation path or a given cnot
+	bool **graph_adjacency = NULL;  // graph structure
+	int **trans_cost = NULL;        // the cost of each cnot
+	TransPath **trans_path = NULL;  // the transformation path or a given cnot
 
-int graph_size = 0;
-std::vector<TransPath> path_list;
+	int graph_size = 0;
+	// std::vectosr<TransPath> path_list;
 
-bool read_graph( const std::string& filename );
-void print_graph( );
-void delete_graph( );
-void create_trans( bool verbose );
+	bool read_graph( const std::string& filename );
+	void print_graph( );
+	void delete_graph( );
+	void create_trans( bool verbose );
 
 }
 #endif /* IBMgraph_hpp */
