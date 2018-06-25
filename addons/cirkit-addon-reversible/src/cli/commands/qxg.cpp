@@ -892,7 +892,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     p.clear();
 
     cost = initial_matrix(circ, cnots, map_cost, map);
-    std::cout << "number of gates:\t" << circ.num_gates() << "\tinitial permutation:\t" << cost;
+    std::cout << "\tnumber of gates:\t" << circ.num_gates() << "\tinitial permutation:\t" << cost;
     // std::cout << "number of gates: " << circ.num_gates() << std::endl;
     // std::cout << "initial permutation: " << cost << std::endl;
     aux = copy_matrix(aux, cnots); //Algorithm greedy 1
@@ -916,7 +916,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     std::cout << "\tfinal permutation:\t" << cost << "\t";
     for(auto it : permutation)
     	std::cout << " " << it.second;
-    std::cout << std::endl;
+    //std::cout << std::endl;
     return circ_qx;
 }
 
@@ -973,8 +973,11 @@ bool qxg_command::execute()
             return true;
         }
         circ_qx = qxg(circ, map_qx5, map_qx5, statistics);
+        std::cout.setf(std::ios_base::fixed, std::ios_base::floatfield);
+        std::cout.precision(9);
+        std::cout << "\t" << statistics->get<double>( "runtime" ) << std::endl;
         // std::cout << "Before: " << circ_qx.num_gates() << std::endl;
-        // print_runtime();
+        //print_runtime();
         // circ_qx = optimize_circuit(circ_qx, statistics);
         // std::cout << "After: " << circ_qx.num_gates() << std::endl;
         // print_runtime();
