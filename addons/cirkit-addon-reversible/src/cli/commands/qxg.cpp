@@ -329,7 +329,8 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
         // std::cout << "sem alvo " << x << " " << y << std::endl;
         return std::make_pair(x,y);
     }
-    
+    std::cout << "====> should not happen" << std::endl;
+    return std::make_pair(0,0); // added -- not reachable???
 }
 
 // Map the last qubit
