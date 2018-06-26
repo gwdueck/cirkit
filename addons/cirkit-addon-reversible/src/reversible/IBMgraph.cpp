@@ -30,6 +30,8 @@
 
 namespace cirkit
 {
+    // Here the memory error stopped
+    std::vector<TransPath> path_list;
     
     bool read_graph( const std::string& filename )
     {
@@ -121,7 +123,7 @@ namespace cirkit
             {
                 tp.add( MoveQubit( tab, w, i ));
                 visited[i] = true;
-                find_all_paths( v,  i, tp, visited );
+                find_all_paths( v,  i, tp, visited );           
                 tp.remove_last();
                 visited[i] = false;
             }
@@ -180,7 +182,7 @@ namespace cirkit
         {
             visited[i] = false;
         }
-        
+
         TransPath tp;
         for( int v = 0; v < graph_size; v++)
         {
@@ -211,6 +213,15 @@ namespace cirkit
                 }
                 std::cout << std::endl;
             }
+            std::cout << "== Optimization ==" << std::endl;
+            for( int v = 0; v < graph_size; v++)
+            {
+                for( int w = 0; w < graph_size; w++)
+                {
+                    std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
+                }
+                std::cout << std::endl;
+            }
             for( int v = 0; v < graph_size; v++)
             {
                 for( int w = 0; w < graph_size; w++)
@@ -219,6 +230,7 @@ namespace cirkit
                     {
                         std::cout << "cnot(" << v << "," << w << ") = ";
                         trans_path[v][w].print();
+                        std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
             }

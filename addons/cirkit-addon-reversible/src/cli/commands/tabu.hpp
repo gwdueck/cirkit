@@ -25,39 +25,46 @@
  */
 
 /**
- * @file trans_path.hpp
+ * @file tabu.hpp
  *
- * @brief path of transformation to implement a singel cnot gate
+ * @brief Tabu Search to optimize reversible circuit
  *
- * @author Gerhard Dueck
- * @since  2.3
+ * @author A.G.A.
+ * @2
  */
 
-#ifndef TRANS_PATH_HPP
-#define TRANS_PATH_HPP
+#ifndef CLI_TABU_COMMAND_HPP
+#define CLI_TABU_COMMAND_HPP
 
-#include <vector>
-#include "move_qubit.hpp"
+#include <reversible/circuit.hpp>
+#include <cli/cirkit_command.hpp>
 
 namespace cirkit
 {
-    class TransPath{
-    private:
-        std::vector<MoveQubit> tpath;
+
+class tabu_command : public cirkit_command
+    {
     public:
-        void add( MoveQubit );
-        void print();
-        int opt();
-        void clear() { tpath.clear(); };
-        void remove_last(){ tpath.pop_back(); };
-        int cost();
-        int costPlus();
-        void addInverse();
-    };
+        tabu_command( const environment::ptr& env );
+
+protected:
+  bool execute();
+  rules_t validity_rules() const;
+
+private:
+  unsigned int iteration = 500u;
+	unsigned int opt = 0u;
+	unsigned int penalization = 10u;
+	unsigned int neighborhood = 10u;
+	unsigned int overlap = 70u;
+	
+public:
+  log_opt_t log() const;
+};
 
 }
 
-#endif /* TRANS_PATH_HPP */
+#endif
 
 // Local Variables:
 // c-basic-offset: 2

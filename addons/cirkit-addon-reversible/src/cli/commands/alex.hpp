@@ -59,10 +59,11 @@ class alex_command : public cirkit_command
 		void choose_rule( unsigned& y, const unsigned i );
 
 protected:
+  // rules_t validity_rules() const;
   bool execute();
-  
-private:
 
+private:
+  std::string filename;
 };
 
 }

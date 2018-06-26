@@ -36,13 +36,19 @@ namespace cirkit
         v = a;
         w = b;
     }
+    
     void MoveQubit::set( move_qubit_type t, int a, int b){
         mv_type = t;
         v = a;
         w = b;
     }
+    
     void MoveQubit::print(){
         std::cout << type_name[mv_type] << " " << v << " " << w << "; ";
+    }
+
+    int MoveQubit::opt(){
+        return mv_type;
     }
     
     int MoveQubit::cost(){
