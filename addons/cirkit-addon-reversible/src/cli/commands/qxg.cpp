@@ -278,7 +278,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
     if(p1 != permutation.end() && p2 != permutation.end())
     {
         //Do nothing
-        // std::cout << "Do nothing" << std::endl;
+        std::cout << "Do nothing" << std::endl;
         return std::make_pair(p1->second,p2->second);
     }
     else if(p1 == permutation.end() && p2 == permutation.end())
@@ -296,7 +296,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
                 }
             }
         }
-        // std::cout << "nenhum " << x << " " << y << std::endl;
+        std::cout << "nenhum " << x << " " << y << std::endl;
         return std::make_pair(x,y);
     }
     else if(p1 == permutation.end() && p2 != permutation.end())
@@ -311,7 +311,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
                 x = i;
             }    
         }
-        // std::cout << "sem controle " << x << " " << y << std::endl;
+        std::cout << "sem controle " << x << " " << y << std::endl;
         return std::make_pair(x,y);
     }
     else if(p1 != permutation.end() && p2 == permutation.end())
@@ -326,7 +326,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
                 y = j;
             }    
         }
-        // std::cout << "sem alvo " << x << " " << y << std::endl;
+        std::cout << "sem alvo " << x << " " << y << std::endl;
         return std::make_pair(x,y);
     }
     std::cout << "====> should not happen" << std::endl;
@@ -403,6 +403,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         // If the higher qubit is zero... (maybe this can be changed)
         if(aux[qubit1.first][qubit1.second] == 0) break;
         
+        // TAKE A LOOK AT THIS
         aux[qubit1.first][qubit1.second] = 0;
         
         // Get mapping for the second qubit
