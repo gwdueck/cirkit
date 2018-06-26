@@ -208,110 +208,8 @@ command::rules_t qxg_command::validity_rules() const
   return {has_store_element<circuit>( env )};
 }
 
-//Change two lines of the circuit
-void manipulate_matrix( matrix& m1, int x, int y, matrix& m2, std::vector<int>& perm, const matrix& map )
-{
-    int aux;
 
-    aux = perm[x];
-    perm[x] = perm[y];
-    perm[y] = aux;
-    for(int j=0; j<m1.size(); ++j)
-    {
-        aux = m1[x][j];
-        m1[x][j] = m1[y][j];
-        m1[y][j] = aux;
-        m2[x][j] = m1[x][j] * map[x][j]; 
-        m2[y][j] = m1[y][j] * map[y][j];
-    }
-    for(int i=0; i<m1.size(); ++i)
-    {
-        aux = m1[i][x];
-        m1[i][x] = m1[i][y];
-        m1[i][y] = aux;
-        m2[i][x] = m1[i][x] * map[i][x]; 
-        m2[i][y] = m1[i][y] * map[i][y];
-    }
-}
-
-void print_matrix( const matrix& m)
-{
-    for(int i=0; i<m.size(); ++i)
-    {
-        for(int j=0; j<m.size(); ++j)
-        {
-            std::cout << m[i][j] << " & ";
-        }
-        std::cout << std::endl;
-    }
-}
-
-// //Search matrix for the qubit with higher cost
-// int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
-// {
-//     int cost, qtd_cnot; 
-//     int higher_cost = 0, index = 0, higher_qtd_cnot = 0;
-    
-//     for(int i=0; i<m1.size(); ++i)
-//     {
-//         cost = 0;
-//         qtd_cnot = 0;
-//         if (std::find(p.begin(), p.end(), i) == p.end())
-//         {
-//             for(int j=0; j<m1.size(); ++j)
-//             {
-//                 cost += m1[i][j] + m1[j][i];
-//                 qtd_cnot += m2[i][j] + m2[j][i];
-//             }
-//             if( cost > higher_cost)
-//             {
-//                 higher_cost = cost;
-//                 higher_qtd_cnot = qtd_cnot;
-//                 index = i;
-//             }
-//             else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
-//             {
-//                 higher_qtd_cnot = qtd_cnot;
-//                 index = i;
-//             }
-//         }
-//     }
-//     return index;
-// }
-
-// //Search matrix for the pair qubit with higher cost
-int higher_cost( const matrix& m1, const matrix& m2, const std::vector<int>& p)
-{
-    int cost, qtd_cnot; 
-    int higher_cost = 0, index = 0, higher_qtd_cnot = 0;
-    
-    for(int i=0; i<m1.size(); ++i)
-    {
-        cost = 0;
-        qtd_cnot = 0;
-        if (std::find(p.begin(), p.end(), i) == p.end())
-        {
-            for(int j=0; j<m1.size(); ++j)
-            {
-                cost += m1[i][j] + m1[j][i];
-                qtd_cnot += m2[i][j] + m2[j][i];
-                if( cost > higher_cost)
-                {
-                    higher_cost = cost;
-                    index = i;
-                }
-                else if(cost == higher_cost && qtd_cnot > higher_qtd_cnot)
-                {
-                    higher_qtd_cnot = qtd_cnot;
-                    index = i;
-                }
-            }
-        }
-    }
-    return index;
-}
-
-//Create cnots matrix and cost matrix
+// Create cnots matrix and cost matrix
 unsigned int initial_matrix(circuit circ, matrix& cnots, matrix& map_cost, const matrix& map)
 {
     unsigned int target, control;
@@ -330,420 +228,7 @@ unsigned int initial_matrix(circuit circ, matrix& cnots, matrix& map_cost, const
     return cost;
 }
 
-//Update the circuit cost
-unsigned int matrix_cost(const matrix& m)
-{
-    unsigned int cost = 0;
-    for(int i=0; i<m.size(); ++i)
-        for(int j=0; j<m.size(); ++j)
-            cost += m[i][j];
-    return cost;
-}
-
-void print_permutation( const std::vector<int>& perm )
-{
-    for(int i=0; i<perm.size(); ++i)
-        std::cout << " " << perm[i];    
-    std::cout << std::endl;
-}
-
-void print_results( const matrix& cnots, const std::vector<int>& perm, const unsigned int cost)
-{
-    std::cout << "Best permutation found (gates =  " << cost << "):";
-    //print_permutation(perm);
-    
-    //This print the permutation like the ibm command
-    //std::cout << "ibm representation: ";
-    for(int i=0; i<cnots.size(); ++i)
-    {
-        for(int j=0; j<cnots.size(); ++j)
-        {
-            if(perm[j] == i)
-            {
-                std::cout << " " << j;
-                break;
-            }
-        }
-    }
-    std::cout << std::endl;  
-}
-
-int search_qubit_column(const matrix& mapping, const unsigned int target, const unsigned int value)
-{
-    for (int i = 0; i < mapping.size(); ++i)
-    {
-        if(mapping[i][target] == value && i != target)
-            return i;
-    }
-    return (-1);
-}
-
-int search_qubit_row(const matrix& mapping, const unsigned int control, const unsigned int value)
-{
-    for (int i = 0; i < mapping.size(); ++i)
-    {
-        if(mapping[control][i] == value && i != control)
-            return i;   
-    }
-    return (-1);
-}
-
-void find_path(const matrix& mapping, const unsigned int control, const unsigned int target, std::vector<int>& permute, const matrix& path, const unsigned int& path_size)
-{
-    unsigned int x;
-    if(permute.size() >= path_size)
-    {
-        // std::cout << "Tamanho maximo" << std::endl;
-        return;
-    }
-    else
-    {
-        for (int i = 0; i < path.size(); ++i)
-        {
-            if (path[control][i] != 0 && std::find(permute.begin(), permute.end(), i) == permute.end())
-            {   
-                permute.push_back(i);
-                // for (int c = 0; c < permute.size(); ++c){std::cout << " " << permute[c];}std::cout << std::endl;
-                // std::cout << "target: " << target << std::endl;
-                if(i == target)
-                {
-                    // std::cout << "AAAAAAAAAAAA" << std::endl;
-                    x = (permute.size() - 2) * 14;
-                    if(path[control][i] == -1)
-                        if(x + 4 == mapping[permute[0]][target])
-                        {
-                            // std::cout << "Achou1!" << std::endl;
-                            return;
-                        }
-                    if(path[permute[0]][permute[1]] == -1)
-                    {
-                        if(x + 4 == mapping[permute[0]][target])
-                        {
-                            for (int y = 0; y < permute.size(); ++y)
-                                permute[y] = permute[y] * -1;
-                            // std::cout << "Achou2!" << std::endl;
-                            return;  
-                        }
-                    }
-                    if(path[control][i] == 1)
-                        if(x - 4 == mapping[permute[0]][target])
-                        {
-                            // std::cout << "Achou3!" << std::endl;
-                            return;
-                        }
-                    if(path[permute[0]][permute[1]] == 1)
-                    {
-                        if(x - 4 == mapping[permute[0]][target])
-                        {
-                            for (int y = 0; y < permute.size(); ++y)
-                                permute[y] = permute[y] * -1;
-                            // std::cout << "Achou4!" << std::endl;
-                            return;
-                        }
-                    }
-                    permute.pop_back();
-                }
-                else
-                {
-                    find_path(mapping, i, target, permute, path, path_size);
-                    if(permute.back() != target && permute.back() != target*-1)
-                    {
-                        permute.pop_back();
-                    }
-                    else
-                    {
-                        // std::cout << "Achou5!" << std::endl;
-                    }
-                }
-            }   
-        }
-    }
-}
-
-void invert_cnot(circuit& circ, const unsigned int control, const unsigned int target)
-{
-    std::vector<unsigned int> controls;
-    controls.push_back( target );
-    append_hadamard( circ, control );
-    append_hadamard( circ, target );
-    append_toffoli( circ, controls, control );
-    append_hadamard( circ, control );
-    append_hadamard( circ, target );
-//    return circ;
-}
-
-void swap_gates_seven(circuit& circ, const unsigned int control, const unsigned int target)
-{
-    std::vector<unsigned int> controls;
-    controls.push_back( control );
-    append_toffoli( circ, controls, target );
-    append_hadamard( circ, control );
-    append_hadamard( circ, target );
-    append_toffoli( circ, controls, target );
-    append_hadamard( circ, control );
-    append_hadamard( circ, target );
-    append_toffoli( circ, controls, target );
-//    return circ;
-}
-
-void swap_gates_five(circuit& circ, const unsigned int control, const unsigned int target, const unsigned hadamard)
-{
-    std::vector<unsigned int> controls;
-    controls.push_back( control );
-    append_toffoli( circ, controls, target );
-    append_hadamard( circ, control );
-    append_hadamard( circ, target );
-    append_toffoli( circ, controls, target );
-    append_hadamard( circ, hadamard );
-//    return circ;
-}
-
-void swap_gates_five_back(circuit& circ, const unsigned int control, const unsigned int target, const unsigned hadamard)
-{
-    std::vector<unsigned int> controls;
-    controls.push_back( control );
-    append_hadamard( circ, hadamard );
-    append_toffoli( circ, controls, target );
-    append_hadamard( circ, control );
-    append_hadamard( circ, target );
-    append_toffoli( circ, controls, target );
-}
-
-circuit matrix_to_circuit( circuit circ, const matrix& cnots, const std::vector<int>& perm, const matrix& mapping, const matrix& path)
-{
-    //piece of code from ibm.cpp
-    std::vector<int> permute;
-    unsigned int start = circ.lines() + 1;
-    unsigned int target, control;
-    unsigned int qubit;
-    unsigned int comeco, fim;
-
-    std::vector<unsigned int> new_controls;
-    circuit circ_qx;
-   
-    for(unsigned int i = start ; i <= cnots.size(); i++)
-    {
-        add_line_to_circuit( circ, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
-    }   
-    
-    copy_metadata(circ, circ_qx);
-    
-    // std::cout << "tamanho do circuito no comeco: " << circ_qx.num_gates() << std::endl;
-    for(int i=0; i<cnots.size(); ++i)
-        for(int j=0; j<cnots.size(); ++j)
-            if(perm[j] == i)
-                permute.push_back(j);
-    
-    permute_lines( circ , &permute[0] );
-    permute.clear();
-    // iterate through the gates
-    for ( const auto& gate : circ )
-    {
-        target = gate.targets().front();
-        new_controls.clear();
-        new_controls.push_back( target );
-        if( !gate.controls().empty() )
-        {
-            control = gate.controls().front().line();
-        }
-        
-        if ( is_toffoli( gate ) )
-        {
-            if( gate.controls().empty() ) // a NOT gate
-            {
-                append_toffoli( circ_qx, gate.controls(), target );
-            }
-            else // CNOT gate
-            {
-                // std::cout << "controle: " << control << " target: " << target << std::endl;
-                // std::cout << "esperado: " << mapping[control][target] << std::endl;
-                // comeco = circ_qx.num_gates();
-                // std::cout << "comeco: " << comeco << std::endl;
-                if ( mapping[control][target] == 0 )
-                {
-                    append_toffoli( circ_qx, gate.controls(), target );
-                }
-                else if( mapping[control][target] == 4 ) // invert CNOT
-                {
-                    invert_cnot(circ_qx, control, target);
-                }
-                else
-                {
-                    unsigned int path_size;
-                    permute.clear();
-                    if((mapping[control][target] - 4) % 7 == 0)
-                    {
-                        // std::cout << "-4" << std::endl;
-                        path_size = ((mapping[control][target] - 4) / 14) + 2;
-                        permute.clear();
-                        permute.push_back(control);
-                        find_path(mapping, control, target, permute, path, path_size);
-                        // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
-                        if(permute[0] < 0 || permute[1] < 0)
-                        {
-                            // std::cout << "-4 negativo" << std::endl;
-                            for (int y = 0; y < permute.size(); ++y)
-                                permute[y] = permute[y] * -1;
-                            for (int i = permute.size() - 1; i > 1; --i)
-                            {
-                                if(path[permute[i]][permute[i-1]] == -1)
-                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
-                                else
-                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
-                            }                
-
-                            invert_cnot(circ_qx, permute[0], permute[1]);                           
-                            
-                            for (int i = 1; i < permute.size() - 1; ++i)
-                            {
-                                if(path[permute[i]][permute[i+1]] == -1)
-                                    swap_gates_seven(circ_qx, permute[i+1], permute[i]);
-                                else
-                                    swap_gates_seven(circ_qx, permute[i], permute[i+1]);
-                            } 
-                        }
-                        else
-                        {
-                            // std::cout << "-4 positivo" << std::endl;
-                            for (int i = 0; i < permute.size() - 1; ++i)
-                            {
-                                if(i == permute.size() - 2)
-                                {
-                                    invert_cnot(circ_qx, permute[i], permute[i+1]); 
-                                }
-                                else
-                                {
-                                    if(path[permute[i]][permute[i+1]] == -1)
-                                        swap_gates_seven(circ_qx, permute[i+1], permute[i]);
-                                    else
-                                        swap_gates_seven(circ_qx, permute[i], permute[i+1]);
-                                }
-                                
-                            }                 
-                                         
-                            for (int i = permute.size() - 1; i > 1; --i)
-                            {
-                                if(path[permute[i]][permute[i-1]] == -1)
-                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
-                                else
-                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
-                            }
-                        }
-                    }
-                    else if((mapping[control][target] + 4) % 7 == 0)
-                    {
-                        // std::cout << "+4" << std::endl;
-                        path_size = ((mapping[control][target] + 4) / 14) + 2;
-                        permute.clear();
-                        permute.push_back(control);
-                        find_path(mapping, control, target, permute, path, path_size);
-                        // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
-                        if(permute[0] < 0 || permute[1] < 0)
-                        {
-                            // std::cout << "+4 negativo" << std::endl;
-                            for (int y = 0; y < permute.size(); ++y)
-                                permute[y] = permute[y] * -1;
-                            for (int i = permute.size() - 1; i > 2; --i)
-                            {
-                                if(path[permute[i]][permute[i-1]] == -1)
-                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
-                                else
-                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
-                            }                
-                            
-                            if(path[permute[2]][permute[1]] == -1)
-                                swap_gates_five(circ_qx, permute[1], permute[2], permute[2]);
-                            else
-                                swap_gates_five(circ_qx, permute[2], permute[1], permute[1]);
-                            
-                            new_controls.clear();
-                            new_controls.push_back(permute[0]);
-                            append_toffoli(circ_qx, new_controls, permute[1]);
-
-                            if(path[permute[2]][permute[1]] == -1)
-                                swap_gates_five_back(circ_qx, permute[1], permute[2], permute[2]);
-                            else
-                                swap_gates_five_back(circ_qx, permute[2], permute[1], permute[1]);
-
-                            for (int i = 2; i < permute.size() - 1; ++i)
-                            {
-                                if(path[permute[i]][permute[i+1]] == -1)
-                                    swap_gates_seven(circ_qx, permute[i+1], permute[i]);
-                                else
-                                    swap_gates_seven(circ_qx, permute[i], permute[i+1]);
-                            } 
-                        }
-                        else
-                        {
-                            // std::cout << "+4 positivo" << std::endl;
-                            for (int i = 0; i <= permute.size() - 3; ++i)
-                            {
-                                // std::cout << "primeira fase: " << permute[i] << std::endl;
-                                if(i == permute.size() - 3)
-                                {
-                                    // std::cout << "igual" << std::endl;
-                                    if(path[permute[i]][permute[i+1]] == -1)
-                                        swap_gates_five(circ_qx, permute[i+1], permute[i], permute[i+1]);
-                                    else
-                                        swap_gates_five(circ_qx, permute[i], permute[i+1], permute[i]);
-
-                                    new_controls.clear();
-                                    new_controls.push_back(permute[i+1]);
-                                    append_toffoli(circ_qx, new_controls, permute[i+2]);
-
-                                    if(path[permute[i+1]][permute[i]] == -1)
-                                        swap_gates_five_back(circ_qx, permute[i], permute[i+1], permute[i]);
-                                    else
-                                        swap_gates_five_back(circ_qx, permute[i+1], permute[i], permute[i+1]);
-                                }
-                                else
-                                {
-                                    // std::cout << "nao igual" << std::endl;
-                                    if(path[permute[i]][permute[i+1]] == -1)
-                                        swap_gates_seven(circ_qx, permute[i+1], permute[i]);
-                                    else
-                                        swap_gates_seven(circ_qx, permute[i], permute[i+1]);
-                                }
-                            }
-
-                            for (int i = permute.size() - 2; i > 1; --i)
-                            {
-                                // std::cout << "segunda fase: " << permute[i] << std::endl;
-                                if(path[permute[i]][permute[i-1]] == -1)
-                                    swap_gates_seven(circ_qx, permute[i-1], permute[i]);
-                                else
-                                    swap_gates_seven(circ_qx, permute[i], permute[i-1]);
-                            } 
-
-                        }
-                    }                 
-                }
-            }
-            // fim = circ_qx.num_gates();
-            // std::cout << "fim: " << fim << std::endl;
-            // std::cout << "diferenca: " << fim - comeco << std::endl;
-
-            // for (int i = 0; i < permute.size(); ++i){std::cout << " " << permute[i];}std::cout << std::endl;
-        }
-        else if ( is_pauli( gate ) )
-        {
-            const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
-            append_pauli( circ_qx, target, tag.axis, tag.root, tag.adjoint );
-            
-        }
-        else if ( is_hadamard( gate ) )
-        {
-            append_hadamard( circ_qx, target );
-        }
-        else
-        {
-            assert( false );
-        }
-    }
-    //std::cout << "TAMANHO: " << circ_qx.num_gates() << std::endl;
-    return circ_qx;
-}
-
+// Permute the matrix
 matrix permute_matrix(matrix& cnots, const std::map<int, int>& permutation, matrix& aux)
 {
     for(auto it : permutation)
@@ -755,6 +240,7 @@ matrix permute_matrix(matrix& cnots, const std::map<int, int>& permutation, matr
     return cnots;
 }
 
+// Get the permutation cost
 unsigned permute_cost(const matrix& cnots, const matrix& map)
 {
 	unsigned int cost = 0;
@@ -764,6 +250,7 @@ unsigned permute_cost(const matrix& cnots, const matrix& map)
 	return cost;
 }
 
+// Find the higher value in the matrix
 std::pair<int,int> get_position_higher_value_matrix(matrix& m)
 {
     unsigned int h = 0, x, y;
@@ -782,6 +269,7 @@ std::pair<int,int> get_position_higher_value_matrix(matrix& m)
     return std::make_pair (x,y);
 }
 
+// Get a mapping from the matrix
 std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std::map<int, int>& permutation, std::vector<int> p)
 {
     std::map<int, int>::iterator p1, p2;
@@ -844,6 +332,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
     
 }
 
+// Map the last qubit
 std::map<int, int> complete_permutation(std::map<int, int>& permutation, unsigned int s)
 {
     std::vector<int> x, y;
@@ -862,6 +351,7 @@ std::map<int, int> complete_permutation(std::map<int, int>& permutation, unsigne
     return permutation;
 }
 
+// To duplicate a matrix
 matrix copy_matrix(matrix& aux, const matrix& m)
 {
 	for (int i = 0; i < m.size(); ++i)
@@ -870,6 +360,8 @@ matrix copy_matrix(matrix& aux, const matrix& m)
     return aux;
 }
 
+
+// Main function -- Find all the mappings
 circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
 {
     properties_timer t( statistics );
@@ -880,6 +372,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     std::map<int, int> permutation;
     matrix cnots, map_cost, aux;
 
+    // Set the matrices
     for (int i = 0; i < map.size(); ++i)
         p.push_back(0);
     
@@ -891,40 +384,54 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     }
     p.clear();
 
+    // Get the default permutation cost
     cost = initial_matrix(circ, cnots, map_cost, map);
-    std::cout << "\tnumber of gates:\t" << circ.num_gates() << "\tinitial permutation:\t" << cost;
-    // std::cout << "number of gates: " << circ.num_gates() << std::endl;
-    // std::cout << "initial permutation: " << cost << std::endl;
-    aux = copy_matrix(aux, cnots); //Algorithm greedy 1
-    // aux = copy_matrix(aux, map_cost); //Algorithm greedy 2
-        
+    std::cout << "number of gates: " << circ.num_gates() << std::endl;
+    std::cout << "default permutation: " << cost << std::endl;
+    
+    // Copy matrix to aux
+    aux = copy_matrix(aux, cnots);
+    
+    
+    // Map the qubits until 1 left    
     while(permutation.size() < cnots.size() - 1)
     {   
+        // Get higher CNOT count 
         qubit1 = get_position_higher_value_matrix(aux);
+        
+        // If the higher qubit is zero... (maybe this can be changed)
         if(aux[qubit1.first][qubit1.second] == 0) break;
+        
         aux[qubit1.first][qubit1.second] = 0;
+        
+        // Get mapping for the second qubit
         qubit2 = get_mapping(map, qubit1, permutation, p);
+        
+        // Saving the mapping
         permutation.insert(std::pair<int, int>(qubit1.first, qubit2.first));
         permutation.insert(std::pair<int, int>(qubit1.second, qubit2.second));
+        
+        // Vector to save the qubits already mapped
         p.push_back(qubit2.first);
         p.push_back(qubit2.second);
     }
 
+    // Finish the mapping
     permutation = complete_permutation(permutation, cnots.size());
+    
+    // Permute the matrix with the CNOTs
     cnots = permute_matrix(cnots, permutation, aux);
+    
+    // Get the cost of the permutation
     cost = permute_cost(cnots, map);
-    std::cout << "\tfinal permutation:\t" << cost << "\t";
+    
+    // Print permutation
+    std::cout << "final permutation: " << cost << std::endl;
+    std::cout << "total gates: " << cost + circ.num_gates() << std::endl;
     for(auto it : permutation)
     	std::cout << " " << it.second;
-    //std::cout << std::endl;
+    std::cout << std::endl;
     return circ_qx;
-}
-
-
-circuit optimize_circuit(circuit& circ,  properties::ptr& statistics)
-{
-    properties_timer t( statistics );
-    return remove_dup_gates( circ );
 }
 
 bool qxg_command::execute()
@@ -932,8 +439,10 @@ bool qxg_command::execute()
     auto& circuits = env->store<circuit>();
     circuit aux = circuits.current();
     circuit circ_qx, circ;
-    copy_circuit(aux, circ);    //auto settings = make_settings();
+    copy_circuit(aux, circ);    
+    //auto settings = make_settings();
 
+    
     if ( is_set( "QS1_1" ) )
     {
         if(circ.lines() > 20)
@@ -943,12 +452,6 @@ bool qxg_command::execute()
         }
         circ_qx = qxg(circ, map_qx20, path_qx20, statistics);
         // print_runtime();
-        circ_qx = optimize_circuit(circ_qx, statistics);
-        // print_runtime();
-        std::cout << "After: " << circ_qx.num_gates() << std::endl;
-        // circ_qx = optimize_circuit(circ_qx, statistics);
-        // print_runtime();
-        // std::cout << "After: " << circ_qx.num_gates() << std::endl;
     }
     else if ( is_set( "qx3" ) )
     {
@@ -958,12 +461,8 @@ bool qxg_command::execute()
             return true;
         }
         circ_qx = qxg(circ, map_qx3, map_qx3, statistics);
-        std::cout << "Before: " << circ_qx.num_gates() << std::endl;
-        // std::cout << "Before: " << circ_qx.num_gates() << std::endl;
         // print_runtime();
-        // circ_qx = optimize_circuit(circ_qx, statistics);
-        // std::cout << "After: " << circ_qx.num_gates() << std::endl;
-        // print_runtime();
+
     }
     else if ( is_set( "qx5" ) )
     {
@@ -973,14 +472,10 @@ bool qxg_command::execute()
             return true;
         }
         circ_qx = qxg(circ, map_qx5, map_qx5, statistics);
-        std::cout.setf(std::ios_base::fixed, std::ios_base::floatfield);
-        std::cout.precision(9);
-        std::cout << "\t" << statistics->get<double>( "runtime" ) << std::endl;
-        // std::cout << "Before: " << circ_qx.num_gates() << std::endl;
-        //print_runtime();
-        // circ_qx = optimize_circuit(circ_qx, statistics);
-        // std::cout << "After: " << circ_qx.num_gates() << std::endl;
-        // print_runtime();
+        print_runtime();
+        // std::cout.setf(std::ios_base::fixed, std::ios_base::floatfield);
+        // std::cout.precision(9);
+        // std::cout << "\t" << statistics->get<double>( "runtime" ) << std::endl;
     }
     else
     {
@@ -994,7 +489,6 @@ bool qxg_command::execute()
         else
             circ_qx = qxg(circ, map_qx2, map_qx2, statistics);
         // print_runtime();
-        //circ_qx = optimize_circuit(circ_qx, statistics);
     }
     if ( is_set( "new" ) )
         circuits.extend();    

@@ -51,7 +51,8 @@ namespace cirkit
 	TransPath **trans_path = NULL;  // the transformation path or a given cnot
 
 	int graph_size = 0;
-	// std::vectosr<TransPath> path_list;
+	
+	// std::vectosr<TransPath> path_list; -- it was giving memory error (now it is in cpp file)
 
 	bool read_graph( const std::string& filename );
 	void print_graph( );

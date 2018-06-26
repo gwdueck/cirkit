@@ -30,6 +30,7 @@
 
 namespace cirkit
 {
+    // Here the memory error stopped
     std::vector<TransPath> path_list;
     
     bool read_graph( const std::string& filename )
