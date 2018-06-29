@@ -43,8 +43,9 @@ namespace cirkit
 {
     class TransPath{
     private:
-        std::vector<MoveQubit> tpath;
+        
     public:
+        std::vector<MoveQubit> tpath;
         void add( MoveQubit );
         void print();
         int opt();

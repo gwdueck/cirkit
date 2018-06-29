@@ -70,6 +70,9 @@ namespace cirkit
         int opt();
         int cost();
         void invert();
+        move_qubit_type getType() { return mv_type; };
+        unsigned int getA() { return v; };
+        unsigned int getB() { return w; };
     };
     
 

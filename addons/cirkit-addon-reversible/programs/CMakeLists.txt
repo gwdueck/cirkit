@@ -8,6 +8,7 @@ set(reversible_programs
   example3
   example4
   my_example
+  June2018
   pidd_debugging
   window_optimization)
 

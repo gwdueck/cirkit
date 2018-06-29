@@ -393,6 +393,10 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     // Copy matrix to aux
     aux = copy_matrix(aux, cnots);
     
+    for(int i = 0; i < 16; i++){
+        for(int j = 0; j < 16; j++) std::cout << aux[i][j] << " ";
+        std::cout << std::endl;
+    }
     
     // Map the qubits until 1 left    
     while(permutation.size() < cnots.size() - 1)
@@ -403,10 +407,14 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         // If the higher qubit is zero... (maybe this can be changed)
         if(aux[qubit1.first][qubit1.second] == 0) break;
         
+        std::cout << "mapping, cost " << qubit1.first << " " << qubit1.second<< " " << aux[qubit1.first][qubit1.second] << std::endl;
+        
         aux[qubit1.first][qubit1.second] = 0;
         
         // Get mapping for the second qubit
         qubit2 = get_mapping(map, qubit1, permutation, p);
+        
+        std::cout << qubit1.first << "  " << qubit1.second << " map to " << qubit2.first << "  " << qubit2.second << std::endl;
         
         // Saving the mapping
         permutation.insert(std::pair<int, int>(qubit1.first, qubit2.first));
