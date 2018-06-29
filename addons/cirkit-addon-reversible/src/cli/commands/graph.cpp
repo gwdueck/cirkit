@@ -61,13 +61,18 @@ graph_command::graph_command( const environment::ptr& env )
     ( "print,p",  "print current graph" )
     ( "create,c",  "create the transformation matrix" )
     ( "verbose,v", "verbose mode")
+    ( "transform,t", "transform non supported cnot gates")
+    ( "rm_dup,r",  "Remove duplicate gates" )
     ;
+    add_new_option();
 }
 
     
 bool graph_command::execute()
 {
     bool verbose = false;
+    
+    
     if( is_set( "verbose" ) )
     {
         verbose = true;
@@ -85,6 +90,21 @@ bool graph_command::execute()
     }
     if( is_set( "delete" ) ){
         delete_graph( );
+    }
+    if( is_set( "transform" ) ){
+        auto& circuits = env->store<circuit>();
+        circuit circ_working = circuits.current();
+        circuit circ_result;
+        expand_cnots( circ_result, circ_working );
+        if ( is_set( "new" ) )
+        {
+            circuits.extend();
+        }
+        if ( is_set( "rm_dup" ) )
+        {
+            circ_result = remove_dup_gates( circ_result );
+        }
+        circuits.current() = circ_result;
     }
     return true;
 }

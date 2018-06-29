@@ -25,13 +25,22 @@
  */
 
 #include "IBMgraph.hpp"
-#include "functions/move_qubit.hpp"
+#include <reversible/functions/move_qubit.hpp>
+#include <reversible/functions/copy_metadata.hpp>
+#include <reversible/functions/add_gates.hpp>
+#include <reversible/gate.hpp>
+#include <reversible/pauli_tags.hpp>
+#include <reversible/rotation_tags.hpp>
+#include <reversible/target_tags.hpp>
 
 
 namespace cirkit
 {
     // Here the memory error stopped
     std::vector<TransPath> path_list;
+    bool **graph_adjacency = NULL;  // graph structure
+    int **trans_cost = NULL;        // the cost of each cnot
+    TransPath **trans_path = NULL;  // the transformation path or a given cnot
     
     bool read_graph( const std::string& filename )
     {
@@ -233,6 +242,118 @@ namespace cirkit
                         std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
+            }
+        }
+    }
+    // expand the cnot gates that are not supported by the architecture
+    // assume that the corresponding matricies have been set up correctly
+    void expand_cnots( circuit& circ_out, const circuit& circ_in ){
+        
+        unsigned target, control;
+        std::vector<unsigned int> new_controls, control2, old_controls;
+        
+        copy_metadata( circ_in, circ_out );
+        for ( const auto& gate : circ_in )
+        {
+            target = gate.targets().front();
+            new_controls.clear();
+            new_controls.push_back( target );
+            if( !gate.controls().empty() )
+            {
+                control = gate.controls().front().line();
+                old_controls.clear();
+                old_controls.push_back( control );
+            }
+            
+            if ( is_toffoli( gate ) )
+            {
+                if( gate.controls().empty() ) // a NOT gate
+                {
+                    circ_out.append_gate() = gate;
+                }
+                else // CNOT gate
+                {
+                    for ( auto &p : trans_path[control][target].tpath ) {
+                        switch ( p.getType() )
+                        {
+                            case cab : //std::cout << "cab" << std::endl;
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                break;
+                            case cba : //std::cout << "cba" << std::endl;
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                break;
+                            case tab : //std::cout << "tab" << std::endl;
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                append_hadamard( circ_out, p.getB() );
+                                break;
+                            case tba : //std::cout << "tba" << std::endl;
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                break;
+                            case cabi : //std::cout << "cabi" << std::endl;
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                break;
+                            case cbai : //std::cout << "cbai" << std::endl;
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                break;
+                            case tabi : //std::cout << "tabi" << std::endl;
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                break;
+                            case tbai : //std::cout << "tbai" << std::endl;
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                break;
+                            case nop : //std::cout << "nop" << std::endl;
+                                append_cnot( circ_out, p.getA(), p.getB() );
+                                break;
+                            case flip : //std::cout << "flip" << std::endl;
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                append_cnot( circ_out, p.getB(), p.getA() );
+                                append_hadamard( circ_out, p.getA() );
+                                append_hadamard( circ_out, p.getB() );
+                                break;
+                            default : std::cout << "ERROR expand_cnots" << std::endl;
+                        }
+                    }
+                }
+            }
+            else
+            {
+               circ_out.append_gate() = gate;
             }
         }
     }

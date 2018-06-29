@@ -41,23 +41,26 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include "functions/trans_path.hpp"
+#include <reversible/functions/trans_path.hpp>
+#include <reversible/functions/remove_dup_gates.hpp>
+#include <reversible/circuit.hpp>
 
 namespace cirkit
 {
 
-	bool **graph_adjacency = NULL;  // graph structure
-	int **trans_cost = NULL;        // the cost of each cnot
-	TransPath **trans_path = NULL;  // the transformation path or a given cnot
+	extern bool **graph_adjacency;  // graph structure
+	extern int **trans_cost;        // the cost of each cnot
+	extern TransPath **trans_path;  // the transformation path or a given cnot
 
 	int graph_size = 0;
 	
-	// std::vectosr<TransPath> path_list; -- it was giving memory error (now it is in cpp file)
+	extern std::vector<TransPath> path_list; //-- it was giving memory error (now it is in cpp file)
 
 	bool read_graph( const std::string& filename );
 	void print_graph( );
 	void delete_graph( );
 	void create_trans( bool verbose );
+    void expand_cnots( circuit& circ_out, const circuit& circ_in );
 
 }
 #endif /* IBMgraph_hpp */
