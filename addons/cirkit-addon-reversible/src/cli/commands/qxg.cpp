@@ -333,6 +333,19 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
     return std::make_pair(0,0); // added -- not reachable???
 }
 
+void print_matrix(matrix& m)
+{
+    std::cout << std::endl;
+    for (int i = 0; i < m.size(); ++i)
+    {
+        for (int j = 0; j < m.size(); ++j)
+        {
+            std::cout << " " << m[i][j];    
+        }
+        std::cout << std::endl;
+    }
+}
+
 // Map the last qubit
 std::map<int, int> complete_permutation(std::map<int, int>& permutation, unsigned int s)
 {
@@ -361,6 +374,10 @@ matrix copy_matrix(matrix& aux, const matrix& m)
     return aux;
 }
 
+int myrandom (int i) 
+{ 
+    return std::rand()%i;
+}
 
 // Main function -- Find all the mappings
 circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
@@ -371,7 +388,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     std::vector <int> p;
     std::pair<int,int> qubit1, qubit2;
     std::map<int, int> permutation;
-    matrix cnots, map_cost, aux;
+    matrix cnots, map_cost, aux, original;
 
     // Set the matrices
     for (int i = 0; i < map.size(); ++i)
@@ -382,6 +399,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         cnots.push_back(p);
         map_cost.push_back(p);
         aux.push_back(p);
+        original.push_back(p);
     }
     p.clear();
 
@@ -392,6 +410,8 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     costa = cost;
     // Copy matrix to aux
     aux = copy_matrix(aux, cnots);
+    original = copy_matrix(original, cnots);
+    print_matrix(cnots);
     
     // for(int i = 0; i < 16; i++){
     //     for(int j = 0; j < 16; j++) std::cout << aux[i][j] << " ";
@@ -463,7 +483,9 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
             for(auto it : permutation)
                 std::cout << " " << it.second;
             std::cout << std::endl;
+            print_matrix(cnots);
         }
+        cnots = copy_matrix(cnots, original);
     }while(true);
     // // Permute the matrix with the CNOTs
     // cnots = permute_matrix(cnots, permutation, aux);
@@ -477,6 +499,27 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     // for(auto it : permutation)
     // 	std::cout << " " << it.second;
     // std::cout << std::endl;
+
+
+    // permutation.insert(std::pair<int, int>(0, 8));
+    // permutation.insert(std::pair<int, int>(1, 14));
+    // permutation.insert(std::pair<int, int>(2, 12));
+    // permutation.insert(std::pair<int, int>(3, 1));
+    // permutation.insert(std::pair<int, int>(4, 5));
+    // permutation.insert(std::pair<int, int>(5, 4));
+    // permutation.insert(std::pair<int, int>(6, 3));
+    // permutation.insert(std::pair<int, int>(7, 6));
+    // permutation.insert(std::pair<int, int>(8, 13));
+    // permutation.insert(std::pair<int, int>(9, 7));
+    // permutation.insert(std::pair<int, int>(10,2));
+    // permutation.insert(std::pair<int, int>(11,9));
+    // permutation.insert(std::pair<int, int>(12,15));
+    // permutation.insert(std::pair<int, int>(13,11));
+    // permutation.insert(std::pair<int, int>(14,10));
+    // permutation.insert(std::pair<int, int>(15,0));
+    // cnots = permute_matrix(cnots, permutation, aux);
+    // print_matrix(cnots);
+    // std::cout << "final permutation: " << permute_cost(cnots, map) << std::endl;
     return circ_qx;
 }
 
@@ -487,7 +530,7 @@ bool qxg_command::execute()
     circuit circ_qx, circ;
     copy_circuit(aux, circ);    
     //auto settings = make_settings();
-
+    std::srand ( unsigned ( std::time(0) ) );
     
     if ( is_set( "QS1_1" ) )
     {
