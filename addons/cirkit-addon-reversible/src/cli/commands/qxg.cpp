@@ -253,7 +253,7 @@ unsigned permute_cost(const matrix& cnots, const matrix& map)
 // Find the higher value in the matrix
 std::pair<int,int> get_position_higher_value_matrix(matrix& m)
 {
-    unsigned int h = 0, x, y;
+    int h = 0, x, y;
     for (int i = 0; i < m.size(); ++i)
     {
         for (int j = 0; j < m.size(); ++j)
@@ -384,7 +384,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
 {
     properties_timer t( statistics );
     circuit circ_qx;
-    unsigned int cost, costa;
+    unsigned int cost;
     std::vector <int> p;
     std::pair<int,int> qubit1, qubit2;
     std::map<int, int> permutation;
@@ -407,119 +407,56 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     cost = initial_matrix(circ, cnots, map_cost, map);
     std::cout << "number of gates: " << circ.num_gates() << std::endl;
     std::cout << "default permutation: " << cost << std::endl;
-    costa = cost;
     // Copy matrix to aux
     aux = copy_matrix(aux, cnots);
     original = copy_matrix(original, cnots);
     print_matrix(cnots);
     
-    // for(int i = 0; i < 16; i++){
-    //     for(int j = 0; j < 16; j++) std::cout << aux[i][j] << " ";
-    //     std::cout << std::endl;
-    // }
-    
     // Map the qubits until 1 left    
-    // while(permutation.size() < cnots.size() - 1)
-    // {   
-    //     // Get higher CNOT count 
-    //     qubit1 = get_position_higher_value_matrix(aux);
+    while(permutation.size() < cnots.size() - 1)
+    {   
+        // Get higher CNOT count 
+        qubit1 = get_position_higher_value_matrix(aux);
         
-    //     // If the higher qubit is zero... (maybe this can be changed)
-    //     if(aux[qubit1.first][qubit1.second] == 0) break;
+        // If the higher qubit is zero... (maybe this can be changed)
+        if(aux[qubit1.first][qubit1.second] == 0) break;
         
-    //     // TAKE A LOOK AT THIS
-    //     std::cout << "mapping, cost " << qubit1.first << " " << qubit1.second<< " " << aux[qubit1.first][qubit1.second] << std::endl;
+        // TAKE A LOOK AT THIS
+        std::cout << "mapping, cost " << qubit1.first << " " << qubit1.second<< " " << aux[qubit1.first][qubit1.second] << std::endl;
         
-    //     aux[qubit1.first][qubit1.second] = 0;
+        aux[qubit1.first][qubit1.second] = -1;
         
-    //     // Get mapping for the second qubit
-    //     qubit2 = get_mapping(map, qubit1, permutation, p);
+        // Get mapping for the second qubit
+        qubit2 = get_mapping(map, qubit1, permutation, p);
         
-    //     std::cout << qubit1.first << "  " << qubit1.second << " map to " << qubit2.first << "  " << qubit2.second << std::endl;
+        std::cout << qubit1.first << "  " << qubit1.second << " map to " << qubit2.first << "  " << qubit2.second << std::endl;
         
-    //     // Saving the mapping
-    //     permutation.insert(std::pair<int, int>(qubit1.first, qubit2.first));
-    //     permutation.insert(std::pair<int, int>(qubit1.second, qubit2.second));
+        // Saving the mapping
+        permutation.insert(std::pair<int, int>(qubit1.first, qubit2.first));
+        permutation.insert(std::pair<int, int>(qubit1.second, qubit2.second));
         
-    //     // Vector to save the qubits already mapped
-    //     p.push_back(qubit2.first);
-    //     p.push_back(qubit2.second);
-    // }
+        // Vector to save the qubits already mapped
+        p.push_back(qubit2.first);
+        p.push_back(qubit2.second);
+    }
 
     // Finish the mapping
-    // permutation = complete_permutation(permutation, cnots.size());
+    permutation = complete_permutation(permutation, cnots.size());
     
-    std::vector<int> myperm;
-    for (int i = 0; i < 16; ++i)
-        myperm.push_back(i);
-
-    do{
-        std::random_shuffle ( myperm.begin(), myperm.end() );
-        permutation.clear();
-        permutation.insert(std::pair<int, int>(0, myperm[0]));
-        permutation.insert(std::pair<int, int>(1, myperm[1]));
-        permutation.insert(std::pair<int, int>(2, myperm[2]));
-        permutation.insert(std::pair<int, int>(3, myperm[3]));
-        permutation.insert(std::pair<int, int>(4, myperm[4]));
-        permutation.insert(std::pair<int, int>(5, myperm[5]));
-        permutation.insert(std::pair<int, int>(6, myperm[6]));
-        permutation.insert(std::pair<int, int>(7, myperm[7]));
-        permutation.insert(std::pair<int, int>(8, myperm[8]));
-        permutation.insert(std::pair<int, int>(9, myperm[9]));
-        permutation.insert(std::pair<int, int>(10, myperm[10]));
-        permutation.insert(std::pair<int, int>(11, myperm[11]));
-        permutation.insert(std::pair<int, int>(12, myperm[12]));
-        permutation.insert(std::pair<int, int>(13, myperm[13]));
-        permutation.insert(std::pair<int, int>(14, myperm[14]));
-        permutation.insert(std::pair<int, int>(15, myperm[15]));
-        cnots = permute_matrix(cnots, permutation, aux);
-        costa = permute_cost(cnots, map);
-        // std::cout << "permutation cost: " << costa << std::endl;
-        if(costa < cost)
-        {
-            cost = costa;
-            // std::cout << "final permutation: " << cost << std::endl;
-            std::cout << "total gates: " << cost + circ.num_gates() << std::endl;
-            for(auto it : permutation)
-                std::cout << " " << it.second;
-            std::cout << std::endl;
-            print_matrix(cnots);
-        }
-        cnots = copy_matrix(cnots, original);
-    }while(true);
-    // // Permute the matrix with the CNOTs
-    // cnots = permute_matrix(cnots, permutation, aux);
+    
+    // Permute the matrix with the CNOTs
+    cnots = permute_matrix(cnots, permutation, aux);
     
     // Get the cost of the permutation
-    // cost = permute_cost(cnots, map);
+    cost = permute_cost(cnots, map);
     
     // Print permutation
-    // std::cout << "final permutation: " << cost << std::endl;
-    // std::cout << "total gates: " << cost + circ.num_gates() << std::endl;
-    // for(auto it : permutation)
-    // 	std::cout << " " << it.second;
-    // std::cout << std::endl;
+    std::cout << "final permutation: " << cost << std::endl;
+    std::cout << "total gates: " << cost + circ.num_gates() << std::endl;
+    for(auto it : permutation)
+    	std::cout << " " << it.second;
+    std::cout << std::endl;
 
-
-    // permutation.insert(std::pair<int, int>(0, 8));
-    // permutation.insert(std::pair<int, int>(1, 14));
-    // permutation.insert(std::pair<int, int>(2, 12));
-    // permutation.insert(std::pair<int, int>(3, 1));
-    // permutation.insert(std::pair<int, int>(4, 5));
-    // permutation.insert(std::pair<int, int>(5, 4));
-    // permutation.insert(std::pair<int, int>(6, 3));
-    // permutation.insert(std::pair<int, int>(7, 6));
-    // permutation.insert(std::pair<int, int>(8, 13));
-    // permutation.insert(std::pair<int, int>(9, 7));
-    // permutation.insert(std::pair<int, int>(10,2));
-    // permutation.insert(std::pair<int, int>(11,9));
-    // permutation.insert(std::pair<int, int>(12,15));
-    // permutation.insert(std::pair<int, int>(13,11));
-    // permutation.insert(std::pair<int, int>(14,10));
-    // permutation.insert(std::pair<int, int>(15,0));
-    // cnots = permute_matrix(cnots, permutation, aux);
-    // print_matrix(cnots);
-    // std::cout << "final permutation: " << permute_cost(cnots, map) << std::endl;
     return circ_qx;
 }
 

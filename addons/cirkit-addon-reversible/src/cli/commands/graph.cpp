@@ -62,7 +62,7 @@ graph_command::graph_command( const environment::ptr& env )
     ( "create,c",  "create the transformation matrix" )
     ( "verbose,v", "verbose mode")
     ( "transform,t", "transform non supported cnot gates")
-    ( "rm_dup,r",  "Remove duplicate gates" )
+    ( "rm_dup,m",  "Remove duplicate gates" )
     ;
     add_new_option();
 }
