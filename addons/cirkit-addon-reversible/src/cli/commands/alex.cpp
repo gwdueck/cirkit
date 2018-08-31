@@ -58,40 +58,45 @@ command::rules_t alex_command::validity_rules() const
 }
 
 
-
-
-std::string vector_to_string(std::vector<unsigned>& ppp)
+void print_all_matrix(xt::xarray<complex_t>& t, unsigned int& q)
 {
-	std::string p;
-	for (int i = 0; i < ppp.size(); ++i)
-		p.append(std::to_string(ppp[i]));
-	return p;
+  	for (int i = 0; i < t.size(); ++i)
+  	{
+  		if(i % q == 0)
+ 			std::cout << std::endl;
+  		std::cout << " " << t[i];
+  	}
+ 	std::cout << std::endl;
+}
+
+void print_line(xt::xarray<complex_t>& t, unsigned int& q)
+{
+	unsigned int line;
+  	std::cout << "Choose line: ";
+  	std::cin >> line;
+
+
+  	for (int i = line*q; i < (line+1)*q; ++i)
+  		std::cout << " " << t[i];
+  	
+ 	std::cout << std::endl;
 }
 
 bool alex_command::execute()
 {
 	const auto& circuits = env->store<circuit>().current();
 
-  	// std::vector<std::pair<xt::xarray<complex_t>, unsigned>> matrices;
-
 	xt::xarray<complex_t> teste;
 
   	teste = matrix_from_clifford_t_circuit( circuits, is_set( "progress" ) );
 
-  	std::cout << "teste: " <<  teste.size() <<std::endl;
-  	std::cout << teste << std::endl;
-  	std::cout << "teste1: " << std::endl;
- 	
- 	unsigned qubits = sqrt(teste.size());
- 	std::cout << "qubits: " << qubits << std::endl;
+  	// Number of qubits
+  	unsigned int qubits = sqrt(teste.size());
+ 	// std::cout << "qubits: " << qubits << std::endl;
 
-  	for (int i = 0; i < teste.size(); ++i)
-  	{
-  		if(i % qubits == 0)
- 			std::cout << std::endl;
-  		std::cout << " " << teste[i];
-  	}
- 	std::cout << std::endl;
+	// print_all_matrix(teste, qubits);
+	print_line(teste, qubits);
+
 	return true;
 }
 
