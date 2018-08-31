@@ -82,14 +82,16 @@ bool alex_command::execute()
   	std::cout << teste << std::endl;
   	std::cout << "teste1: " << std::endl;
  	
+ 	unsigned qubits = sqrt(teste.size());
+ 	std::cout << "qubits: " << qubits << std::endl;
+
   	for (int i = 0; i < teste.size(); ++i)
   	{
-  		std::cout << teste[i] << std::endl;
-  		
+  		if(i % qubits == 0)
+ 			std::cout << std::endl;
+  		std::cout << " " << teste[i];
   	}
-
-
-
+ 	std::cout << std::endl;
 	return true;
 }
 
