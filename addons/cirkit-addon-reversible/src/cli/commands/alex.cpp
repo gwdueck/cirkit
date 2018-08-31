@@ -72,10 +72,11 @@ void print_all_matrix(xt::xarray<complex_t>& t, unsigned int& q)
 void print_line(xt::xarray<complex_t>& t, unsigned int& q)
 {
 	unsigned int line;
-  	std::cout << "Choose line: ";
-  	std::cin >> line;
+	std::string in;
+  	std::cout << "Input: ";
+  	std::cin >> in;
 
-
+  	line = std::stoi(in, nullptr, 2);
   	for (int i = line*q; i < (line+1)*q; ++i)
   		std::cout << " " << t[i];
   	
