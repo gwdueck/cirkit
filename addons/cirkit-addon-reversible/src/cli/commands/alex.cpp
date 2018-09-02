@@ -86,6 +86,7 @@ void print_line(xt::xarray<complex_t>& t, unsigned int& q)
 void print_solution(xt::xarray<complex_t>& t, unsigned int& q)
 {
 	unsigned int j = 0;
+	bool first = true;
   	for (int i = 0; i < t.size(); ++i, ++j)
   	{
 		if(i % q == 0)
@@ -93,10 +94,19 @@ void print_solution(xt::xarray<complex_t>& t, unsigned int& q)
  			std::cout << std::endl;
  			std::cout << "input: " << std::bitset<4>(i/q).to_string() << " => ";
   			j = 0;
+  			first = true;
   		}
   	  	if(t[i] != 0.0)
   		{
-  			std::cout << " " << t[i] << " " << std::bitset<4>(j).to_string();
+  			if(first)
+  			{
+  				std::cout << " " << t[i] << " " << std::bitset<4>(j).to_string();
+  				first = false;
+  			}
+  			else
+  			{
+  				std::cout << " + " << t[i] << " " << std::bitset<4>(j).to_string();
+  			}
   		}
   	}
  	std::cout << std::endl;
@@ -106,17 +116,17 @@ bool alex_command::execute()
 {
 	const auto& circuits = env->store<circuit>().current();
 
-	xt::xarray<complex_t> teste;
+	xt::xarray<complex_t> table;
 
-  	teste = matrix_from_clifford_t_circuit( circuits, is_set( "progress" ) );
+  	table = matrix_from_clifford_t_circuit( circuits, is_set( "progress" ) );
 
   	// Number of qubits
-  	unsigned int qubits = sqrt(teste.size());
+  	unsigned int qubits = sqrt(table.size());
  	// std::cout << "qubits: " << qubits << std::endl;
 
-	// print_all_matrix(teste, qubits);
-	// print_line(teste, qubits);
-	print_solution(teste, qubits);
+	// print_all_matrix(table, qubits);
+	// print_line(table, qubits);
+	print_solution(table, qubits);
 
 
 	return true;
