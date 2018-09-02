@@ -48,6 +48,7 @@ alex_command::alex_command( const environment::ptr& env )
     : cirkit_command( env, "Alex test" )
 {
 	opts.add_options()
+	( "input,l",                              "print single input" )
     ;
 
 }
@@ -69,30 +70,53 @@ void print_all_matrix(xt::xarray<complex_t>& t, unsigned int& q)
  	std::cout << std::endl;
 }
 
-void print_line(xt::xarray<complex_t>& t, unsigned int& q)
+void print_line(xt::xarray<complex_t>& t, const unsigned int& q)
 {
+	unsigned int j = 0;
+	bool first = true;
+	std::string p;
+	unsigned int k = log10(q)/log10(2);
+
 	unsigned int line;
 	std::string in;
   	std::cout << "Input: ";
   	std::cin >> in;
 
   	line = std::stoi(in, nullptr, 2);
-  	for (int i = line*q; i < (line+1)*q; ++i)
-  		std::cout << " " << t[i];
-  	
+  	for (int i = line*q; i < (line+1)*q; ++i, ++j)
+  	{
+		if(t[i] != 0.0)
+  		{
+  			if(first)
+  			{
+  				p = std::bitset<8>(j).to_string();
+  				std::cout << std::endl;
+				std::cout << "input: " << in << " => " << t[i] << " " << p.substr(p.length() - k);
+  				first = false;
+  			}
+  			else
+  			{
+  				p = std::bitset<8>(j).to_string();
+  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
+  			}
+  		}
+  	}
  	std::cout << std::endl;
 }
 
-void print_solution(xt::xarray<complex_t>& t, unsigned int& q)
+void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
 {
 	unsigned int j = 0;
 	bool first = true;
+	std::string p;
+	unsigned int k = log10(q)/log10(2);
   	for (int i = 0; i < t.size(); ++i, ++j)
   	{
 		if(i % q == 0)
   		{
+  			p = std::bitset<8>(i/q).to_string();
  			std::cout << std::endl;
- 			std::cout << "input: " << std::bitset<4>(i/q).to_string() << " => ";
+ 			std::cout << "input: " <<  p.substr(p.length() - k) << " => ";
   			j = 0;
   			first = true;
   		}
@@ -100,12 +124,14 @@ void print_solution(xt::xarray<complex_t>& t, unsigned int& q)
   		{
   			if(first)
   			{
-  				std::cout << " " << t[i] << " " << std::bitset<4>(j).to_string();
+  				p = std::bitset<8>(j).to_string();
+  				std::cout << " " << t[i] << " " << p.substr(p.length() - k);
   				first = false;
   			}
   			else
   			{
-  				std::cout << " + " << t[i] << " " << std::bitset<4>(j).to_string();
+  				p = std::bitset<8>(j).to_string();
+  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
   			}
   		}
   	}
@@ -125,8 +151,10 @@ bool alex_command::execute()
  	// std::cout << "qubits: " << qubits << std::endl;
 
 	// print_all_matrix(table, qubits);
-	// print_line(table, qubits);
-	print_solution(table, qubits);
+	if(is_set("input"))
+		print_line(table, qubits);
+	else
+		print_solution(table, qubits);
 
 
 	return true;
