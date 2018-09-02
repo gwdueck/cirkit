@@ -83,6 +83,25 @@ void print_line(xt::xarray<complex_t>& t, unsigned int& q)
  	std::cout << std::endl;
 }
 
+void print_solution(xt::xarray<complex_t>& t, unsigned int& q)
+{
+	unsigned int j = 0;
+  	for (int i = 0; i < t.size(); ++i, ++j)
+  	{
+		if(i % q == 0)
+  		{
+ 			std::cout << std::endl;
+ 			std::cout << "input: " << std::bitset<4>(i/q).to_string() << " => ";
+  			j = 0;
+  		}
+  	  	if(t[i] != 0.0)
+  		{
+  			std::cout << " " << t[i] << " " << std::bitset<4>(j).to_string();
+  		}
+  	}
+ 	std::cout << std::endl;
+}
+
 bool alex_command::execute()
 {
 	const auto& circuits = env->store<circuit>().current();
@@ -96,7 +115,9 @@ bool alex_command::execute()
  	// std::cout << "qubits: " << qubits << std::endl;
 
 	// print_all_matrix(teste, qubits);
-	print_line(teste, qubits);
+	// print_line(teste, qubits);
+	print_solution(teste, qubits);
+
 
 	return true;
 }
