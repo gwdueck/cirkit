@@ -48,7 +48,7 @@ alex_command::alex_command( const environment::ptr& env )
     : cirkit_command( env, "Alex test" )
 {
 	opts.add_options()
-	( "input,l",                              "print single input" )
+	( "input,i",	value( &input ),	"print single input -- use it in binary" )
     ;
 
 }
@@ -70,7 +70,7 @@ void print_all_matrix(xt::xarray<complex_t>& t, unsigned int& q)
  	std::cout << std::endl;
 }
 
-void print_line(xt::xarray<complex_t>& t, const unsigned int& q)
+void print_line(xt::xarray<complex_t>& t, unsigned int& q, std::string input)
 {
 	unsigned int j = 0;
 	bool first = true;
@@ -78,30 +78,34 @@ void print_line(xt::xarray<complex_t>& t, const unsigned int& q)
 	unsigned int k = log10(q)/log10(2);
 
 	unsigned int line;
-	std::string in;
-  	std::cout << "Input: ";
-  	std::cin >> in;
-
-  	line = std::stoi(in, nullptr, 2);
-  	for (int i = line*q; i < (line+1)*q; ++i, ++j)
+  	line = std::stoi(input, nullptr, 2);
+  	if(line >= q)
   	{
-		if(t[i] != 0.0)
-  		{
-  			if(first)
-  			{
-  				p = std::bitset<8>(j).to_string();
-  				std::cout << std::endl;
-				std::cout << "input: " << in << " => " << t[i] << " " << p.substr(p.length() - k);
-  				first = false;
-  			}
-  			else
-  			{
-  				p = std::bitset<8>(j).to_string();
-  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
-  			}
-  		}
+  		std::cout << "Out of range. The circuit has " << k << " qubits." << std::endl;
   	}
- 	std::cout << std::endl;
+  	else
+  	{
+  		for (int i = line*q; i < (line+1)*q; ++i, ++j)
+	  	{
+			if(t[i] != 0.0)
+	  		{
+	  			if(first)
+	  			{
+	  				p = std::bitset<8>(j).to_string();
+	  				// std::cout << std::endl;
+					std::string pp = std::bitset<8>(line).to_string();
+					std::cout << "input: " << pp.substr(pp.length() - k) << " => " << t[i] << " " << p.substr(p.length() - k);
+	  				first = false;
+	  			}
+	  			else
+	  			{
+	  				p = std::bitset<8>(j).to_string();
+	  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
+	  			}
+	  		}
+	  	}
+	  	std::cout << std::endl;
+  	}
 }
 
 void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
@@ -152,7 +156,7 @@ bool alex_command::execute()
 
 	// print_all_matrix(table, qubits);
 	if(is_set("input"))
-		print_line(table, qubits);
+		print_line(table, qubits, input);
 	else
 		print_solution(table, qubits);
 

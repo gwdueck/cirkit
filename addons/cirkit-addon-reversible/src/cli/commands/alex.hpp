@@ -53,6 +53,7 @@ class alex_command : public cirkit_command
   		bool execute();
 
 	private:
+		std::string input;
 };
 
 }
