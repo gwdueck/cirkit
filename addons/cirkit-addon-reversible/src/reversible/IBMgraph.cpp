@@ -162,6 +162,9 @@ namespace cirkit
         
         for ( auto &p : path_list )
         {
+            if(p.cnot3())
+                std::cout << "CNOT3 => " << v << " " << w <<std::endl;
+            // std::cout << "CNOT3: " << trans_path[v][w].cnot3() << std::endl;
             if(p.costPlus() < best_cost )
             {
                 best_cost = p.costPlus();

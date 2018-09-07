@@ -42,27 +42,19 @@ namespace cirkit
     
 
     bool TransPath::cnot3(){
-        bool cn3 = false;
-        for (int i = 0; i < tpath.size()/2; ++i)
+        if(tpath.size() > 1)
         {
-            if(tpath[i].opt() == cab && tpath[i+1].opt() == cab)
-                cn3 = true;
-            else if(tpath[i].opt() == cab && tpath[i+1].opt() == nop)
-                cn3 = true;
-            else if(tpath[i].opt() == tab && tpath[i+1].opt() == nop)
-                cn3 = true;
+            if(tpath[0].opt() == cab && tpath[1].opt() == nop)
+                return true;
             else
-            {
-                cn3 = false;
-                break;
-            }
+                return false;
         }
-        return cn3;
+        return false;
     }
 
     int TransPath::opt(){
         int total = 0;
-        for (int i = 0; i < tpath.size()/2; ++i){
+        for (int i = 0; i < tpath.size()/2; i=i+2){
             if( tpath[i].opt() == cba && tpath[i+1].opt() == cab)
                 total += 4;
             else if( tpath[i].opt() == cba && tpath[i+1].opt() == tba)
