@@ -140,11 +140,13 @@ void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
   		}
   	}
  	std::cout << std::endl;
+
+  // std::cout << t << std::endl;
 }
 
 bool alex_command::execute()
 {
-	const auto& circuits = env->store<circuit>().current();
+	const circuit circuits = env->store<circuit>().current();
 
 	xt::xarray<complex_t> table;
 

@@ -40,21 +40,40 @@ namespace cirkit
         std::cout << "cost = " << cost() << std::endl;
     }
     
+
+    bool TransPath::cnot3(){
+        bool cn3 = false;
+        for (int i = 0; i < tpath.size()/2; ++i)
+        {
+            if(tpath[i].opt() == cab && tpath[i+1].opt() == cab)
+                cn3 = true;
+            else if(tpath[i].opt() == cab && tpath[i+1].opt() == nop)
+                cn3 = true;
+            else if(tpath[i].opt() == tab && tpath[i+1].opt() == nop)
+                cn3 = true;
+            else
+            {
+                cn3 = false;
+                break;
+            }
+        }
+        return cn3;
+    }
+
     int TransPath::opt(){
         int total = 0;
         for (int i = 0; i < tpath.size()/2; ++i){
-            // std::cout << "AA: " << tpath[i].opt() << " AAA: " << tpath[i+1].opt() << std::endl;
-            if( tpath[i].opt() == 1 && tpath[i+1].opt() == 0)
+            if( tpath[i].opt() == cba && tpath[i+1].opt() == cab)
                 total += 4;
-            else if( tpath[i].opt() == 1 && tpath[i+1].opt() == 3)
+            else if( tpath[i].opt() == cba && tpath[i+1].opt() == tba)
                 total += 4;
-            else if( tpath[i].opt() == 1 && tpath[i+1].opt() == 9)
+            else if( tpath[i].opt() == cba && tpath[i+1].opt() == flip)
                 total += 4;
-            else if( tpath[i].opt() == 2 && tpath[i+1].opt() == 0)
+            else if( tpath[i].opt() == tab && tpath[i+1].opt() == cab)
                 total += 4;
-            else if( tpath[i].opt() == 2 && tpath[i+1].opt() == 3)
+            else if( tpath[i].opt() == tab && tpath[i+1].opt() == tba)
                 total += 4;
-            else if( tpath[i].opt() == 2 && tpath[i+1].opt() == 9)
+            else if( tpath[i].opt() == tab && tpath[i+1].opt() == flip)
                 total += 4;
         }
         return total;

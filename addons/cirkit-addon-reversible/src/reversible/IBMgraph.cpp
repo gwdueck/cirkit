@@ -146,7 +146,7 @@ namespace cirkit
             }
         }
     }
-    
+
     /* Precondition: the path_list contains all paths from v to w
      Postcondition: the best path and its cost will be stored in:
         - trans_cost[v][w]
@@ -159,6 +159,7 @@ namespace cirkit
         int best_cost;
         best_tp = path_list[0];
         best_cost = best_tp.costPlus();
+        
         for ( auto &p : path_list )
         {
             if(p.costPlus() < best_cost )
@@ -171,6 +172,31 @@ namespace cirkit
         best_tp.addInverse();
         trans_path[v][w] = best_tp;
     }
+
+    // void set_cnot3_path(int v, int w )
+    // {
+    //     TransPath tp, best_tp;
+    //     int best_cost;
+    //     best_tp = path_list[0];
+    //     best_cost = best_tp.costPlus();
+        
+    //     for ( auto &p : path_list )
+    //     {
+    //         if(p.cnot3() < best_cost)
+    //         {
+    //             best_cost = p.costPlus();
+    //             best_tp = p;   
+    //         }
+    //         if(p.costPlus() < best_cost )
+    //         {
+    //             best_cost = p.costPlus();
+    //             best_tp = p;
+    //         }
+    //     }
+    //     trans_cost[v][w] = best_cost;
+    //     best_tp.addInverse();
+    //     trans_path[v][w] = best_tp;
+    // }
     
     void allocate_data_stuctures(){
         trans_cost = new int*[graph_size];
@@ -182,7 +208,7 @@ namespace cirkit
         }
     }
     
-    void create_trans( bool verbose )
+    void create_trans( bool verbose, bool cnot3 )
     {
         allocate_data_stuctures();
         path_list.clear();
@@ -208,7 +234,7 @@ namespace cirkit
                     path_list.clear();
                     tp.clear();
                     find_all_paths( v,  w, tp, visited );
-                    set_best_path( v,  w );
+                    set_best_path( v,  w);
                 }
             }
         }
@@ -237,14 +263,16 @@ namespace cirkit
                 {
                     if( v != w )
                     {
-                        std::cout << "cnot(" << v << "," << w << ") = ";
+                        std::cout << "cnot(" << v << "," << w << ") => ";
                         trans_path[v][w].print();
                         std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
+                        std::cout << "CNOT3: " << trans_path[v][w].cnot3() << std::endl;
                     }
                 }
             }
         }
     }
+
     // expand the cnot gates that are not supported by the architecture
     // assume that the corresponding matricies have been set up correctly
     void expand_cnots( circuit& circ_out, const circuit& circ_in ){

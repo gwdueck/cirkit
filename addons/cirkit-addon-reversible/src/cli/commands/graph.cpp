@@ -63,6 +63,7 @@ graph_command::graph_command( const environment::ptr& env )
     ( "verbose,v", "verbose mode")
     ( "transform,t", "transform non supported cnot gates")
     ( "rm_dup,m",  "Remove duplicate gates" )
+    ( "cnot3",  "only CNOT3 gates" )
     ;
     add_new_option();
 }
@@ -71,11 +72,17 @@ graph_command::graph_command( const environment::ptr& env )
 bool graph_command::execute()
 {
     bool verbose = false;
+    bool cnot3 = false;
     
-    
+
     if( is_set( "verbose" ) )
     {
         verbose = true;
+    }
+
+    if( is_set( "cnot3" ) )
+    {
+        cnot3 = true;
     }
 
     if( is_set( "read" ) )
@@ -86,7 +93,7 @@ bool graph_command::execute()
         print_graph( );
     }
     if( is_set( "create" ) ){
-        create_trans( verbose );
+        create_trans( verbose, cnot3 );
     }
     if( is_set( "delete" ) ){
         delete_graph( );

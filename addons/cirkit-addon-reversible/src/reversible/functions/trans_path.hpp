@@ -49,6 +49,7 @@ namespace cirkit
         void add( MoveQubit );
         void print();
         int opt();
+        bool cnot3();
         void clear() { tpath.clear(); };
         void remove_last(){ tpath.pop_back(); };
         int cost();
