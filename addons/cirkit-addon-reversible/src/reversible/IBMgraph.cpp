@@ -159,48 +159,26 @@ namespace cirkit
         int best_cost;
         best_tp = path_list[0];
         best_cost = best_tp.costPlus();
-        
+        unsigned int tttt = 0;
         for ( auto &p : path_list )
         {
-            if(p.cnot3())
-                std::cout << "CNOT3 => " << v << " " << w <<std::endl;
-            // std::cout << "CNOT3: " << trans_path[v][w].cnot3() << std::endl;
+            if(p.cnot3()){
+                std::cout << "ACHOU!!!!" << std::endl;
+                p.print();
+            }
             if(p.costPlus() < best_cost )
             {
                 best_cost = p.costPlus();
                 best_tp = p;
             }
         }
+
         trans_cost[v][w] = best_cost;
         best_tp.addInverse();
         trans_path[v][w] = best_tp;
     }
 
-    // void set_cnot3_path(int v, int w )
-    // {
-    //     TransPath tp, best_tp;
-    //     int best_cost;
-    //     best_tp = path_list[0];
-    //     best_cost = best_tp.costPlus();
-        
-    //     for ( auto &p : path_list )
-    //     {
-    //         if(p.cnot3() < best_cost)
-    //         {
-    //             best_cost = p.costPlus();
-    //             best_tp = p;   
-    //         }
-    //         if(p.costPlus() < best_cost )
-    //         {
-    //             best_cost = p.costPlus();
-    //             best_tp = p;
-    //         }
-    //     }
-    //     trans_cost[v][w] = best_cost;
-    //     best_tp.addInverse();
-    //     trans_path[v][w] = best_tp;
-    // }
-    
+   
     void allocate_data_stuctures(){
         trans_cost = new int*[graph_size];
         trans_path = new TransPath*[graph_size];
@@ -269,7 +247,6 @@ namespace cirkit
                         std::cout << "cnot(" << v << "," << w << ") => ";
                         trans_path[v][w].print();
                         std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
-                        std::cout << "CNOT3: " << trans_path[v][w].cnot3() << std::endl;
                     }
                 }
             }

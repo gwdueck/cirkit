@@ -67,7 +67,6 @@ namespace cirkit
         MoveQubit( move_qubit_type, int, int );
         void set( move_qubit_type, int, int );
         void print();
-        int opt();
         int cost();
         void invert();
         move_qubit_type getType() { return mv_type; };

@@ -42,30 +42,23 @@ namespace cirkit
     
 
     bool TransPath::cnot3(){
-        if(tpath.size() > 1)
-        {
-            if(tpath[0].opt() == cab && tpath[1].opt() == nop)
-                return true;
-            else
-                return false;
-        }
         return false;
     }
 
     int TransPath::opt(){
         int total = 0;
         for (int i = 0; i < tpath.size()/2; i=i+2){
-            if( tpath[i].opt() == cba && tpath[i+1].opt() == cab)
+            if( tpath[i].getType() == cba && tpath[i+1].getType() == cab)
                 total += 4;
-            else if( tpath[i].opt() == cba && tpath[i+1].opt() == tba)
+            else if( tpath[i].getType()== cba && tpath[i+1].getType() == tba)
                 total += 4;
-            else if( tpath[i].opt() == cba && tpath[i+1].opt() == flip)
+            else if( tpath[i].getType() == cba && tpath[i+1].getType() == flip)
                 total += 4;
-            else if( tpath[i].opt() == tab && tpath[i+1].opt() == cab)
+            else if( tpath[i].getType() == tab && tpath[i+1].getType() == cab)
                 total += 4;
-            else if( tpath[i].opt() == tab && tpath[i+1].opt() == tba)
+            else if( tpath[i].getType() == tab && tpath[i+1].getType() == tba)
                 total += 4;
-            else if( tpath[i].opt() == tab && tpath[i+1].opt() == flip)
+            else if( tpath[i].getType() == tab && tpath[i+1].getType() == flip)
                 total += 4;
         }
         return total;
