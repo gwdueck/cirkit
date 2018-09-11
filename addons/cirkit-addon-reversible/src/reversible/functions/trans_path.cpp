@@ -25,6 +25,7 @@
  */
 
 #include <iostream>
+#include <cmath>
 #include "trans_path.hpp"
 #include "move_qubit.hpp"
 
@@ -41,13 +42,13 @@ namespace cirkit
     }
     
 
-    bool TransPath::cnot3(){
+    int TransPath::cnot3(){
         if(tpath[tpath.size()-1].getType() != nop)
-            return false;
+            return 0;
 
         if(tpath[0].getType() == cab && tpath[1].getType() == nop)
-            return true;
-        
+            return 8;
+
         unsigned movement = 0;
         for (int i = tpath.size()-2 ; i >= 0 ; --i)
         {
@@ -57,9 +58,9 @@ namespace cirkit
                 ++movement;
         }
         if(movement >= 2)
-            return true;
+            return (12*movement - (pow(2,movement)+pow(2,++movement)-2));
         else
-            return false;
+            return 0;
     }
 
     int TransPath::opt(){

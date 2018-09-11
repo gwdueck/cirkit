@@ -162,9 +162,13 @@ namespace cirkit
         unsigned int tttt = 0;
         for ( auto &p : path_list )
         {
-            if(p.cnot3()){
-                std::cout << "ACHOU!!!! CNOT " << v << " " << w << std::endl;
-                p.print();
+            if(p.cnot3() > 0){
+                if(p.cost()-p.cnot3() <= 10)
+                {
+                    std::cout << "ACHOU!!!! CNOT " << v << " " << w << std::endl;
+                    p.print();
+                    std::cout << "CUSTO: " << p.cost() << " CUSTO FINAL: " << (2*p.cost())-p.cnot3() << std::endl;
+                }
             }
             if(p.costPlus() < best_cost )
             {
