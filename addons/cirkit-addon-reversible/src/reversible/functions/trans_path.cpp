@@ -42,7 +42,24 @@ namespace cirkit
     
 
     bool TransPath::cnot3(){
-        return false;
+        if(tpath[tpath.size()-1].getType() != nop)
+            return false;
+
+        if(tpath[0].getType() == cab && tpath[1].getType() == nop)
+            return true;
+        
+        unsigned movement = 0;
+        for (int i = tpath.size()-2 ; i >= 0 ; --i)
+        {
+            if(tpath[i].getType() != cab )
+                break;
+            else
+                ++movement;
+        }
+        if(movement >= 2)
+            return true;
+        else
+            return false;
     }
 
     int TransPath::opt(){

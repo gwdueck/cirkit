@@ -163,7 +163,7 @@ namespace cirkit
         for ( auto &p : path_list )
         {
             if(p.cnot3()){
-                std::cout << "ACHOU!!!!" << std::endl;
+                std::cout << "ACHOU!!!! CNOT " << v << " " << w << std::endl;
                 p.print();
             }
             if(p.costPlus() < best_cost )
