@@ -59,7 +59,7 @@ namespace cirkit
 	bool read_graph( const std::string& filename );
 	void print_graph( );
 	void delete_graph( );
-	void create_trans( bool verbose, bool cnot3 );
+	void create_trans( bool verbose );
     void expand_cnots( circuit& circ_out, const circuit& circ_in );
 
 }

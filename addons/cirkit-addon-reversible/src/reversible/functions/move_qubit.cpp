@@ -29,8 +29,8 @@
 
 namespace cirkit
 {
-    const std::string MoveQubit::type_name[10] = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip" };
-    const int MoveQubit::move_cost[10] = {6, 5, 5, 6, 6, 5, 5, 6, 0, 4};
+    const std::string MoveQubit::type_name[11] = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip", "cnot3"};
+    const int MoveQubit::move_cost[11] = {6, 5, 5, 6, 6, 5, 5, 6, 0, 4, 3};
     MoveQubit::MoveQubit( move_qubit_type t, int a, int b){
         mv_type = t;
         v = a;

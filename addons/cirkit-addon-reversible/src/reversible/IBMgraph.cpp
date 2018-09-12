@@ -159,26 +159,12 @@ namespace cirkit
         int best_cost;
         best_tp = path_list[0];
         best_cost = best_tp.costPlus();
-        unsigned int tttt = 0;
         for ( auto &p : path_list )
         {
-            // if(p.cnot3() > 0)
-            // {       
-            //     if(p.cost()-p.cnot3() <= 10)
-            //     {
-            //         std::cout << "ACHOU!!!! CNOT " << v << " " << w << std::endl;
-            //         p.print();
-            //         std::cout << "CUSTO: " << p.costPlus() << " CUSTO FINAL: " << (2*p.cost())-p.cnot3() << std::endl;
-            //     }
-            // }
+            p.movcnot3();
             if(p.costPlus() < best_cost )
             {
                 best_cost = p.costPlus();
-                best_tp = p;
-            }
-            if(p.costPlus()-p.cnot3() < best_cost)
-            {
-                best_cost = p.costPlus()-p.cnot3();
                 best_tp = p;
             }
         }
@@ -199,7 +185,7 @@ namespace cirkit
         }
     }
     
-    void create_trans( bool verbose, bool cnot3 )
+    void create_trans( bool verbose )
     {
         allocate_data_stuctures();
         path_list.clear();
@@ -239,15 +225,15 @@ namespace cirkit
                 }
                 std::cout << std::endl;
             }
-            std::cout << "== Optimization ==" << std::endl;
-            for( int v = 0; v < graph_size; v++)
-            {
-                for( int w = 0; w < graph_size; w++)
-                {
-                    std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
-                }
-                std::cout << std::endl;
-            }
+            // std::cout << "== Optimization ==" << std::endl;
+            // for( int v = 0; v < graph_size; v++)
+            // {
+            //     for( int w = 0; w < graph_size; w++)
+            //     {
+            //         std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
+            //     }
+            //     std::cout << std::endl;
+            // }
             for( int v = 0; v < graph_size; v++)
             {
                 for( int w = 0; w < graph_size; w++)

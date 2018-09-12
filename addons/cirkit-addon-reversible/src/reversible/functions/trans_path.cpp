@@ -31,6 +31,7 @@
 
 namespace cirkit
 {
+   
     void TransPath::add( MoveQubit q ){
         tpath.push_back( q );
     }
@@ -40,27 +41,55 @@ namespace cirkit
         }
         std::cout << "cost = " << cost() << std::endl;
     }
-    
 
-    int TransPath::cnot3(){
-        if(tpath[tpath.size()-1].getType() != nop)
-            return 0;
-
-        if(tpath[0].getType() == cab && tpath[1].getType() == nop)
-            return 8;
-
-        unsigned movement = 0;
-        for (int i = tpath.size()-2 ; i >= 0 ; --i)
+    void TransPath::movcnot3(){
+        if(tpath.size() > 1)
         {
-            if(tpath[i].getType() != cab )
-                break;
+            if(tpath.size() == 2)
+            {
+                if(tpath[0].getType() == cab && tpath[1].getType() == nop)
+                {
+                    unsigned b = tpath[tpath.size()-1].getB();
+                    tpath.pop_back();
+                    unsigned a = tpath[tpath.size()-1].getA();
+                    tpath.pop_back();
+                    tpath.push_back( MoveQubit( cnot3, a, b ) );
+                }
+            }
             else
-                ++movement;
+            {
+                if(tpath[tpath.size()-1].getType() == nop)
+                {
+                    unsigned movement = 0;
+                    for (int i = tpath.size()-2 ; i >= 0 ; --i)
+                    {
+                        if(tpath[i].getType() != cab )
+                            break;
+                        else
+                            ++movement;
+                    }
+                    if(movement >= 2)
+                    {
+                        std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+                        for ( auto &p : tpath ) 
+                            p.print();
+                        std::cout << "cost = " << cost() << std::endl;
+                        unsigned b = tpath[tpath.size()-1].getB();
+                        for (int i = 0; i < movement; ++i)
+                            tpath.pop_back();
+                        unsigned a = tpath[tpath.size()-1].getA();
+                        tpath.pop_back();
+                        for (int i = 0; i < movement; ++i)
+                            tpath.push_back( MoveQubit( cnot3, a, b ) );
+                        for ( auto &p : tpath ) 
+                            p.print();
+                        std::cout << "cost = " << cost() << std::endl;
+                        std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+                    }       
+                }
+                
+            }    
         }
-        if(movement >= 2)
-            return (12*movement - (pow(2,movement)+pow(2,++movement)-2));
-        else
-            return 0;
     }
 
     int TransPath::opt(){
@@ -104,9 +133,12 @@ namespace cirkit
         MoveQubit q;
         for(int i = tpath.size() - 2; i >= 0; i-- )
         {
-            q = tpath[i];
-            q.invert();
-            tpath.push_back( q );
+            if(tpath[i].getType() != cnot3)
+            {
+                q = tpath[i];
+                q.invert();
+                tpath.push_back( q );    
+            }
         }
     }
 }
