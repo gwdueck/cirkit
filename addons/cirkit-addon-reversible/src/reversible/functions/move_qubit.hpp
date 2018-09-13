@@ -73,6 +73,7 @@ namespace cirkit
         move_qubit_type getType() { return mv_type; };
         unsigned int getA() { return v; };
         unsigned int getB() { return w; };
+        unsigned int getC() { return z; };
     };
     
 

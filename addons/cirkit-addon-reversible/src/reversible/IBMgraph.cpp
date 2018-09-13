@@ -253,7 +253,7 @@ namespace cirkit
     // assume that the corresponding matricies have been set up correctly
     void expand_cnots( circuit& circ_out, const circuit& circ_in ){
         
-        unsigned target, control;
+        unsigned target, control, moreCnot3 = 0;
         std::vector<unsigned int> new_controls, control2, old_controls;
         
         copy_metadata( circ_in, circ_out );
@@ -350,11 +350,26 @@ namespace cirkit
                                 append_hadamard( circ_out, p.getA() );
                                 append_hadamard( circ_out, p.getB() );
                                 break;
-                            // case cnot3 :
-                            //     append_cnot( circ_out, p.getA(), p.getA() );
-                            //     append_cnot( circ_out, p.getB(), p.getA() );
+                            case cnot3 :
+                                if(moreCnot3 == 0)
+                                {
+                                    std::cout << "TESTE: " << p.getA() << " " << p.getB() << " " << p.getC() << std::endl;
+                                    append_cnot( circ_out, p.getA(), p.getB() );
+                                    append_cnot( circ_out, p.getB(), p.getC() );
+                                    append_cnot( circ_out, p.getA(), p.getB() );
+                                    append_cnot( circ_out, p.getB(), p.getC() );
+                                    ++moreCnot3;
+                                }
+                                else
+                                {
+                                    unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2;
+                                    append_cnot( circ_out, p.getB(), p.getC() );
+                                    for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)
+                                        circ_out.append_gate() = circ_out[j];
+                                    ++moreCnot3;
+                                }
 
-                            //     break;
+                                break;
                             default : std::cout << "ERROR expand_cnots" << std::endl;
                         }
                     }
