@@ -42,7 +42,7 @@ namespace cirkit
         std::cout << "cost = " << cost() << std::endl;
     }
 
-    void TransPath::movcnot3(){
+    void TransPath::movCnot3(){
         if(tpath.size() > 1)
         {
             if(tpath.size() == 2)
@@ -70,10 +70,10 @@ namespace cirkit
                     }
                     if(movement >= 2)
                     {
-                        std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-                        for ( auto &p : tpath ) 
-                            p.print();
-                        std::cout << "cost = " << cost() << std::endl;
+                        // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+                        // for ( auto &p : tpath ) 
+                        //     p.print();
+                        // std::cout << "cost = " << cost() << std::endl;
                         unsigned b = tpath[tpath.size()-1].getB();
                         for (int i = 0; i < movement; ++i)
                             tpath.pop_back();
@@ -81,10 +81,11 @@ namespace cirkit
                         tpath.pop_back();
                         for (int i = 0; i < movement; ++i)
                             tpath.push_back( MoveQubit( cnot3, a, b ) );
-                        for ( auto &p : tpath ) 
-                            p.print();
-                        std::cout << "cost = " << cost() << std::endl;
-                        std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+                        // for ( auto &p : tpath ) 
+                        //     p.print();
+                        // std::cout << "cost = " << cost() << std::endl;
+                        // std::cout << "CNOT3 COST: " << cnot3Cost() << std::endl;
+                        // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
                     }       
                 }
                 
@@ -111,12 +112,24 @@ namespace cirkit
         return total;
     }
 
+    int TransPath::cnot3Cost(){
+        int res = 0;
+        for ( auto &p : tpath ) {
+            if(p.getType() == cnot3)
+                ++res;
+        }
+        if(res > 0)
+            return (pow(2,res)+pow(2,++res)-2);
+        else
+            return 1;
+    }
+
     int TransPath::cost(){
         int res = 0;
         for ( auto &p : tpath ) {
             res += p.cost();
         }
-        return res;
+        return res + ( cnot3Cost() - 1 );
     }
     
     // add the cost of the inverse path
@@ -125,9 +138,8 @@ namespace cirkit
         for ( auto &p : tpath ) {
             res += p.cost();
         }
-        return 2*res - tpath.back().cost();
+        return 2*res - tpath.back().cost() + ( cnot3Cost() - 1 );
     }
-    
     
     void TransPath::addInverse(){
         MoveQubit q;

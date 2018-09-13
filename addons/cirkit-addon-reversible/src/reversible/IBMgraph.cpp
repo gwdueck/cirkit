@@ -161,7 +161,7 @@ namespace cirkit
         best_cost = best_tp.costPlus();
         for ( auto &p : path_list )
         {
-            p.movcnot3();
+            p.movCnot3();
             if(p.costPlus() < best_cost )
             {
                 best_cost = p.costPlus();

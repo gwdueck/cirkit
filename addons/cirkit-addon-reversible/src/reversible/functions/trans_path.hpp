@@ -49,11 +49,12 @@ namespace cirkit
         void add( MoveQubit );
         void print();
         int opt();
-        void movcnot3();
+        void movCnot3();
         void clear() { tpath.clear(); };
         void remove_last(){ tpath.pop_back(); };
         int cost();
         int costPlus();
+        int cnot3Cost();
         void addInverse();
         unsigned int TransPath::getQA( int );
         unsigned int TransPath::getQB( int );
