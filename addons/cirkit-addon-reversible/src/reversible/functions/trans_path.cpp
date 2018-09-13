@@ -49,11 +49,12 @@ namespace cirkit
             {
                 if(tpath[0].getType() == cab && tpath[1].getType() == nop)
                 {
-                    unsigned b = tpath[tpath.size()-1].getB();
+                    unsigned a = tpath[tpath.size()-2].getA();
+                    unsigned b = tpath[tpath.size()-1].getA();
+                    unsigned c = tpath[tpath.size()-1].getB();
                     tpath.pop_back();
-                    unsigned a = tpath[tpath.size()-1].getA();
                     tpath.pop_back();
-                    tpath.push_back( MoveQubit( cnot3, a, b ) );
+                    tpath.push_back( MoveQubit( cnot3, a, b, c ) );
                 }
             }
             else

@@ -366,6 +366,7 @@ namespace cirkit
                                     append_cnot( circ_out, p.getB(), p.getC() );
                                     for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)
                                         circ_out.append_gate() = circ_out[j];
+                                    append_cnot( circ_out, p.getB(), p.getC() );
                                     ++moreCnot3;
                                 }
 
