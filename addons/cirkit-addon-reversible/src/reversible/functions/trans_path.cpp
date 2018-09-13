@@ -74,13 +74,22 @@ namespace cirkit
                         // for ( auto &p : tpath ) 
                         //     p.print();
                         // std::cout << "cost = " << cost() << std::endl;
-                        unsigned b = tpath[tpath.size()-1].getB();
+
+                        std::vector<MoveQubit> cnot3_list;    
+                        unsigned a,b,c;
                         for (int i = 0; i < movement; ++i)
+                        {
+                            a = tpath[tpath.size()-2].getA();
+                            b = tpath[tpath.size()-1].getA();
+                            c = tpath[tpath.size()-1].getB();
+                            cnot3_list.insert( cnot3_list.begin(), MoveQubit( cnot3, a, b, c ) );
                             tpath.pop_back();
-                        unsigned a = tpath[tpath.size()-1].getA();
+                        }
+
                         tpath.pop_back();
-                        for (int i = 0; i < movement; ++i)
-                            tpath.push_back( MoveQubit( cnot3, a, b ) );
+                        for ( auto &p : cnot3_list )
+                            tpath.push_back( p );
+
                         // for ( auto &p : tpath ) 
                         //     p.print();
                         // std::cout << "cost = " << cost() << std::endl;

@@ -61,10 +61,11 @@ namespace cirkit
         static const std::string type_name[11];
         static const int move_cost[11];
         move_qubit_type mv_type;
-        int v,w;
+        int v,w,z=-1;
     public:
         MoveQubit() {};
         MoveQubit( move_qubit_type, int, int );
+        MoveQubit( move_qubit_type, int, int, int );
         void set( move_qubit_type, int, int );
         void print();
         int cost();

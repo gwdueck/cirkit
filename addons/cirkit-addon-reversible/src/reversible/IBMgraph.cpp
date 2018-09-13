@@ -350,6 +350,11 @@ namespace cirkit
                                 append_hadamard( circ_out, p.getA() );
                                 append_hadamard( circ_out, p.getB() );
                                 break;
+                            // case cnot3 :
+                            //     append_cnot( circ_out, p.getA(), p.getA() );
+                            //     append_cnot( circ_out, p.getB(), p.getA() );
+
+                            //     break;
                             default : std::cout << "ERROR expand_cnots" << std::endl;
                         }
                     }
