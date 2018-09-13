@@ -353,7 +353,6 @@ namespace cirkit
                             case cnot3 :
                                 if(moreCnot3 == 0)
                                 {
-                                    std::cout << "TESTE: " << p.getA() << " " << p.getB() << " " << p.getC() << std::endl;
                                     append_cnot( circ_out, p.getA(), p.getB() );
                                     append_cnot( circ_out, p.getB(), p.getC() );
                                     append_cnot( circ_out, p.getA(), p.getB() );
