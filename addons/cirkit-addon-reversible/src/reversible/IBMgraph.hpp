@@ -57,7 +57,9 @@ namespace cirkit
 	extern std::vector<TransPath> path_list; //-- it was giving memory error (now it is in cpp file)
 
 	bool read_graph( const std::string& filename );
+	bool write_to_file( const std::string& filename );
 	void print_graph( );
+	void print_matrix( );
 	void delete_graph( );
 	void create_trans( bool verbose );
     void expand_cnots( circuit& circ_out, const circuit& circ_in );

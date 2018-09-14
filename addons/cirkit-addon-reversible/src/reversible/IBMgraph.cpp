@@ -66,9 +66,37 @@ namespace cirkit
             graphfile >> v >> w;
             graph_adjacency[v][w] = true;
         }
+        graphfile.close();
         return true;
     }
     
+    bool write_to_file ( const std::string& filename )
+    {
+        std::ofstream graphfile ( filename );
+        if ( !graphfile.is_open() )
+            return false;
+        graphfile << graph_size << std::endl;
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+                graphfile << trans_cost[v][w] << " ";
+            graphfile << std::endl;
+        }
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+            {
+                if( v != w )
+                {
+                    graphfile << "cnot(" << v << "," << w << ") => ";
+                    trans_path[v][w].print( graphfile );
+                }
+            }
+        }
+        graphfile.close();
+        return true;
+    }
+
     void print_graph( ){
         for( int i = 0; i < graph_size; i++ ){
             for( int j = 0; j < graph_size; j++ ){
@@ -77,7 +105,17 @@ namespace cirkit
             std::cout << std::endl;
         }
     }
-    
+
+    void print_matrix( )
+    {
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+                std::cout << trans_cost[v][w] << " ";
+            std::cout << std::endl;
+        }
+    }
+
     void delete_graph( ){
         for( int i = 0; i < graph_size; i++ ){
             delete [] graph_adjacency[i];
@@ -381,8 +419,6 @@ namespace cirkit
                circ_out.append_gate() = gate;
             }
         }
-        std::cout << "ENTRADA: " << circ_in.lines() << " " << circ_in.num_gates() << std::endl;
-    std::cout << "  SAIDA: " << circ_in.lines() << " " << circ_out.num_gates() << std::endl;
     }
     
 }

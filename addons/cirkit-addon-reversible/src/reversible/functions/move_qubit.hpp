@@ -37,6 +37,7 @@
 #define MOVE_QUBIT_HPP
 
 #include <string>
+#include <fstream>
 
 
 
@@ -68,6 +69,7 @@ namespace cirkit
         MoveQubit( move_qubit_type, int, int, int );
         void set( move_qubit_type, int, int );
         void print();
+        void print( std::ofstream& );
         int cost();
         void invert();
         move_qubit_type getType() { return mv_type; };

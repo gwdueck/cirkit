@@ -41,6 +41,12 @@ namespace cirkit
         }
         std::cout << "cost = " << cost() << std::endl;
     }
+    void TransPath::print( std::ofstream& graphfile ){
+        for ( auto &p : tpath ) {
+            p.print( graphfile );
+        }
+        graphfile << "cost = " << cost() << std::endl;
+    }
 
     void TransPath::movCnot3(){
         if(tpath.size() > 1)
@@ -71,11 +77,6 @@ namespace cirkit
                     }
                     if(movement >= 2)
                     {
-                        // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-                        // for ( auto &p : tpath ) 
-                        //     p.print();
-                        // std::cout << "cost = " << cost() << std::endl;
-
                         std::vector<MoveQubit> cnot3_list;    
                         unsigned a,b,c;
                         for (int i = 0; i < movement; ++i)
@@ -90,12 +91,6 @@ namespace cirkit
                         tpath.pop_back();
                         for ( auto &p : cnot3_list )
                             tpath.push_back( p );
-
-                        // for ( auto &p : tpath ) 
-                        //     p.print();
-                        // std::cout << "cost = " << cost() << std::endl;
-                        // std::cout << "CNOT3 COST: " << cnot3Cost() << std::endl;
-                        // std::cout << "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
                     }       
                 }
                 

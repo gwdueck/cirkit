@@ -63,6 +63,8 @@ graph_command::graph_command( const environment::ptr& env )
     ( "verbose,v", "verbose mode")
     ( "transform,t", "transform non supported cnot gates")
     ( "rm_dup,m",  "Remove duplicate gates" )
+    ( "matrix_cost,q",  "Print matrix cost" )
+    ( "file", value( &filename ), "Write matrix and transformations to a file" )
     ;
     add_new_option();
 }
@@ -83,6 +85,14 @@ bool graph_command::execute()
     }
     if( is_set( "print" ) ){
         print_graph( );
+    }
+    if( is_set( "matrix_cost" ) )
+    {
+        print_matrix( );
+    }
+    if( is_set( "file" ) )
+    {
+        write_to_file( filename );
     }
     if( is_set( "create" ) ){
         create_trans( verbose );

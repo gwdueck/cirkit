@@ -37,6 +37,7 @@
 #define TRANS_PATH_HPP
 
 #include <vector>
+#include <fstream>
 #include "move_qubit.hpp"
 
 namespace cirkit
@@ -48,6 +49,7 @@ namespace cirkit
         std::vector<MoveQubit> tpath;
         void add( MoveQubit );
         void print();
+        void print( std::ofstream& );
         int opt();
         void movCnot3();
         void clear() { tpath.clear(); };
