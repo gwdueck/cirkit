@@ -114,6 +114,17 @@ namespace cirkit
                 std::cout << trans_cost[v][w] << " ";
             std::cout << std::endl;
         }
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+            {
+                if( v != w )
+                {
+                    std::cout << "cnot(" << v << "," << w << ") => ";
+                    trans_path[v][w].print( );
+                }
+            }
+        }
     }
 
     void delete_graph( ){

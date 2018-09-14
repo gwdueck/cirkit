@@ -63,7 +63,7 @@ graph_command::graph_command( const environment::ptr& env )
     ( "verbose,v", "verbose mode")
     ( "transform,t", "transform non supported cnot gates")
     ( "rm_dup,m",  "Remove duplicate gates" )
-    ( "matrix_cost,q",  "Print matrix cost" )
+    ( "matrix_cost,q",  "Print matrix cost and transformations" )
     ( "file", value( &filename ), "Write matrix and transformations to a file" )
     ;
     add_new_option();
