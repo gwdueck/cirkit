@@ -277,6 +277,7 @@ namespace cirkit
                 }
                 else // CNOT gate
                 {
+                    moreCnot3 = 0;
                     for ( auto &p : trans_path[control][target].tpath ) {
                         switch ( p.getType() )
                         {
@@ -380,5 +381,8 @@ namespace cirkit
                circ_out.append_gate() = gate;
             }
         }
+        std::cout << "ENTRADA: " << circ_in.lines() << " " << circ_in.num_gates() << std::endl;
+    std::cout << "  SAIDA: " << circ_in.lines() << " " << circ_out.num_gates() << std::endl;
     }
+    
 }
