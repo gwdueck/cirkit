@@ -65,6 +65,7 @@ graph_command::graph_command( const environment::ptr& env )
     ( "rm_dup,m",  "Remove duplicate gates" )
     ( "matrix_cost,q",  "Print matrix cost and transformations" )
     ( "file", value( &filename ), "Write matrix and transformations to a file" )
+    ( "from_file,f", value( &filename ), "Read matrix and transformations to a file" )
     ;
     add_new_option();
 }
@@ -93,6 +94,10 @@ bool graph_command::execute()
     if( is_set( "file" ) )
     {
         write_to_file( filename );
+    }
+    if( is_set( "from_file" ) )
+    {
+        read_from_file( filename );
     }
     if( is_set( "create" ) ){
         create_trans( verbose );

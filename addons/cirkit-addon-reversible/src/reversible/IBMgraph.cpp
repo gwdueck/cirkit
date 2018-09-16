@@ -69,7 +69,34 @@ namespace cirkit
         graphfile.close();
         return true;
     }
-    
+
+    bool read_from_file ( const std::string& filename )
+    { 
+        std::ifstream graphfile ( filename );
+        if ( !graphfile.is_open() )
+            return false;
+        
+        graphfile >> graph_size;
+        allocate_data_stuctures();
+        for( int v = 0; v < graph_size; v++){
+            for( int w = 0; w < graph_size; w++)
+                graphfile >> trans_cost[v][w];
+        }
+        
+        // for( int v = 0; v < graph_size; v++){
+        //     for( int w = 0; w < graph_size; w++)
+        //     {
+        //         if( v != w )
+        //         {
+        //             graphfile << "cnot(" << v << "," << w << ") => ";
+        //             trans_path[v][w].print( graphfile );
+        //         }
+        //     }
+        // }
+        graphfile.close();
+        return true;
+    }
+
     bool write_to_file ( const std::string& filename )
     {
         std::ofstream graphfile ( filename );
@@ -97,7 +124,7 @@ namespace cirkit
         return true;
     }
 
-    void print_graph( ){
+   void print_graph( ){
         for( int i = 0; i < graph_size; i++ ){
             for( int j = 0; j < graph_size; j++ ){
                 std::cout << (graph_adjacency[i][j] ? "X " : "- ");
