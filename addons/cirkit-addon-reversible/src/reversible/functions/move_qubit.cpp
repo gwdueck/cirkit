@@ -58,9 +58,9 @@ namespace cirkit
 
     void MoveQubit::print( std::ofstream& graphfile ){
         if(z!=-1)
-            graphfile << type_name[mv_type] << " " << v << " " << w << " " << z << "; ";
+            graphfile << type_name[mv_type] << " " << v << " " << w << " " << z << " ; ";
         else
-            graphfile << type_name[mv_type] << " " << v << " " << w << "; ";
+            graphfile << type_name[mv_type] << " " << v << " " << w << " ; ";
     }
 
     int MoveQubit::cost(){

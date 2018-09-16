@@ -72,6 +72,8 @@ namespace cirkit
 
     bool read_from_file ( const std::string& filename )
     { 
+        std::string tmp;
+        TransPath tp;
         std::ifstream graphfile ( filename );
         if ( !graphfile.is_open() )
             return false;
@@ -83,16 +85,10 @@ namespace cirkit
                 graphfile >> trans_cost[v][w];
         }
         
-        // for( int v = 0; v < graph_size; v++){
-        //     for( int w = 0; w < graph_size; w++)
-        //     {
-        //         if( v != w )
-        //         {
-        //             graphfile << "cnot(" << v << "," << w << ") => ";
-        //             trans_path[v][w].print( graphfile );
-        //         }
-        //     }
-        // }
+        while ( !graphfile.eof() ){
+            graphfile >> tmp;
+            std::cout << tmp << std::endl;
+        }
         graphfile.close();
         return true;
     }
