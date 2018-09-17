@@ -225,6 +225,7 @@ unsigned int initial_matrix(circuit circ, matrix& cnots, matrix& map_cost, const
             map_cost[control][target] = cnots[control][target] * map[control][target];
         }
     }
+
     return cost;
 }
 
