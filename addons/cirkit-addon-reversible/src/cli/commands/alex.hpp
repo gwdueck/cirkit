@@ -36,34 +36,24 @@
 #ifndef CLI_ALEX_COMMAND_HPP
 #define CLI_ALEX_COMMAND_HPP
 
-#include <reversible/circuit.hpp>
+#include <vector>
 
 #include <cli/cirkit_command.hpp>
 
 namespace cirkit
 {
-
-	void remove_line_control_target ( gate& control, const gate& target );
-	bool line_control_target ( const gate& control, const gate& target );
-	bool different_polarity_controls ( const gate& ga, const gate& gb );
-	bool controls_same_line ( const gate& ga, const gate& gb );
-	bool targets_same_line ( const gate& ga, const gate& gb );
-	void swap_gates ( circuit::const_iterator itGate, circuit::const_iterator nextGate );
-	bool single_control( const gate& ga, const gate& gb );
-	
 	
 class alex_command : public cirkit_command
-    {
+{
     public:
         alex_command( const environment::ptr& env );
-		void choose_rule( unsigned& y, const unsigned i );
+		
+	protected:
+  		rules_t validity_rules() const;
+  		bool execute();
 
-protected:
-  // rules_t validity_rules() const;
-  bool execute();
-
-private:
-  std::string filename;
+	private:
+		std::string input;
 };
 
 }

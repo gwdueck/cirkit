@@ -57,12 +57,15 @@ graph_command::graph_command( const environment::ptr& env )
 {
     opts.add_options()
     ( "read,r", value( &filename ), "read graph from a file" )
-    ( "delete,d",  "delete current graph" )
-    ( "print,p",  "print current graph" )
     ( "create,c",  "create the transformation matrix" )
     ( "verbose,v", "verbose mode")
+    ( "print,p",  "print current graph" )
+    ( "matrix_cost,q",  "Print matrix cost and transformations" )
     ( "transform,t", "transform non supported cnot gates")
-    ( "rm_dup,r",  "Remove duplicate gates" )
+    ( "rm_dup,m",  "Remove duplicate gates" )
+    ( "delete,d",  "delete current graph" )
+    ( "file,w", value( &filename ), "Write matrix and transformations to a file" )
+    ( "from_file,f", value( &filename ), "Read matrix and transformations from a file" )
     ;
     add_new_option();
 }
@@ -71,8 +74,7 @@ graph_command::graph_command( const environment::ptr& env )
 bool graph_command::execute()
 {
     bool verbose = false;
-    
-    
+
     if( is_set( "verbose" ) )
     {
         verbose = true;
@@ -84,6 +86,18 @@ bool graph_command::execute()
     }
     if( is_set( "print" ) ){
         print_graph( );
+    }
+    if( is_set( "matrix_cost" ) )
+    {
+        print_matrix( );
+    }
+    if( is_set( "file" ) )
+    {
+        write_to_file( filename );
+    }
+    if( is_set( "from_file" ) )
+    {
+        read_from_file( filename );
     }
     if( is_set( "create" ) ){
         create_trans( verbose );

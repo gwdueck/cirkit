@@ -66,10 +66,87 @@ namespace cirkit
             graphfile >> v >> w;
             graph_adjacency[v][w] = true;
         }
+        graphfile.close();
         return true;
     }
-    
-    void print_graph( ){
+
+    // read the matrix and the transformations from a file
+    bool read_from_file ( const std::string& filename )
+    { 
+        std::vector<std::string> type_name = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip", "cnot3"};
+        std::string tmp;
+        TransPath tp;
+        int a,b,c,v,w;
+        std::ifstream graphfile ( filename );
+        if ( !graphfile.is_open() )
+            return false;
+        
+        graphfile >> graph_size; // get the number of qubits
+        allocate_data_stuctures();
+
+        for( v = 0; v < graph_size; v++){ // read the matrix with the transformations costs
+            for( w = 0; w < graph_size; w++)
+                graphfile >> trans_cost[v][w];
+        }
+        
+        v = 0; // for the variable trans_path
+        w = 1; // starting with cnot(0,1)
+        while ( !graphfile.eof() ){
+            graphfile >> tmp;
+            if(tmp == "cost"){ // it means that the transformation has already been read
+                trans_path[v][w] = tp;  // update trans_path,
+                tp.clear();             // and clear for the next one
+                ++w;
+                if(v == w) // cnot(x,x) doesn't exist
+                    ++w;
+                if(w == graph_size){    // finished all w possibilities
+                    ++v;                // and start the next one
+                    w = 0;
+                }
+            }
+            auto it = std::find(type_name.begin(), type_name.end(), tmp);   
+            if(it != type_name.end()){                                  // check if it is a movement
+                unsigned pos = std::distance(type_name.begin(), it);    // get the type of movement
+                if(tmp == "cnot3"){     // cnot3 needs three parameters
+                    graphfile >> a >> b >> c;
+                    tp.add( MoveQubit( pos, a, b, c ));
+                }
+                else{                   // the other movements only two
+                    graphfile >> a >> b;
+                    tp.add( MoveQubit( pos, a, b ));
+                }
+            }
+        }
+        graphfile.close();
+        return true;
+    }
+
+    // write the matrix and the transformations to a file
+    bool write_to_file ( const std::string& filename )
+    {
+        std::ofstream graphfile ( filename );
+        if ( !graphfile.is_open() )
+            return false;
+
+        graphfile << graph_size << std::endl;
+        for( int v = 0; v < graph_size; v++){   
+            for( int w = 0; w < graph_size; w++)
+                graphfile << trans_cost[v][w] << " ";
+            graphfile << std::endl;
+        }
+        for( int v = 0; v < graph_size; v++){
+            for( int w = 0; w < graph_size; w++){
+                if( v != w ){
+                    graphfile << "cnot(" << v << "," << w << ") => ";
+                    trans_path[v][w].print( graphfile );
+                }
+            }
+        }
+        graphfile.close();
+        return true;
+    }
+
+   void print_graph( ){
         for( int i = 0; i < graph_size; i++ ){
             for( int j = 0; j < graph_size; j++ ){
                 std::cout << (graph_adjacency[i][j] ? "X " : "- ");
@@ -77,7 +154,29 @@ namespace cirkit
             std::cout << std::endl;
         }
     }
-    
+
+    // print the matrix and the transformations
+    void print_matrix( )
+    {
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+                std::cout << trans_cost[v][w] << " ";
+            std::cout << std::endl;
+        }
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+            {
+                if( v != w )
+                {
+                    std::cout << "cnot(" << v << "," << w << ") => ";
+                    trans_path[v][w].print( );
+                }
+            }
+        }
+    }
+
     void delete_graph( ){
         for( int i = 0; i < graph_size; i++ ){
             delete [] graph_adjacency[i];
@@ -146,7 +245,7 @@ namespace cirkit
             }
         }
     }
-    
+
     /* Precondition: the path_list contains all paths from v to w
      Postcondition: the best path and its cost will be stored in:
         - trans_cost[v][w]
@@ -161,17 +260,20 @@ namespace cirkit
         best_cost = best_tp.costPlus();
         for ( auto &p : path_list )
         {
+            p.movCnot3();
             if(p.costPlus() < best_cost )
             {
                 best_cost = p.costPlus();
                 best_tp = p;
             }
         }
+
         trans_cost[v][w] = best_cost;
         best_tp.addInverse();
         trans_path[v][w] = best_tp;
     }
-    
+
+   
     void allocate_data_stuctures(){
         trans_cost = new int*[graph_size];
         trans_path = new TransPath*[graph_size];
@@ -208,7 +310,7 @@ namespace cirkit
                     path_list.clear();
                     tp.clear();
                     find_all_paths( v,  w, tp, visited );
-                    set_best_path( v,  w );
+                    set_best_path( v,  w);
                 }
             }
         }
@@ -222,34 +324,35 @@ namespace cirkit
                 }
                 std::cout << std::endl;
             }
-            std::cout << "== Optimization ==" << std::endl;
-            for( int v = 0; v < graph_size; v++)
-            {
-                for( int w = 0; w < graph_size; w++)
-                {
-                    std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
-                }
-                std::cout << std::endl;
-            }
+            // std::cout << "== Optimization ==" << std::endl;
+            // for( int v = 0; v < graph_size; v++)
+            // {
+            //     for( int w = 0; w < graph_size; w++)
+            //     {
+            //         std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
+            //     }
+            //     std::cout << std::endl;
+            // }
             for( int v = 0; v < graph_size; v++)
             {
                 for( int w = 0; w < graph_size; w++)
                 {
                     if( v != w )
                     {
-                        std::cout << "cnot(" << v << "," << w << ") = ";
+                        std::cout << "cnot(" << v << "," << w << ") => ";
                         trans_path[v][w].print();
-                        std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
+                        // std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
             }
         }
     }
+
     // expand the cnot gates that are not supported by the architecture
     // assume that the corresponding matricies have been set up correctly
     void expand_cnots( circuit& circ_out, const circuit& circ_in ){
         
-        unsigned target, control;
+        unsigned target, control, moreCnot3 = 0;
         std::vector<unsigned int> new_controls, control2, old_controls;
         
         copy_metadata( circ_in, circ_out );
@@ -273,6 +376,7 @@ namespace cirkit
                 }
                 else // CNOT gate
                 {
+                    moreCnot3 = 0;
                     for ( auto &p : trans_path[control][target].tpath ) {
                         switch ( p.getType() )
                         {
@@ -346,6 +450,25 @@ namespace cirkit
                                 append_hadamard( circ_out, p.getA() );
                                 append_hadamard( circ_out, p.getB() );
                                 break;
+                            case cnot3 :
+                                if(moreCnot3 == 0)  // if it is the first cnot3
+                                {                   // just append the four cnot gates
+                                    append_cnot( circ_out, p.getA(), p.getB() );
+                                    append_cnot( circ_out, p.getB(), p.getC() );
+                                    append_cnot( circ_out, p.getA(), p.getB() );
+                                    append_cnot( circ_out, p.getB(), p.getC() );
+                                    ++moreCnot3;    // update the number of cnot3
+                                }
+                                else    // if it is more than "two arrows"
+                                {       // we have to calculate the number of cnots
+                                    unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
+                                    append_cnot( circ_out, p.getB(), p.getC() );                    // append the cnot   
+                                    for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)// and copy all the cnots placed before
+                                        circ_out.append_gate() = circ_out[j];
+                                    append_cnot( circ_out, p.getB(), p.getC() );                    // append again the cnot
+                                    ++moreCnot3;
+                                }
+                                break;
                             default : std::cout << "ERROR expand_cnots" << std::endl;
                         }
                     }
@@ -357,4 +480,5 @@ namespace cirkit
             }
         }
     }
+    
 }
