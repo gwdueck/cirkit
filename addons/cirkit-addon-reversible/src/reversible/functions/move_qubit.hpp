@@ -62,7 +62,7 @@ namespace cirkit
         static const std::string type_name[11];
         static const int move_cost[11];
         move_qubit_type mv_type;
-        int v,w,z=-1;
+        int v, w, z = -1; //variable z is used for cnot3 ( 3 parameters )
     public:
         MoveQubit() {};
         MoveQubit( move_qubit_type, int, int );

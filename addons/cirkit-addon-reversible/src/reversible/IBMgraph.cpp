@@ -70,6 +70,7 @@ namespace cirkit
         return true;
     }
 
+    // read the matrix and the transformations from a file
     bool read_from_file ( const std::string& filename )
     { 
         std::vector<std::string> type_name = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip", "cnot3"};
@@ -80,36 +81,37 @@ namespace cirkit
         if ( !graphfile.is_open() )
             return false;
         
-        graphfile >> graph_size;
+        graphfile >> graph_size; // get the number of qubits
         allocate_data_stuctures();
-        for( v = 0; v < graph_size; v++){
+
+        for( v = 0; v < graph_size; v++){ // read the matrix with the transformations costs
             for( w = 0; w < graph_size; w++)
                 graphfile >> trans_cost[v][w];
         }
         
-        v = 0;
-        w = 1;
+        v = 0; // for the variable trans_path
+        w = 1; // starting with cnot(0,1)
         while ( !graphfile.eof() ){
             graphfile >> tmp;
-            if(tmp == "cost"){
-                trans_path[v][w] = tp;
-                tp.clear();
+            if(tmp == "cost"){ // it means that the transformation has already been read
+                trans_path[v][w] = tp;  // update trans_path,
+                tp.clear();             // and clear for the next one
                 ++w;
-                if(v==w)
+                if(v == w) // cnot(x,x) doesn't exist
                     ++w;
-                if(w == graph_size){
-                    ++v;
+                if(w == graph_size){    // finished all w possibilities
+                    ++v;                // and start the next one
                     w = 0;
                 }
             }
-            auto it = std::find(type_name.begin(), type_name.end(), tmp); 
-            if(it != type_name.end()){
-                unsigned pos = std::distance(type_name.begin(), it);
-                if(tmp == "cnot3"){
+            auto it = std::find(type_name.begin(), type_name.end(), tmp);   
+            if(it != type_name.end()){                                  // check if it is a movement
+                unsigned pos = std::distance(type_name.begin(), it);    // get the type of movement
+                if(tmp == "cnot3"){     // cnot3 needs three parameters
                     graphfile >> a >> b >> c;
                     tp.add( MoveQubit( pos, a, b, c ));
                 }
-                else{
+                else{                   // the other movements only two
                     graphfile >> a >> b;
                     tp.add( MoveQubit( pos, a, b ));
                 }
@@ -119,24 +121,22 @@ namespace cirkit
         return true;
     }
 
+    // write the matrix and the transformations to a file
     bool write_to_file ( const std::string& filename )
     {
         std::ofstream graphfile ( filename );
         if ( !graphfile.is_open() )
             return false;
+
         graphfile << graph_size << std::endl;
-        for( int v = 0; v < graph_size; v++)
-        {
+        for( int v = 0; v < graph_size; v++){   
             for( int w = 0; w < graph_size; w++)
                 graphfile << trans_cost[v][w] << " ";
             graphfile << std::endl;
         }
-        for( int v = 0; v < graph_size; v++)
-        {
-            for( int w = 0; w < graph_size; w++)
-            {
-                if( v != w )
-                {
+        for( int v = 0; v < graph_size; v++){
+            for( int w = 0; w < graph_size; w++){
+                if( v != w ){
                     graphfile << "cnot(" << v << "," << w << ") => ";
                     trans_path[v][w].print( graphfile );
                 }
@@ -155,6 +155,7 @@ namespace cirkit
         }
     }
 
+    // print the matrix and the transformations
     void print_matrix( )
     {
         for( int v = 0; v < graph_size; v++)
@@ -340,7 +341,7 @@ namespace cirkit
                     {
                         std::cout << "cnot(" << v << "," << w << ") => ";
                         trans_path[v][w].print();
-                        std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
+                        // std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
             }
@@ -450,24 +451,23 @@ namespace cirkit
                                 append_hadamard( circ_out, p.getB() );
                                 break;
                             case cnot3 :
-                                if(moreCnot3 == 0)
-                                {
+                                if(moreCnot3 == 0)  // if it is the first cnot3
+                                {                   // just append the four cnot gates
                                     append_cnot( circ_out, p.getA(), p.getB() );
                                     append_cnot( circ_out, p.getB(), p.getC() );
                                     append_cnot( circ_out, p.getA(), p.getB() );
                                     append_cnot( circ_out, p.getB(), p.getC() );
-                                    ++moreCnot3;
+                                    ++moreCnot3;    // update the number of cnot3
                                 }
-                                else
-                                {
-                                    unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2;
-                                    append_cnot( circ_out, p.getB(), p.getC() );
-                                    for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)
+                                else    // if it is more than "two arrows"
+                                {       // we have to calculate the number of cnots
+                                    unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
+                                    append_cnot( circ_out, p.getB(), p.getC() );                    // append the cnot   
+                                    for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)// and copy all the cnots placed before
                                         circ_out.append_gate() = circ_out[j];
-                                    append_cnot( circ_out, p.getB(), p.getC() );
+                                    append_cnot( circ_out, p.getB(), p.getC() );                    // append again the cnot
                                     ++moreCnot3;
                                 }
-
                                 break;
                             default : std::cout << "ERROR expand_cnots" << std::endl;
                         }
