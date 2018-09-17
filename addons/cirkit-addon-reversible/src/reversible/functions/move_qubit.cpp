@@ -29,12 +29,19 @@
 
 namespace cirkit
 {
-    const std::string MoveQubit::type_name[10] = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip" };
-    const int MoveQubit::move_cost[10] = {6, 5, 5, 6, 6, 5, 5, 6, 0, 4};
+    const std::string MoveQubit::type_name[11] = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip", "cnot3"};
+    const int MoveQubit::move_cost[11] = {6, 5, 5, 6, 6, 5, 5, 6, 0, 4, 0}; // here the cost of cnot3 is zero due the value is not constant
     MoveQubit::MoveQubit( move_qubit_type t, int a, int b){
         mv_type = t;
         v = a;
         w = b;
+    }
+    // Only for the cnot3 for now
+    MoveQubit::MoveQubit( move_qubit_type t, int a, int b, int c){
+        mv_type = t;
+        v = a;
+        w = b;
+        z = c;
     }
     
     void MoveQubit::set( move_qubit_type t, int a, int b){
@@ -44,13 +51,20 @@ namespace cirkit
     }
     
     void MoveQubit::print(){
-        std::cout << type_name[mv_type] << " " << v << " " << w << "; ";
+        if(z != -1) // default z is -1. It means only cnot3 has z different of -1
+            std::cout << type_name[mv_type] << " " << v << " " << w << " " << z << "; ";
+        else
+            std::cout << type_name[mv_type] << " " << v << " " << w << "; ";
     }
 
-    int MoveQubit::opt(){
-        return mv_type;
+    // Print to a file
+    void MoveQubit::print( std::ofstream& graphfile ){
+        if(z != -1) // default z is -1. It means only cnot3 has z different of -1
+            graphfile << type_name[mv_type] << " " << v << " " << w << " " << z << " ; ";
+        else
+            graphfile << type_name[mv_type] << " " << v << " " << w << " ; ";
     }
-    
+
     int MoveQubit::cost(){
         return move_cost[mv_type];
     }

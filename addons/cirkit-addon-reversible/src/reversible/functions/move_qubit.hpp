@@ -37,6 +37,7 @@
 #define MOVE_QUBIT_HPP
 
 #include <string>
+#include <fstream>
 
 
 
@@ -49,7 +50,7 @@ namespace cirkit
      flip =
      (appended by i = inverse)
      */
-     enum move_qubit_type { cab, cba, tab, tba, cabi, cbai, tabi, tbai, nop, flip };
+     enum move_qubit_type { cab, cba, tab, tba, cabi, cbai, tabi, tbai, nop, flip, cnot3 };
     static move_qubit_type inverse_type[10] = {cabi, cbai, tabi, tbai, cab, cba, tab, tba, nop, flip };
         
     
@@ -58,21 +59,23 @@ namespace cirkit
     class MoveQubit{
     private:
         
-        static const std::string type_name[10];
-        static const int move_cost[10];
+        static const std::string type_name[11];
+        static const int move_cost[11];
         move_qubit_type mv_type;
-        int v,w;
+        int v, w, z = -1; //variable z is used for cnot3 ( 3 parameters )
     public:
         MoveQubit() {};
         MoveQubit( move_qubit_type, int, int );
+        MoveQubit( move_qubit_type, int, int, int );
         void set( move_qubit_type, int, int );
         void print();
-        int opt();
+        void print( std::ofstream& );
         int cost();
         void invert();
         move_qubit_type getType() { return mv_type; };
         unsigned int getA() { return v; };
         unsigned int getB() { return w; };
+        unsigned int getC() { return z; };
     };
     
 

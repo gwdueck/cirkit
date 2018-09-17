@@ -116,22 +116,22 @@ static const matrix path_qx5={{0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {0,0,0,-1,0,0,0,0,0,0,0,0,0,-1,0,-1},
                             {1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0}};
 
-static const matrix map_qx5={{0,4,10,20,32,38,48,60,66,60,54,42,30,20,10,4},
-                            {0,0,0,12,24,34,44,56,66,72,66,54,42,32,22,10},
+static const matrix map_qx5={{0,4,10,20,32,42,52,64,74,64,54,42,30,20,10,4},
+                            {0,0,0,12,24,34,44,56,66,76,66,54,42,32,22,10},
                             {10,4,0,0,12,22,32,44,54,64,54,42,30,20,10,4},
-                            {20,10,4,0,0,10,20,32,42,52,40,32,20,10,0,10},
-                            {30,20,10,4,0,4,10,20,30,40,28,20,10,4,10,20},
-                            {42,30,20,10,0,0,4,10,20,30,18,10,4,10,22,30},
-                            {50,38,28,18,12,0,0,0,10,20,12,0,10,18,30,38},
-                            {60,48,38,28,22,10,4,0,4,10,0,10,20,28,40,48},
-                            {72,60,50,40,34,22,10,0,0,4,10,20,30,38,46,60},
-                            {62,70,60,50,44,32,20,10,0,0,0,10,20,32,40,50},
-                            {50,58,48,38,32,20,10,4,10,4,0,4,10,20,28,38},
-                            {40,48,38,28,22,10,4,10,20,10,0,0,4,10,18,28},
-                            {34,38,28,18,12,0,10,22,32,18,12,0,0,0,12,22},
-                            {22,30,20,10,0,10,20,32,42,28,22,10,4,0,0,10},
-                            {10,20,10,4,10,20,30,38,48,38,32,20,10,4,0,4},
-                            {0,10,0,10,22,28,38,50,56,50,44,32,20,10,0,0}};
+                            {20,14,4,0,0,10,20,32,42,52,44,32,20,10,0,10},
+                            {30,24,14,4,0,4,14,20,30,40,32,20,14,4,10,20},
+                            {42,30,20,10,0,0,4,10,20,30,22,10,4,10,22,30},
+                            {54,42,32,22,12,0,0,0,10,20,12,0,10,22,34,42},
+                            {64,52,42,32,22,10,4,0,4,10,0,10,20,32,44,52},
+                            {76,64,54,44,34,22,10,0,0,4,10,20,30,42,54,64},
+                            {66,74,64,54,44,32,20,10,0,0,0,10,20,32,44,54},
+                            {54,62,52,42,32,20,14,4,10,4,0,4,14,20,32,42},
+                            {44,52,42,32,22,10,4,10,20,10,0,0,4,10,22,32},
+                            {34,42,32,22,12,0,10,22,32,22,12,0,0,0,12,22},
+                            {22,30,20,10,0,10,20,32,42,32,22,10,4,0,0,10},
+                            {10,20,10,4,10,20,30,42,52,42,32,20,14,4,0,4},
+                            {0,10,0,10,22,32,42,54,64,54,44,32,20,10,0,0}};
 
 static const matrix map_qx20= {{0, 0, 10, 66, 52, 0, 10, 10, 38, 52, 10, 10, 24, 24, 38, 24, 24, 24, 38, 38},
                                 {0, 0, 0, 52, 38, 10, 0, 0, 24, 38, 10, 10, 10, 10, 24, 24, 24, 24, 24, 24},
@@ -254,7 +254,7 @@ unsigned permute_cost(const matrix& cnots, const matrix& map)
 // Find the higher value in the matrix
 std::pair<int,int> get_position_higher_value_matrix(matrix& m)
 {
-    unsigned int h = 0, x, y;
+    int h = 0, x, y;
     for (int i = 0; i < m.size(); ++i)
     {
         for (int j = 0; j < m.size(); ++j)
@@ -279,7 +279,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
     if(p1 != permutation.end() && p2 != permutation.end())
     {
         //Do nothing
-        // std::cout << "Do nothing" << std::endl;
+        std::cout << "Do nothing" << std::endl;
         return std::make_pair(p1->second,p2->second);
     }
     else if(p1 == permutation.end() && p2 == permutation.end())
@@ -297,7 +297,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
                 }
             }
         }
-        // std::cout << "nenhum " << x << " " << y << std::endl;
+        std::cout << "nenhum " << x << " " << y << std::endl;
         return std::make_pair(x,y);
     }
     else if(p1 == permutation.end() && p2 != permutation.end())
@@ -312,7 +312,7 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
                 x = i;
             }    
         }
-        // std::cout << "sem controle " << x << " " << y << std::endl;
+        std::cout << "sem controle " << x << " " << y << std::endl;
         return std::make_pair(x,y);
     }
     else if(p1 != permutation.end() && p2 == permutation.end())
@@ -327,11 +327,24 @@ std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std
                 y = j;
             }    
         }
-        // std::cout << "sem alvo " << x << " " << y << std::endl;
+        std::cout << "sem alvo " << x << " " << y << std::endl;
         return std::make_pair(x,y);
     }
     std::cout << "====> should not happen" << std::endl;
     return std::make_pair(0,0); // added -- not reachable???
+}
+
+void print_matrix(matrix& m)
+{
+    std::cout << std::endl;
+    for (int i = 0; i < m.size(); ++i)
+    {
+        for (int j = 0; j < m.size(); ++j)
+        {
+            std::cout << " " << m[i][j];    
+        }
+        std::cout << std::endl;
+    }
 }
 
 // Map the last qubit
@@ -362,6 +375,10 @@ matrix copy_matrix(matrix& aux, const matrix& m)
     return aux;
 }
 
+int myrandom (int i) 
+{ 
+    return std::rand()%i;
+}
 
 // Main function -- Find all the mappings
 circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
@@ -372,7 +389,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     std::vector <int> p;
     std::pair<int,int> qubit1, qubit2;
     std::map<int, int> permutation;
-    matrix cnots, map_cost, aux;
+    matrix cnots, map_cost, aux, original;
 
     // Set the matrices
     for (int i = 0; i < map.size(); ++i)
@@ -383,6 +400,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         cnots.push_back(p);
         map_cost.push_back(p);
         aux.push_back(p);
+        original.push_back(p);
     }
     p.clear();
 
@@ -390,14 +408,10 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     cost = initial_matrix(circ, cnots, map_cost, map);
     std::cout << "number of gates: " << circ.num_gates() << std::endl;
     std::cout << "default permutation: " << cost << std::endl;
-    
     // Copy matrix to aux
     aux = copy_matrix(aux, cnots);
-    
-    for(int i = 0; i < 16; i++){
-        for(int j = 0; j < 16; j++) std::cout << aux[i][j] << " ";
-        std::cout << std::endl;
-    }
+    original = copy_matrix(original, cnots);
+    print_matrix(cnots);
     
     // Map the qubits until 1 left    
     while(permutation.size() < cnots.size() - 1)
@@ -408,9 +422,10 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
         // If the higher qubit is zero... (maybe this can be changed)
         if(aux[qubit1.first][qubit1.second] == 0) break;
         
+        // TAKE A LOOK AT THIS
         std::cout << "mapping, cost " << qubit1.first << " " << qubit1.second<< " " << aux[qubit1.first][qubit1.second] << std::endl;
         
-        aux[qubit1.first][qubit1.second] = 0;
+        aux[qubit1.first][qubit1.second] = -1;
         
         // Get mapping for the second qubit
         qubit2 = get_mapping(map, qubit1, permutation, p);
@@ -429,6 +444,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     // Finish the mapping
     permutation = complete_permutation(permutation, cnots.size());
     
+    
     // Permute the matrix with the CNOTs
     cnots = permute_matrix(cnots, permutation, aux);
     
@@ -441,6 +457,7 @@ circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::pt
     for(auto it : permutation)
     	std::cout << " " << it.second;
     std::cout << std::endl;
+
     return circ_qx;
 }
 
@@ -451,7 +468,7 @@ bool qxg_command::execute()
     circuit circ_qx, circ;
     copy_circuit(aux, circ);    
     //auto settings = make_settings();
-
+    std::srand ( unsigned ( std::time(0) ) );
     
     if ( is_set( "QS1_1" ) )
     {
