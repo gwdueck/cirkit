@@ -72,22 +72,48 @@ namespace cirkit
 
     bool read_from_file ( const std::string& filename )
     { 
+        std::vector<std::string> type_name = { "cab", "cba", "tab", "tba", "cabi", "cbai", "tabi", "tbai", "nop", "flip", "cnot3"};
         std::string tmp;
         TransPath tp;
+        int a,b,c,v,w;
         std::ifstream graphfile ( filename );
         if ( !graphfile.is_open() )
             return false;
         
         graphfile >> graph_size;
         allocate_data_stuctures();
-        for( int v = 0; v < graph_size; v++){
-            for( int w = 0; w < graph_size; w++)
+        for( v = 0; v < graph_size; v++){
+            for( w = 0; w < graph_size; w++)
                 graphfile >> trans_cost[v][w];
         }
         
+        v = 0;
+        w = 1;
         while ( !graphfile.eof() ){
             graphfile >> tmp;
-            std::cout << tmp << std::endl;
+            if(tmp == "cost"){
+                trans_path[v][w] = tp;
+                tp.clear();
+                ++w;
+                if(v==w)
+                    ++w;
+                if(w == graph_size){
+                    ++v;
+                    w = 0;
+                }
+            }
+            auto it = std::find(type_name.begin(), type_name.end(), tmp); 
+            if(it != type_name.end()){
+                unsigned pos = std::distance(type_name.begin(), it);
+                if(tmp == "cnot3"){
+                    graphfile >> a >> b >> c;
+                    tp.add( MoveQubit( pos, a, b, c ));
+                }
+                else{
+                    graphfile >> a >> b;
+                    tp.add( MoveQubit( pos, a, b ));
+                }
+            }
         }
         graphfile.close();
         return true;
