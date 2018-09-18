@@ -66,6 +66,7 @@ graph_command::graph_command( const environment::ptr& env )
     ( "delete,d",  "delete current graph" )
     ( "file,w", value( &filename ), "Write matrix and transformations to a file" )
     ( "from_file,f", value( &filename ), "Read matrix and transformations from a file" )
+    ( "mapping", "Realize the mapping for a current circuit")
     ;
     add_new_option();
 }
@@ -105,7 +106,15 @@ bool graph_command::execute()
     if( is_set( "delete" ) ){
         delete_graph( );
     }
+    if( is_set( "mapping" ) ){
+        
+    }
+
     if( is_set( "transform" ) ){
+        if( env->store<circuit>().current_index() ){
+            std::cout << "no current circuit available" << std::endl;
+            return true;
+        }
         auto& circuits = env->store<circuit>();
         circuit circ_working = circuits.current();
         circuit circ_result;
@@ -128,6 +137,10 @@ command::log_opt_t graph_command::log() const
   return log_opt_t({{"runtime", statistics->get<double>( "runtime" )}});
 }
 
+// command::rules_t graph_command::validity_rules() const
+// {
+//   return {has_store_element<circuit>( env )};
+// }
 
 
 }
