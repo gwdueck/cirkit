@@ -66,7 +66,8 @@ graph_command::graph_command( const environment::ptr& env )
     ( "delete,d",  "delete current graph" )
     ( "file,w", value( &filename ), "Write matrix and transformations to a file" )
     ( "from_file,f", value( &filename ), "Read matrix and transformations from a file" )
-    ( "mapping", "Realize the mapping for a current circuit")
+    ( "mapping,x", "Realize the mapping for a current circuit")
+    ( "no_inverse,i", "Create transformation matrix without reverse the path")
     ;
     add_new_option();
 }
@@ -75,14 +76,15 @@ graph_command::graph_command( const environment::ptr& env )
 bool graph_command::execute()
 {
     bool verbose = false;
+    bool no_inverse = false;
 
-    if( is_set( "verbose" ) )
-    {
+    if( is_set( "verbose" ) ){
         verbose = true;
     }
-
-    if( is_set( "read" ) )
-    {
+    if( is_set( "no_inverse" ) ){
+        no_inverse = true;  
+    }
+    if( is_set( "read" ) ){
         read_graph( filename );
     }
     if( is_set( "print" ) ){
@@ -101,7 +103,7 @@ bool graph_command::execute()
         read_from_file( filename );
     }
     if( is_set( "create" ) ){
-        create_trans( verbose );
+        create_trans( verbose, no_inverse );
     }
     if( is_set( "delete" ) ){
         delete_graph( );
@@ -111,7 +113,7 @@ bool graph_command::execute()
     }
 
     if( is_set( "transform" ) ){
-        if( env->store<circuit>().current_index() ){
+        if( env->store<circuit>().current_index() < 0 ){
             std::cout << "no current circuit available" << std::endl;
             return true;
         }

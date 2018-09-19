@@ -258,6 +258,7 @@ namespace cirkit
         int best_cost;
         best_tp = path_list[0];
         best_cost = best_tp.costPlus();
+
         for ( auto &p : path_list )
         {
             p.movCnot3();
@@ -273,6 +274,27 @@ namespace cirkit
         trans_path[v][w] = best_tp;
     }
 
+    void set_best_path_no_inverse(int v, int w )
+    {
+        TransPath tp, best_tp;
+        int best_cost;
+        best_tp = path_list[0];
+        best_cost = best_tp.cost();
+
+        for ( auto &p : path_list )
+        {
+            p.movCnot3();
+            if(p.cost() < best_cost )
+            {
+                best_cost = p.cost();
+                best_tp = p;
+            }
+        }
+
+        trans_cost[v][w] = best_cost;
+        trans_path[v][w] = best_tp;
+    }
+
    
     void allocate_data_stuctures(){
         trans_cost = new int*[graph_size];
@@ -284,7 +306,7 @@ namespace cirkit
         }
     }
     
-    void create_trans( bool verbose )
+    void create_trans( bool verbose, bool no_inverse )
     {
         allocate_data_stuctures();
         path_list.clear();
@@ -310,7 +332,10 @@ namespace cirkit
                     path_list.clear();
                     tp.clear();
                     find_all_paths( v,  w, tp, visited );
-                    set_best_path( v,  w);
+                    if(no_inverse)
+                        set_best_path_no_inverse( v,  w);
+                    else
+                        set_best_path( v,  w);
                 }
             }
         }
