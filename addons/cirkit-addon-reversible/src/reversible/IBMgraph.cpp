@@ -508,8 +508,22 @@ namespace cirkit
     void the_mapping( circuit& circ_out, const circuit& circ_in )
     {
         std::cout << "THE MAPPING!" << std::endl;
-        std::cout << circ_in << std::endl;
-
+        std::vector<unsigned> s; // cnot implementable
+        std::vector<unsigned> r; // reverse of s
+        
+        for(int i = 0; i < graph_size ; i++ ){
+            unsigned ns = 0;
+            unsigned nr = 0;
+            for(int j = 0; j < graph_size; j++){
+                if(graph_adjacency[i][j])
+                    ++ns;
+                if(graph_adjacency[j][i])
+                    ++nr;
+            }
+            s.push_back(ns);
+            r.push_back(nr);
+            std::cout << "Qubit " << i << " - " << ns << " X's in this line and " << nr << " X's in this column"<< std::endl;
+        }
     }
 
     
