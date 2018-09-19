@@ -25,6 +25,7 @@
  */
 
 #include "IBMgraph.hpp"
+#include <reversible/io/print_circuit.hpp>
 #include <reversible/functions/move_qubit.hpp>
 #include <reversible/functions/copy_metadata.hpp>
 #include <reversible/functions/add_gates.hpp>
@@ -82,9 +83,22 @@ namespace cirkit
             return false;
         
         graphfile >> graph_size; // get the number of qubits
+        graph_adjacency = new bool*[graph_size];
         allocate_data_stuctures();
 
-        for( v = 0; v < graph_size; v++){ // read the matrix with the transformations costs
+        // read the graph
+        for(int i = 0; i < graph_size ; i++ ){
+            graph_adjacency[i] = new bool[graph_size];
+            for(int j = 0; j < graph_size; j++){
+                graphfile >> tmp;
+                if(tmp == "X")
+                    graph_adjacency[i][j] = true;
+                else
+                    graph_adjacency[i][j] = false;    
+            }
+        }
+        // read the matrix with the transformations costs
+        for( v = 0; v < graph_size; v++){ 
             for( w = 0; w < graph_size; w++)
                 graphfile >> trans_cost[v][w];
         }
@@ -121,7 +135,7 @@ namespace cirkit
         return true;
     }
 
-    // write the matrix and the transformations to a file
+    // write the graph, the matrix and the transformations to a file
     bool write_to_file ( const std::string& filename )
     {
         std::ofstream graphfile ( filename );
@@ -129,11 +143,21 @@ namespace cirkit
             return false;
 
         graphfile << graph_size << std::endl;
+
+        // writing the graph
+        for( int i = 0; i < graph_size; i++ ){ 
+            for( int j = 0; j < graph_size; j++ ){
+                graphfile<< (graph_adjacency[i][j] ? "X " : "- ");
+            }
+            graphfile << std::endl;
+        }
+        // writing the matrix
         for( int v = 0; v < graph_size; v++){   
             for( int w = 0; w < graph_size; w++)
                 graphfile << trans_cost[v][w] << " ";
             graphfile << std::endl;
         }
+        // writing the transformations
         for( int v = 0; v < graph_size; v++){
             for( int w = 0; w < graph_size; w++){
                 if( v != w ){
@@ -274,28 +298,6 @@ namespace cirkit
         trans_path[v][w] = best_tp;
     }
 
-    void set_best_path_no_inverse(int v, int w )
-    {
-        TransPath tp, best_tp;
-        int best_cost;
-        best_tp = path_list[0];
-        best_cost = best_tp.cost();
-
-        for ( auto &p : path_list )
-        {
-            p.movCnot3();
-            if(p.cost() < best_cost )
-            {
-                best_cost = p.cost();
-                best_tp = p;
-            }
-        }
-
-        trans_cost[v][w] = best_cost;
-        trans_path[v][w] = best_tp;
-    }
-
-   
     void allocate_data_stuctures(){
         trans_cost = new int*[graph_size];
         trans_path = new TransPath*[graph_size];
@@ -306,7 +308,7 @@ namespace cirkit
         }
     }
     
-    void create_trans( bool verbose, bool no_inverse )
+    void create_trans( bool verbose )
     {
         allocate_data_stuctures();
         path_list.clear();
@@ -332,10 +334,7 @@ namespace cirkit
                     path_list.clear();
                     tp.clear();
                     find_all_paths( v,  w, tp, visited );
-                    if(no_inverse)
-                        set_best_path_no_inverse( v,  w);
-                    else
-                        set_best_path( v,  w);
+                    set_best_path( v,  w);
                 }
             }
         }
@@ -505,5 +504,13 @@ namespace cirkit
             }
         }
     }
+
+    void the_mapping( circuit& circ_out, const circuit& circ_in )
+    {
+        std::cout << "THE MAPPING!" << std::endl;
+        std::cout << circ_in << std::endl;
+
+    }
+
     
 }

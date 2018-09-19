@@ -64,25 +64,20 @@ graph_command::graph_command( const environment::ptr& env )
     ( "transform,t", "transform non supported cnot gates")
     ( "rm_dup,m",  "Remove duplicate gates" )
     ( "delete,d",  "delete current graph" )
-    ( "file,w", value( &filename ), "Write matrix and transformations to a file" )
+    ( "file,w", value( &filename ), "Write graph, matrix and transformations to a file" )
     ( "from_file,f", value( &filename ), "Read matrix and transformations from a file" )
     ( "mapping,x", "Realize the mapping for a current circuit")
-    ( "no_inverse,i", "Create transformation matrix without reverse the path")
     ;
     add_new_option();
 }
 
-    
 bool graph_command::execute()
 {
     bool verbose = false;
-    bool no_inverse = false;
+    
 
     if( is_set( "verbose" ) ){
         verbose = true;
-    }
-    if( is_set( "no_inverse" ) ){
-        no_inverse = true;  
     }
     if( is_set( "read" ) ){
         read_graph( filename );
@@ -103,13 +98,19 @@ bool graph_command::execute()
         read_from_file( filename );
     }
     if( is_set( "create" ) ){
-        create_trans( verbose, no_inverse );
+        create_trans( verbose );
     }
     if( is_set( "delete" ) ){
         delete_graph( );
     }
     if( is_set( "mapping" ) ){
-        
+        if( env->store<circuit>().current_index() < 0 ){
+            std::cout << "no current circuit available" << std::endl;
+            return true;
+        }
+        auto& circuits = env->store<circuit>();
+        circuit circ_out, circ_in = circuits.current();
+        the_mapping( circ_out, circ_in);
     }
 
     if( is_set( "transform" ) ){
