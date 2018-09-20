@@ -39,6 +39,7 @@
 #include <reversible/utils/matrix_utils.hpp>
 #include <alice/rules.hpp>
 
+
 namespace cirkit
 {
 
@@ -146,21 +147,84 @@ void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
 
 bool alex_command::execute()
 {
-	const circuit circuits = env->store<circuit>().current();
+	const circuit circ = env->store<circuit>().current();
 
-	xt::xarray<complex_t> table;
+  unsigned target, control;
+  std::vector<unsigned> v;
+  std::vector<std::vector<unsigned>> output;
+  int static const map_method_qx2[5][5] ={{0,0,0,10,10},
+                                          {4,0,0,10,10},
+                                          {4,4,0,4,4},
+                                          {10,10,0,0,0},
+                                          {10,10,0,4,0}};
 
-  	table = matrix_from_clifford_t_circuit( circuits, is_set( "progress" ) );
+  // Create a matrix with 0's
+  for (int i = 0; i < circ.lines(); ++i){
+    for (int j = 0; j < circ.lines(); ++j){
+      v.push_back(0);
+    }
+    output.push_back(v);
+  }
+    
+  for ( const auto& gate : circ )
+  {
+    if( !gate.controls().empty() ) // if is not a NOT gate
+    {
+      target = gate.targets().front();
+      control = gate.controls().front().line();
+      ++output[control][target];
+    }
+  }
 
-  	// Number of qubits
-  	unsigned int qubits = sqrt(table.size());
- 	// std::cout << "qubits: " << qubits << std::endl;
+  for (int i = 0; i < 5; ++i){
+    for (int j = 0; j < 5; ++j){
+      std::cout << " " << map_method_qx2[i][j];
+    }
+    std::cout << std::endl;
+  }
 
-	// print_all_matrix(table, qubits);
-	if(is_set("input"))
-		print_line(table, qubits, input);
-	else
-		print_solution(table, qubits);
+    std::cout << std::endl;
+
+  for (int i = 0; i < circ.lines(); ++i){
+    for (int j = 0; j < circ.lines(); ++j){
+      std::cout << " " << output[i][j];
+    }
+    std::cout << std::endl;
+  }
+
+  std::cout << std::endl;
+  
+  for (int i = 0; i < circ.lines(); ++i){
+    for (int j = 0; j < circ.lines(); ++j){
+      if(i==j)
+        std::cout << " 10000";
+      else if(output[i][j] == 0)
+        std::cout << " 100";
+      else
+        std::cout << " " << output[i][j]+map_method_qx2[i][j];
+    }
+    std::cout << std::endl;
+  }
+
+
+
+
+
+
+
+	// xt::xarray<complex_t> table;
+
+ //  	table = matrix_from_clifford_t_circuit( circ, is_set( "progress" ) );
+
+ //  	// Number of qubits
+ //  	unsigned int qubits = sqrt(table.size());
+ // 	// std::cout << "qubits: " << qubits << std::endl;
+
+	// // print_all_matrix(table, qubits);
+	// if(is_set("input"))
+	// 	print_line(table, qubits, input);
+	// else
+	// 	print_solution(table, qubits);
 
 
 	return true;
