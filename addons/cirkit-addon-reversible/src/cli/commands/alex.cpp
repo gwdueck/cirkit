@@ -165,7 +165,8 @@ bool alex_command::execute()
     }
     output.push_back(v);
   }
-    
+  
+  // Create a matrix with the cnots 
   for ( const auto& gate : circ )
   {
     if( !gate.controls().empty() ) // if is not a NOT gate
@@ -176,37 +177,43 @@ bool alex_command::execute()
     }
   }
 
+  // Print the cost of the transformations
   for (int i = 0; i < 5; ++i){
     for (int j = 0; j < 5; ++j){
-      std::cout << " " << map_method_qx2[i][j];
+      std::cout << "\t" << map_method_qx2[i][j];
     }
     std::cout << std::endl;
   }
+  
+  std::cout << std::endl;
 
-    std::cout << std::endl;
-
+  // Print the cnots in the circuit
   for (int i = 0; i < circ.lines(); ++i){
     for (int j = 0; j < circ.lines(); ++j){
-      std::cout << " " << output[i][j];
+      std::cout << "\t" << output[i][j];
     }
     std::cout << std::endl;
   }
 
   std::cout << std::endl;
   
+  // Print the total cost of the circuit
   for (int i = 0; i < circ.lines(); ++i){
     for (int j = 0; j < circ.lines(); ++j){
-      if(i==j)
-        std::cout << " 10000";
-      else if(output[i][j] == 0)
-        std::cout << " 100";
-      else
-        std::cout << " " << output[i][j]+map_method_qx2[i][j];
+      std::cout << "\t" << output[i][j]*map_method_qx2[i][j];
     }
     std::cout << std::endl;
   }
 
-
+  std::cout << std::endl;
+  
+  // Print a possible approach to hungarian algorithm
+  for (int i = 0; i < circ.lines(); ++i){
+    for (int j = 0; j < circ.lines(); ++j){
+      std::cout << "\t" << (output[i][j]*map_method_qx2[i][j])+map_method_qx2[i][j]+1;
+    }
+    std::cout << std::endl;
+  }  
 
 
 

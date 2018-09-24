@@ -505,25 +505,152 @@ namespace cirkit
         }
     }
 
+int matrix_q[4][4];
+std::vector<int> custo;
+std::vector<std::vector<int>> mapeamento;
+
+void extract_matrix(std::vector<int>& v)
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            matrix_q[i][j] = trans_cost[v[i]][v[j]];
+            std::cout << " " << matrix_q[i][j];
+        }
+        std::cout << std::endl;
+    }
+}
+
+void permutation_teste(std::vector<int>& v)
+{
+    unsigned contagem = 1;
+    unsigned int matrix_circuito[4][4] = {  {0,2,0,1},
+                                            {2,0,1,0},
+                                            {1,1,0,0},
+                                            {0,1,1,0}};
+    // unsigned int custo = 100000;
+    unsigned int aux;
+    do
+    {
+        std::cout << contagem++ << ": "; 
+        for (int i = 0; i < 4; ++i)
+        {
+            std::cout << " " << v[i];
+        }
+        std::cout << std::endl;
+        extract_matrix(v);
+        aux = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+            {
+                aux += matrix_q[i][j]*matrix_circuito[i][j];
+            }
+        }
+        if(aux == 22)
+            getchar();
+        custo.push_back(aux);
+        mapeamento.push_back(v);
+        // if( aux < custo )
+        // {
+        //     custo = aux;
+        //     for (int i = 0; i < 4; ++i)
+        //     {
+        //         std::cout << " " << v[i];
+        //     }
+        // }
+
+    } while ( std::next_permutation(v.begin(),v.begin()+4) );
+}
+
+void pretty_print(const std::vector<int>& v) {
+  static int count = 0;
+  std::cout << "combination no " << (++count) << ": [ ";
+  for (int i = 0; i < v.size(); ++i) { std::cout << v[i] << " "; }
+  std::cout << "] " << std::endl;
+}
+
+std::vector<int> people;
+std::vector<int> combination;
+
+
+void go(int offset, int k) {
+  if (k == 0) {
+    pretty_print(combination);
+    permutation_teste(combination);
+    return;
+  }
+  for (int i = offset; i <= people.size() - k; ++i) {
+    combination.push_back(people[i]);
+    go(i+1, k-1);
+    combination.pop_back();
+  }
+}
+
     void the_mapping( circuit& circ_out, const circuit& circ_in )
     {
         std::cout << "THE MAPPING!" << std::endl;
-        std::vector<unsigned> s; // cnot implementable
-        std::vector<unsigned> r; // reverse of s
-        
-        for(int i = 0; i < graph_size ; i++ ){
-            unsigned ns = 0;
-            unsigned nr = 0;
-            for(int j = 0; j < graph_size; j++){
-                if(graph_adjacency[i][j])
-                    ++ns;
-                if(graph_adjacency[j][i])
-                    ++nr;
-            }
-            s.push_back(ns);
-            r.push_back(nr);
-            std::cout << "Qubit " << i << " - " << ns << " X's in this line and " << nr << " X's in this column"<< std::endl;
+        // for( int v = 0; v < graph_size; v++)
+        // {
+        //     for( int w = 0; w < graph_size; w++)
+        //         std::cout << trans_cost[v][w] << " ";
+        //     std::cout << std::endl;
+        // }
+
+        int n = 16, k = 4;
+
+        for (int i = 0; i < n; ++i) { people.push_back(i); }
+        go(0, k);
+        for (int i = 0; i < custo.size(); ++i) { 
+            std::cout << custo[i] << std::endl;
+            for (int j = 0; j < 4; ++j) {
+                std::cout << " " << mapeamento[i][j];
+            } 
+            std::cout << std::endl;
+
         }
+        std::cout << "Menor: " << *min_element(std::begin(custo), std::end(custo)) << std::endl;
+        std::vector<int>::iterator it = std::find(custo.begin(), custo.end(), 22);
+        int index = std::distance(custo.begin(), it);
+        
+        for (int j = 0; j < 4; ++j) {
+            std::cout << " " << mapeamento[index][j];
+        }
+        std::cout << std::endl;
+
+        std::cout << "Max: " << *max_element(std::begin(custo), std::end(custo)) << std::endl;
+         it = std::find(custo.begin(), custo.end(), 535);
+         index = std::distance(custo.begin(), it);
+        
+        for (int j = 0; j < 4; ++j) {
+            std::cout << " " << mapeamento[index][j];
+        }
+        std::cout << std::endl;
+        // std::vector<unsigned> s; // cnot implementable
+        // std::vector<unsigned> r; // reverse of s
+        // std::vector<unsigned> t; // total
+        // std::pair<int,int> ncontrol;
+        // std::pair<int,int> ntarget;
+
+        // for(int i = 0; i < graph_size ; i++ )
+        // {
+        //     unsigned ns = 0;
+        //     unsigned nr = 0;
+        //     for(int j = 0; j < graph_size; j++)
+        //     {
+        //         if(graph_adjacency[i][j])
+        //             ++ns;
+        //         if(graph_adjacency[j][i])
+        //             ++nr;
+        //     }
+        //     s.push_back(ns);
+        //     r.push_back(nr);
+        //     t.push_back(ns+nr);
+        //     std::cout << "Qubit " << i << " - " << ns << " X's in this line and " << nr << " X's in this column"<< std::endl;
+        // }
+        // for (int i = 0; i < graph_size; ++i)
+        //     std::cout << "Qubit " << i << ": " << t[i] << std::endl;
     }
 
     
