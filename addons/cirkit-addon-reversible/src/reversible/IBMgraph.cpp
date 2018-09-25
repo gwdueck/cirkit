@@ -28,15 +28,20 @@
 #include <reversible/io/print_circuit.hpp>
 #include <reversible/functions/move_qubit.hpp>
 #include <reversible/functions/copy_metadata.hpp>
+#include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/gate.hpp>
 #include <reversible/pauli_tags.hpp>
 #include <reversible/rotation_tags.hpp>
 #include <reversible/target_tags.hpp>
+#include <reversible/functions/add_line_to_circuit.hpp>
+#include <boost/lexical_cast.hpp>
+#include <reversible/functions/ibm_helper.hpp>
 
 
 namespace cirkit
 {
+    using matrix = std::vector<std::vector<int>>;
     // Here the memory error stopped
     std::vector<TransPath> path_list;
     bool **graph_adjacency = NULL;  // graph structure
@@ -505,83 +510,10 @@ namespace cirkit
         }
     }
 
-long long int total = 0;
-int matrix_q[9][9];
-unsigned custo = 100000;
-std::vector<std::vector<int>> mapeamento;
+    
 
-void extract_matrix(std::vector<int>& v)
-{
-    for (int i = 0; i < 9; ++i)
-    {
-        for (int j = 0; j < 9; ++j)
-        {
-            matrix_q[i][j] = trans_cost[v[i]][v[j]];
-            // std::cout << " " << matrix_q[i][j];
-        }
-        // std::cout << std::endl;
-    }
-}
 
-void permutation_teste(std::vector<int>& v)
-{
-    unsigned contagem = 1;
-    unsigned int matrix_circuito[9][9] = {  {0,2,0,1,0,0,0,0,0}, //A
-                                            {2,0,1,0,0,0,0,0,0}, //B
-                                            {1,1,0,0,0,0,0,0,0}, //C
-                                            {0,1,1,0,0,0,0,0,0}, //D
-                                            {0,0,0,1,0,0,0,0,1}, //E
-                                            {0,1,0,0,0,0,0,0,0}, //F
-                                            {0,0,0,0,0,1,0,0,0}, //G
-                                            {0,0,0,0,0,0,1,0,0}, //H
-                                            {0,0,0,0,0,0,0,0,0}}; //I
-    // unsigned int custo = 100000;
-    unsigned int aux;
-    do
-    {
-        ++total;
-        if(total%500000000 == 0)
-            std::cout << " | " << std::endl;
-        // std::cout << contagem++ << ": "; 
-        // for (int i = 0; i < 5; ++i)
-        // {
-        //     std::cout << " " << v[i];
-        // }
-        // std::cout << std::endl;
-        extract_matrix(v);
-        aux = 0;
-        for (int i = 0; i < 9; ++i)
-        {
-            for (int j = 0; j < 9; ++j)
-            {
-                aux += matrix_q[i][j]*matrix_circuito[i][j];
-            }
-        }
-        if(aux < custo)
-        {
-            custo = aux;
-            mapeamento.clear();
-            mapeamento.push_back(v);
-        }
-        else if( aux == custo)
-        {
-            mapeamento.push_back(v);
-        }
-        // if(aux == 22)
-        //     getchar();
-        // custo.push_back(aux);
-        // mapeamento.push_back(v);
-        // if( aux < custo )
-        // {
-        //     custo = aux;
-        //     for (int i = 0; i < 4; ++i)
-        //     {
-        //         std::cout << " " << v[i];
-        //     }
-        // }
 
-    } while ( std::next_permutation(v.begin(),v.begin()+9) );
-}
 
 void pretty_print(const std::vector<int>& v) {
   static int count = 0;
@@ -590,37 +522,136 @@ void pretty_print(const std::vector<int>& v) {
   std::cout << "] " << std::endl;
 }
 
-std::vector<int> people;
-std::vector<int> combination;
+    unsigned custo;
+    matrix mapeamento;
+    matrix matrix_custo;
 
+    void extract_matrix(std::vector<int>& v)
+    {
+        for (int i = 0; i < v.size(); ++i)
+        {
+            for (int j = 0; j < v.size(); ++j)
+            {
+                matrix_custo[i][j] = trans_cost[v[i]][v[j]];
+                // std::cout << " " << matrix_q[i][j];
+            }
+            // std::cout << std::endl;
+        }
+    }
 
-void go(int offset, int k) {
-  if (k == 0) {
-    // pretty_print(combination);
-    permutation_teste(combination);
-    return;
-  }
-  for (int i = offset; i <= people.size() - k; ++i) {
-    combination.push_back(people[i]);
-    go(i+1, k-1);
-    combination.pop_back();
-  }
-}
+    void all_combinations(int offset, int k, std::vector<int>& qubits, std::vector<int>& combination, matrix& matrix_circuito) 
+    {
+        // long long int total = 0;
+        
+        if (k == 0) 
+        {
+            // pretty_print(combination);
+            unsigned int aux;
+            do
+            {
+                // ++total;
+                // if(total%500000000 == 0)
+                //     std::cout << " | " << std::endl;
+                // std::cout << contagem++ << ": "; 
+                // for (int i = 0; i < 5; ++i)
+                // {
+                //     std::cout << " " << v[i];
+                // }
+                // std::cout << std::endl;
+                extract_matrix(combination);
+                aux = 0;
+                for (int i = 0; i < combination.size(); ++i)
+                {
+                    for (int j = 0; j < combination.size(); ++j)
+                    {
+                        aux += matrix_custo[i][j]*matrix_circuito[i][j];
+                    }
+                }
+                if(aux < custo)
+                {
+                    custo = aux;
+                    mapeamento.clear();
+                    mapeamento.push_back(combination);
+                }
+                else if( aux == custo)
+                {
+                    mapeamento.push_back(combination);
+                }
+                // if(aux == 22)
+                //     getchar();
+                // custo.push_back(aux);
+                // mapeamento.push_back(v);
+                // if( aux < custo )
+                // {
+                //     custo = aux;
+                //     for (int i = 0; i < 4; ++i)
+                //     {
+                //         std::cout << " " << v[i];
+                //     }
+                // }
+
+            } while ( std::next_permutation(combination.begin(),combination.begin()+combination.size()) );
+            return;
+        }
+        for (int i = offset; i <= qubits.size() - k; ++i) 
+        {
+            combination.push_back(qubits[i]);
+            all_combinations(i+1, k-1, qubits, combination, matrix_circuito);
+            combination.pop_back();
+        }
+    }
 
     void the_mapping( circuit& circ_out, const circuit& circ_in )
     {
         std::cout << "THE MAPPING!" << std::endl;
+        circuit aux;
+        copy_circuit(circ_in, aux);
         // for( int v = 0; v < graph_size; v++)
         // {
         //     for( int w = 0; w < graph_size; w++)
         //         std::cout << trans_cost[v][w] << " ";
         //     std::cout << std::endl;
         // }
+        unsigned target, control;
+        std::vector<int> qubits;
+        std::vector<int> combination;
+        matrix matrix_circuito;
+        custo = 100000;
 
-        int n = 16, k = 9;
 
-        for (int i = 0; i < n; ++i) { people.push_back(i); }
-        go(0, k);
+        for (int i = 0; i < mapeamento.size(); ++i)
+            mapeamento[i].clear();
+        mapeamento.clear();
+        for (int i = 0; i < matrix_custo.size(); ++i)
+            matrix_custo[i].clear();
+        matrix_custo.clear();
+
+
+        for (int i = 0; i < circ_in.lines(); ++i)
+            combination.push_back(0);
+        for (int i = 0; i < circ_in.lines(); ++i)
+        {
+            matrix_circuito.push_back(combination);
+            matrix_custo.push_back(combination);
+        }
+        
+        combination.clear();
+
+        for ( const auto& gate : circ_in )
+        {
+            if( !gate.controls().empty() ) // if is not a NOT gate
+            {
+                target = gate.targets().front();
+                control = gate.controls().front().line();
+                ++matrix_circuito[control][target];
+            }
+        }
+
+        for (int i = 0; i < graph_size; ++i) 
+            qubits.push_back(i);
+
+        all_combinations(0, circ_in.lines(), qubits, combination, matrix_circuito);
+
         // for (int i = 0; i < custo.size(); ++i) { 
         //     std::cout << custo[i] << std::endl;
         //     for (int j = 0; j < 5; ++j) {
@@ -633,13 +664,21 @@ void go(int offset, int k) {
         std::cout << "\nMenor: " << custo << std::endl;
         for (int i = 0; i < mapeamento.size(); ++i) 
         { 
-            for (int j = 0; j < 9; ++j) 
+            for (int j = 0; j < circ_in.lines(); ++j) 
             {
                 std::cout << " " << mapeamento[i][j];
             } 
             std::cout << std::endl;
         }
+
+        for(unsigned i = circ_in.lines() ; i < graph_size; i++)
+            add_line_to_circuit( aux, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
         
+        permute_lines(aux, &mapeamento[0][0]);
+
+        // copy_circuit(circ_out, aux);
+        expand_cnots( circ_out, aux );
+
         // std::cout << "Menor: " << *min_element(std::begin(custo), std::end(custo)) << std::endl;
         // std::vector<int>::iterator it = std::find(custo.begin(), custo.end(), 25);
         // int index = std::distance(custo.begin(), it);
@@ -649,7 +688,7 @@ void go(int offset, int k) {
         // }
         // std::cout << std::endl;
         
-        std::cout << "Total: " << total << std::endl;
+        // std::cout << "Total: " << total << std::endl;
 
         // std::cout << "Max: " << *max_element(std::begin(custo), std::end(custo)) << std::endl;
         //  it = std::find(custo.begin(), custo.end(), 535);

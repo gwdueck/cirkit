@@ -111,6 +111,11 @@ bool graph_command::execute()
         auto& circuits = env->store<circuit>();
         circuit circ_out, circ_in = circuits.current();
         the_mapping( circ_out, circ_in);
+        if ( is_set( "new" ) )
+        {
+            circuits.extend();
+        }
+        circuits.current() = circ_out;
     }
 
     if( is_set( "transform" ) ){
