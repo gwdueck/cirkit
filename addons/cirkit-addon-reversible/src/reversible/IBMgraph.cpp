@@ -505,53 +505,72 @@ namespace cirkit
         }
     }
 
-int matrix_q[4][4];
-std::vector<int> custo;
+long long int total = 0;
+int matrix_q[9][9];
+unsigned custo = 100000;
 std::vector<std::vector<int>> mapeamento;
 
 void extract_matrix(std::vector<int>& v)
 {
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 9; ++i)
     {
-        for (int j = 0; j < 4; ++j)
+        for (int j = 0; j < 9; ++j)
         {
             matrix_q[i][j] = trans_cost[v[i]][v[j]];
-            std::cout << " " << matrix_q[i][j];
+            // std::cout << " " << matrix_q[i][j];
         }
-        std::cout << std::endl;
+        // std::cout << std::endl;
     }
 }
 
 void permutation_teste(std::vector<int>& v)
 {
     unsigned contagem = 1;
-    unsigned int matrix_circuito[4][4] = {  {0,2,0,1},
-                                            {2,0,1,0},
-                                            {1,1,0,0},
-                                            {0,1,1,0}};
+    unsigned int matrix_circuito[9][9] = {  {0,2,0,1,0,0,0,0,0}, //A
+                                            {2,0,1,0,0,0,0,0,0}, //B
+                                            {1,1,0,0,0,0,0,0,0}, //C
+                                            {0,1,1,0,0,0,0,0,0}, //D
+                                            {0,0,0,1,0,0,0,0,1}, //E
+                                            {0,1,0,0,0,0,0,0,0}, //F
+                                            {0,0,0,0,0,1,0,0,0}, //G
+                                            {0,0,0,0,0,0,1,0,0}, //H
+                                            {0,0,0,0,0,0,0,0,0}}; //I
     // unsigned int custo = 100000;
     unsigned int aux;
     do
     {
-        std::cout << contagem++ << ": "; 
-        for (int i = 0; i < 4; ++i)
-        {
-            std::cout << " " << v[i];
-        }
-        std::cout << std::endl;
+        ++total;
+        if(total%500000000 == 0)
+            std::cout << " | " << std::endl;
+        // std::cout << contagem++ << ": "; 
+        // for (int i = 0; i < 5; ++i)
+        // {
+        //     std::cout << " " << v[i];
+        // }
+        // std::cout << std::endl;
         extract_matrix(v);
         aux = 0;
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 9; ++i)
         {
-            for (int j = 0; j < 4; ++j)
+            for (int j = 0; j < 9; ++j)
             {
                 aux += matrix_q[i][j]*matrix_circuito[i][j];
             }
         }
-        if(aux == 22)
-            getchar();
-        custo.push_back(aux);
-        mapeamento.push_back(v);
+        if(aux < custo)
+        {
+            custo = aux;
+            mapeamento.clear();
+            mapeamento.push_back(v);
+        }
+        else if( aux == custo)
+        {
+            mapeamento.push_back(v);
+        }
+        // if(aux == 22)
+        //     getchar();
+        // custo.push_back(aux);
+        // mapeamento.push_back(v);
         // if( aux < custo )
         // {
         //     custo = aux;
@@ -561,7 +580,7 @@ void permutation_teste(std::vector<int>& v)
         //     }
         // }
 
-    } while ( std::next_permutation(v.begin(),v.begin()+4) );
+    } while ( std::next_permutation(v.begin(),v.begin()+9) );
 }
 
 void pretty_print(const std::vector<int>& v) {
@@ -577,7 +596,7 @@ std::vector<int> combination;
 
 void go(int offset, int k) {
   if (k == 0) {
-    pretty_print(combination);
+    // pretty_print(combination);
     permutation_teste(combination);
     return;
   }
@@ -598,35 +617,50 @@ void go(int offset, int k) {
         //     std::cout << std::endl;
         // }
 
-        int n = 16, k = 4;
+        int n = 16, k = 9;
 
         for (int i = 0; i < n; ++i) { people.push_back(i); }
         go(0, k);
-        for (int i = 0; i < custo.size(); ++i) { 
-            std::cout << custo[i] << std::endl;
-            for (int j = 0; j < 4; ++j) {
+        // for (int i = 0; i < custo.size(); ++i) { 
+        //     std::cout << custo[i] << std::endl;
+        //     for (int j = 0; j < 5; ++j) {
+        //         std::cout << " " << mapeamento[i][j];
+        //     } 
+        //     std::cout << std::endl;
+
+        // }
+        
+        std::cout << "\nMenor: " << custo << std::endl;
+        for (int i = 0; i < mapeamento.size(); ++i) 
+        { 
+            for (int j = 0; j < 9; ++j) 
+            {
                 std::cout << " " << mapeamento[i][j];
             } 
             std::cout << std::endl;
-
         }
-        std::cout << "Menor: " << *min_element(std::begin(custo), std::end(custo)) << std::endl;
-        std::vector<int>::iterator it = std::find(custo.begin(), custo.end(), 22);
-        int index = std::distance(custo.begin(), it);
         
-        for (int j = 0; j < 4; ++j) {
-            std::cout << " " << mapeamento[index][j];
-        }
-        std::cout << std::endl;
-
-        std::cout << "Max: " << *max_element(std::begin(custo), std::end(custo)) << std::endl;
-         it = std::find(custo.begin(), custo.end(), 535);
-         index = std::distance(custo.begin(), it);
+        // std::cout << "Menor: " << *min_element(std::begin(custo), std::end(custo)) << std::endl;
+        // std::vector<int>::iterator it = std::find(custo.begin(), custo.end(), 25);
+        // int index = std::distance(custo.begin(), it);
         
-        for (int j = 0; j < 4; ++j) {
-            std::cout << " " << mapeamento[index][j];
-        }
-        std::cout << std::endl;
+        // for (int j = 0; j < 5; ++j) {
+        //     std::cout << " " << mapeamento[index][j];
+        // }
+        // std::cout << std::endl;
+        
+        std::cout << "Total: " << total << std::endl;
+
+        // std::cout << "Max: " << *max_element(std::begin(custo), std::end(custo)) << std::endl;
+        //  it = std::find(custo.begin(), custo.end(), 535);
+        //  index = std::distance(custo.begin(), it);
+        
+        // for (int j = 0; j < 5; ++j) {
+        //     std::cout << " " << mapeamento[index][j];
+        // }
+        // std::cout << std::endl;
+
+
         // std::vector<unsigned> s; // cnot implementable
         // std::vector<unsigned> r; // reverse of s
         // std::vector<unsigned> t; // total
