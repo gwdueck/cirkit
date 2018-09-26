@@ -37,6 +37,8 @@
 #include <reversible/functions/add_line_to_circuit.hpp>
 #include <boost/lexical_cast.hpp>
 #include <reversible/functions/ibm_helper.hpp>
+#include <reversible/functions/clear_circuit.hpp>
+#include <reversible/io/write_qc.hpp>
 
 
 namespace cirkit
@@ -525,6 +527,7 @@ void pretty_print(const std::vector<int>& v) {
     unsigned custo;
     matrix mapeamento;
     matrix matrix_custo;
+    std::vector<int> v;
 
     void extract_matrix(std::vector<int>& v)
     {
@@ -542,22 +545,13 @@ void pretty_print(const std::vector<int>& v) {
     void all_combinations(int offset, int k, std::vector<int>& qubits, std::vector<int>& combination, matrix& matrix_circuito) 
     {
         // long long int total = 0;
-        
         if (k == 0) 
         {
             // pretty_print(combination);
             unsigned int aux;
             do
             {
-                // ++total;
-                // if(total%500000000 == 0)
-                //     std::cout << " | " << std::endl;
-                // std::cout << contagem++ << ": "; 
-                // for (int i = 0; i < 5; ++i)
-                // {
-                //     std::cout << " " << v[i];
-                // }
-                // std::cout << std::endl;
+
                 extract_matrix(combination);
                 aux = 0;
                 for (int i = 0; i < combination.size(); ++i)
@@ -567,30 +561,25 @@ void pretty_print(const std::vector<int>& v) {
                         aux += matrix_custo[i][j]*matrix_circuito[i][j];
                     }
                 }
-                if(aux < custo)
+                
+                if(aux < custo+10)
                 {
                     custo = aux;
-                    mapeamento.clear();
+                    v.push_back(aux);
+                    // mapeamento.clear();
                     mapeamento.push_back(combination);
+                    for (int i = 0; i < v.size(); ++i) 
+                    {
+                        if(v[i] > aux+10)
+                        {
+                            v.erase(v.begin()+i);
+                            mapeamento.erase(mapeamento.begin()+i);
+                            --i;
+                        }
+                    }
                 }
-                else if( aux == custo)
-                {
-                    mapeamento.push_back(combination);
-                }
-                // if(aux == 22)
-                //     getchar();
-                // custo.push_back(aux);
-                // mapeamento.push_back(v);
-                // if( aux < custo )
-                // {
-                //     custo = aux;
-                //     for (int i = 0; i < 4; ++i)
-                //     {
-                //         std::cout << " " << v[i];
-                //     }
-                // }
 
-            } while ( std::next_permutation(combination.begin(),combination.begin()+combination.size()) );
+           } while ( std::next_permutation(combination.begin(),combination.begin()+combination.size()) );
             return;
         }
         for (int i = offset; i <= qubits.size() - k; ++i) 
@@ -601,24 +590,17 @@ void pretty_print(const std::vector<int>& v) {
         }
     }
 
-    void the_mapping( circuit& circ_out, const circuit& circ_in )
+    circuit try_all( const circuit& circ_in )
     {
-        std::cout << "THE MAPPING!" << std::endl;
-        circuit aux;
+        circuit aux, circ_out;
         copy_circuit(circ_in, aux);
-        // for( int v = 0; v < graph_size; v++)
-        // {
-        //     for( int w = 0; w < graph_size; w++)
-        //         std::cout << trans_cost[v][w] << " ";
-        //     std::cout << std::endl;
-        // }
         unsigned target, control;
         std::vector<int> qubits;
         std::vector<int> combination;
         matrix matrix_circuito;
-        custo = 100000;
+        custo = INT_MAX;
 
-
+        v.clear();
         for (int i = 0; i < mapeamento.size(); ++i)
             mapeamento[i].clear();
         mapeamento.clear();
@@ -651,79 +633,42 @@ void pretty_print(const std::vector<int>& v) {
             qubits.push_back(i);
 
         all_combinations(0, circ_in.lines(), qubits, combination, matrix_circuito);
-
-        // for (int i = 0; i < custo.size(); ++i) { 
-        //     std::cout << custo[i] << std::endl;
-        //     for (int j = 0; j < 5; ++j) {
-        //         std::cout << " " << mapeamento[i][j];
-        //     } 
-        //     std::cout << std::endl;
-
-        // }
         
-        std::cout << "\nMenor: " << custo << std::endl;
-        for (int i = 0; i < mapeamento.size(); ++i) 
-        { 
-            for (int j = 0; j < circ_in.lines(); ++j) 
+        circuit minimo;
+        std::vector<int> map_minimo;
+        for (int i = 0; i < mapeamento.size(); ++i)
+        {
+            clear_circuit(aux);
+            copy_circuit(circ_in, aux);
+            for(unsigned i = circ_in.lines() ; i < graph_size; i++)
+                add_line_to_circuit( aux, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
+            permute_lines(aux, &mapeamento[i][0]);
+            // std::cout << "Imprimindo o permutado" << std::endl;
+            // std::cout << aux << std::endl;
+            expand_cnots( circ_out, aux );
+            // std::cout << "Imprimindo o expandido" << std::endl;
+            // std::cout << circ_out << std::endl;
+            // std::cout << "inicial: " << circ_out.num_gates() << std::endl;
+            circ_out = remove_dup_gates( circ_out);
+            // std::cout << "Imprimindo o reduzido" << std::endl;
+            // std::cout << circ_out << std::endl;
+            // std::cout << "number of gates: " << circ_out.num_gates() << std::endl;
+            if(i == 0 || circ_out.num_gates() < minimo.num_gates())
             {
-                std::cout << " " << mapeamento[i][j];
-            } 
-            std::cout << std::endl;
+                map_minimo.clear();
+                for (int j = 0; j < mapeamento[i].size(); ++j) 
+                    map_minimo.push_back(mapeamento[i][j]);
+                clear_circuit(minimo);
+                copy_circuit(circ_out, minimo);
+            }
+            // write_qc( minimo, "teste_expandido.qc", false );
+            clear_circuit(circ_out);
         }
-
-        for(unsigned i = circ_in.lines() ; i < graph_size; i++)
-            add_line_to_circuit( aux, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
-        
-        permute_lines(aux, &mapeamento[0][0]);
-
-        // copy_circuit(circ_out, aux);
-        expand_cnots( circ_out, aux );
-
-        // std::cout << "Menor: " << *min_element(std::begin(custo), std::end(custo)) << std::endl;
-        // std::vector<int>::iterator it = std::find(custo.begin(), custo.end(), 25);
-        // int index = std::distance(custo.begin(), it);
-        
-        // for (int j = 0; j < 5; ++j) {
-        //     std::cout << " " << mapeamento[index][j];
-        // }
-        // std::cout << std::endl;
-        
-        // std::cout << "Total: " << total << std::endl;
-
-        // std::cout << "Max: " << *max_element(std::begin(custo), std::end(custo)) << std::endl;
-        //  it = std::find(custo.begin(), custo.end(), 535);
-        //  index = std::distance(custo.begin(), it);
-        
-        // for (int j = 0; j < 5; ++j) {
-        //     std::cout << " " << mapeamento[index][j];
-        // }
-        // std::cout << std::endl;
-
-
-        // std::vector<unsigned> s; // cnot implementable
-        // std::vector<unsigned> r; // reverse of s
-        // std::vector<unsigned> t; // total
-        // std::pair<int,int> ncontrol;
-        // std::pair<int,int> ntarget;
-
-        // for(int i = 0; i < graph_size ; i++ )
-        // {
-        //     unsigned ns = 0;
-        //     unsigned nr = 0;
-        //     for(int j = 0; j < graph_size; j++)
-        //     {
-        //         if(graph_adjacency[i][j])
-        //             ++ns;
-        //         if(graph_adjacency[j][i])
-        //             ++nr;
-        //     }
-        //     s.push_back(ns);
-        //     r.push_back(nr);
-        //     t.push_back(ns+nr);
-        //     std::cout << "Qubit " << i << " - " << ns << " X's in this line and " << nr << " X's in this column"<< std::endl;
-        // }
-        // for (int i = 0; i < graph_size; ++i)
-        //     std::cout << "Qubit " << i << ": " << t[i] << std::endl;
+        std::cout << "Best mapping: " << minimo.num_gates() << " ->";
+        for (int i = 0; i < map_minimo.size(); ++i)
+            std::cout << " " << map_minimo[i];             
+        std::cout << std::endl;
+        return minimo;
     }
 
     

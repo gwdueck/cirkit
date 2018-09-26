@@ -67,6 +67,7 @@ graph_command::graph_command( const environment::ptr& env )
     ( "file,w", value( &filename ), "Write graph, matrix and transformations to a file" )
     ( "from_file,f", value( &filename ), "Read matrix and transformations from a file" )
     ( "mapping,x", "Realize the mapping for a current circuit")
+    ( "try_all", "Try all the permutations for the circuit")
     ;
     add_new_option();
 }
@@ -103,14 +104,15 @@ bool graph_command::execute()
     if( is_set( "delete" ) ){
         delete_graph( );
     }
-    if( is_set( "mapping" ) ){
+    if( is_set( "try_all" ) )
+    {
         if( env->store<circuit>().current_index() < 0 ){
             std::cout << "no current circuit available" << std::endl;
             return true;
         }
         auto& circuits = env->store<circuit>();
         circuit circ_out, circ_in = circuits.current();
-        the_mapping( circ_out, circ_in);
+        circ_out = try_all( circ_in);
         if ( is_set( "new" ) )
         {
             circuits.extend();
