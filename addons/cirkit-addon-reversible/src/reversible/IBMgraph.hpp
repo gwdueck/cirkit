@@ -65,6 +65,7 @@ extern std::vector<TransPath> path_list; //-- it was giving memory error (now it
 	void delete_graph( );
 	void create_trans( bool verbose );
     circuit try_all( const circuit& circ_in );
+    void mapping( const circuit& circ_in );
     void expand_cnots( circuit& circ_out, const circuit& circ_in );
 
 }

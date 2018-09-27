@@ -104,6 +104,17 @@ bool graph_command::execute()
     if( is_set( "delete" ) ){
         delete_graph( );
     }
+    if( is_set( "mapping" ) )
+    {
+        if( env->store<circuit>().current_index() < 0 ){
+            std::cout << "no current circuit available" << std::endl;
+            return true;
+        }
+        auto& circuits = env->store<circuit>();
+        circuit circ_in = circuits.current();
+        mapping( circ_in);
+    }
+    
     if( is_set( "try_all" ) )
     {
         if( env->store<circuit>().current_index() < 0 ){

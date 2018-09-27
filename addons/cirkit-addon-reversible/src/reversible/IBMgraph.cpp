@@ -512,37 +512,26 @@ namespace cirkit
         }
     }
 
-    
-
-
-
-
-void pretty_print(const std::vector<int>& v) {
-  static int count = 0;
-  std::cout << "combination no " << (++count) << ": [ ";
-  for (int i = 0; i < v.size(); ++i) { std::cout << v[i] << " "; }
-  std::cout << "] " << std::endl;
-}
-
+ 
     unsigned custo;
     matrix mapeamento;
     matrix matrix_custo;
-    std::vector<int> v;
+    std::vector<int> vector_costs;
 
-    void extract_matrix(std::vector<int>& v)
+    void extract_matrix(std::vector<int>& m)
     {
-        for (int i = 0; i < v.size(); ++i)
+        for (int i = 0; i < m.size(); ++i)
         {
-            for (int j = 0; j < v.size(); ++j)
+            for (int j = 0; j < m.size(); ++j)
             {
-                matrix_custo[i][j] = trans_cost[v[i]][v[j]];
+                matrix_custo[i][j] = trans_cost[m[i]][m[j]];
                 // std::cout << " " << matrix_q[i][j];
             }
             // std::cout << std::endl;
         }
     }
 
-    void all_combinations(int offset, int k, std::vector<int>& qubits, std::vector<int>& combination, matrix& matrix_circuito) 
+    void all_combinations(int offset, int k, std::vector<int>& qubits, std::vector<int>& combination, matrix& matrix_circuit) 
     {
         // long long int total = 0;
         if (k == 0) 
@@ -558,21 +547,22 @@ void pretty_print(const std::vector<int>& v) {
                 {
                     for (int j = 0; j < combination.size(); ++j)
                     {
-                        aux += matrix_custo[i][j]*matrix_circuito[i][j];
+                        aux += matrix_custo[i][j]*matrix_circuit[i][j];
                     }
                 }
                 
                 if(aux < custo+10)
                 {
-                    custo = aux;
-                    v.push_back(aux);
+                    if(aux < custo)
+                        custo = aux;
+                    vector_costs.push_back(aux);
                     // mapeamento.clear();
                     mapeamento.push_back(combination);
-                    for (int i = 0; i < v.size(); ++i) 
+                    for (int i = 0; i < vector_costs.size(); ++i) 
                     {
-                        if(v[i] > aux+10)
+                        if(vector_costs[i] > aux+10)
                         {
-                            v.erase(v.begin()+i);
+                            vector_costs.erase(vector_costs.begin()+i);
                             mapeamento.erase(mapeamento.begin()+i);
                             --i;
                         }
@@ -585,9 +575,25 @@ void pretty_print(const std::vector<int>& v) {
         for (int i = offset; i <= qubits.size() - k; ++i) 
         {
             combination.push_back(qubits[i]);
-            all_combinations(i+1, k-1, qubits, combination, matrix_circuito);
+            all_combinations(i+1, k-1, qubits, combination, matrix_circuit);
             combination.pop_back();
         }
+    }
+
+    void clear_matrix(matrix& m)
+    {
+        for (int i = 0; i < m.size(); ++i)
+            m[i].clear();
+        m.clear();
+    }
+
+    void initialize_matrix(matrix& m, unsigned size)
+    {
+        std::vector<int> aux;
+        for (int i = 0; i < size; ++i)
+            aux.push_back(0);
+        for (int i = 0; i < size; ++i)
+            m.push_back(aux);
     }
 
     circuit try_all( const circuit& circ_in )
@@ -597,27 +603,17 @@ void pretty_print(const std::vector<int>& v) {
         unsigned target, control;
         std::vector<int> qubits;
         std::vector<int> combination;
-        matrix matrix_circuito;
+        matrix matrix_circuit;
         custo = INT_MAX;
 
-        v.clear();
-        for (int i = 0; i < mapeamento.size(); ++i)
-            mapeamento[i].clear();
-        mapeamento.clear();
-        for (int i = 0; i < matrix_custo.size(); ++i)
-            matrix_custo[i].clear();
-        matrix_custo.clear();
+        vector_costs.clear(); // clear the vector with the mapping costs
+        clear_matrix(mapeamento); // clear the matrix with the mappings
+        clear_matrix(matrix_custo); // clear the matrix with the mapping cost
 
+        initialize_matrix(matrix_circuit, circ_in.lines()); // initialize the matrix with zeros
+        initialize_matrix(matrix_custo, circ_in.lines()); // initialize the matrix with zeros
 
-        for (int i = 0; i < circ_in.lines(); ++i)
-            combination.push_back(0);
-        for (int i = 0; i < circ_in.lines(); ++i)
-        {
-            matrix_circuito.push_back(combination);
-            matrix_custo.push_back(combination);
-        }
-        
-        combination.clear();
+        std::cout << "Number of initial gates: " << circ_in.num_gates() << std::endl;
 
         for ( const auto& gate : circ_in )
         {
@@ -625,34 +621,46 @@ void pretty_print(const std::vector<int>& v) {
             {
                 target = gate.targets().front();
                 control = gate.controls().front().line();
-                ++matrix_circuito[control][target];
+                ++matrix_circuit[control][target];
             }
         }
 
-        for (int i = 0; i < graph_size; ++i) 
+        for (int i = 0; i < graph_size; ++i) // initialize a vector with the qubits
             qubits.push_back(i);
 
-        all_combinations(0, circ_in.lines(), qubits, combination, matrix_circuito);
+        // test all the combinations
+        all_combinations(0, circ_in.lines(), qubits, combination, matrix_circuit);
         
+        // printing all the mappings found in the interval
+        for (int i = 0; i < mapeamento.size(); ++i)
+        {
+            std::cout << "Need to add " << vector_costs[i] << " gates ->";
+            for (int j = 0; j < mapeamento[i].size(); ++j)
+                std::cout << " " << mapeamento[i][j];
+            std::cout << std::endl;
+        }
+            
         circuit minimo;
         std::vector<int> map_minimo;
+
+        std::cout << "Best mapping without optimization: " << custo << " total: " << custo + circ_in.num_gates() << std::endl;
         for (int i = 0; i < mapeamento.size(); ++i)
         {
             clear_circuit(aux);
             copy_circuit(circ_in, aux);
             for(unsigned i = circ_in.lines() ; i < graph_size; i++)
                 add_line_to_circuit( aux, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
+            
             permute_lines(aux, &mapeamento[i][0]);
-            // std::cout << "Imprimindo o permutado" << std::endl;
-            // std::cout << aux << std::endl;
             expand_cnots( circ_out, aux );
-            // std::cout << "Imprimindo o expandido" << std::endl;
-            // std::cout << circ_out << std::endl;
-            // std::cout << "inicial: " << circ_out.num_gates() << std::endl;
+            if(circ_out.num_gates() == custo)
+            {
+                for (int j = 0; j < mapeamento[i].size(); ++j)
+                    std::cout << " " << mapeamento[i][j];             
+                std::cout << std::endl;
+            }
             circ_out = remove_dup_gates( circ_out);
-            // std::cout << "Imprimindo o reduzido" << std::endl;
-            // std::cout << circ_out << std::endl;
-            // std::cout << "number of gates: " << circ_out.num_gates() << std::endl;
+
             if(i == 0 || circ_out.num_gates() < minimo.num_gates())
             {
                 map_minimo.clear();
@@ -661,15 +669,45 @@ void pretty_print(const std::vector<int>& v) {
                 clear_circuit(minimo);
                 copy_circuit(circ_out, minimo);
             }
-            // write_qc( minimo, "teste_expandido.qc", false );
             clear_circuit(circ_out);
         }
+
         std::cout << "Best mapping: " << minimo.num_gates() << " ->";
         for (int i = 0; i < map_minimo.size(); ++i)
             std::cout << " " << map_minimo[i];             
         std::cout << std::endl;
+       
         return minimo;
     }
 
+    void mapping( const circuit& circ_in )
+    {
+        unsigned target, control;
+        matrix matrix_circuit;
+
+        initialize_matrix(matrix_circuit, circ_in.lines());
+
+        for ( const auto& gate : circ_in )
+        {
+            if( !gate.controls().empty() ) // if is not a NOT gate
+            {
+                target = gate.targets().front();
+                control = gate.controls().front().line();
+                ++matrix_circuit[control][target];
+            }
+        }
+
+        for (int i = 0; i < matrix_circuit.size(); ++i)
+        {
+            for (int j = 0; j < matrix_circuit.size(); ++j)
+            {
+                std::cout << " " << matrix_circuit[i][j];
+            }
+            std::cout << std::endl;
+        }
+
+        //get the highest cnot value
+
+    }
     
 }
