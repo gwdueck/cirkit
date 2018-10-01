@@ -75,10 +75,14 @@ graph_command::graph_command( const environment::ptr& env )
 bool graph_command::execute()
 {
     bool verbose = false;
+    bool rm_dup = false;
     
 
     if( is_set( "verbose" ) ){
         verbose = true;
+    }
+    if( is_set( "rm_dup" ) ){
+        rm_dup = true;
     }
     if( is_set( "read" ) ){
         read_graph( filename );
@@ -123,7 +127,7 @@ bool graph_command::execute()
         }
         auto& circuits = env->store<circuit>();
         circuit circ_out, circ_in = circuits.current();
-        circ_out = try_all( circ_in);
+        circ_out = try_all( circ_in, verbose, rm_dup);
         if ( is_set( "new" ) )
         {
             circuits.extend();

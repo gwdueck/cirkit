@@ -596,7 +596,7 @@ namespace cirkit
             m.push_back(aux);
     }
 
-    circuit try_all( const circuit& circ_in )
+    circuit try_all( const circuit& circ_in, bool verbose, bool rm_dup )
     {
         circuit aux, circ_out;
         copy_circuit(circ_in, aux);
@@ -632,18 +632,21 @@ namespace cirkit
         all_combinations(0, circ_in.lines(), qubits, combination, matrix_circuit);
         
         // printing all the mappings found in the interval
-        for (int i = 0; i < mapeamento.size(); ++i)
+        if(verbose)
         {
-            std::cout << "Need to add " << vector_costs[i] << " gates ->";
-            for (int j = 0; j < mapeamento[i].size(); ++j)
-                std::cout << " " << mapeamento[i][j];
-            std::cout << std::endl;
+            for (int i = 0; i < mapeamento.size(); ++i)
+            {
+                std::cout << "Need to add " << vector_costs[i] << " gates ->";
+                for (int j = 0; j < mapeamento[i].size(); ++j)
+                    std::cout << " " << mapeamento[i][j];
+                std::cout << std::endl;
+            }    
+            std::cout << "Best mapping without optimization: " << custo << " total: " << custo + circ_in.num_gates() << std::endl;
         }
-            
+        
         circuit minimo;
         std::vector<int> map_minimo;
 
-        std::cout << "Best mapping without optimization: " << custo << " total: " << custo + circ_in.num_gates() << std::endl;
         for (int i = 0; i < mapeamento.size(); ++i)
         {
             clear_circuit(aux);
@@ -659,7 +662,8 @@ namespace cirkit
                     std::cout << " " << mapeamento[i][j];             
                 std::cout << std::endl;
             }
-            circ_out = remove_dup_gates( circ_out);
+            if(rm_dup)
+                circ_out = remove_dup_gates( circ_out);
 
             if(i == 0 || circ_out.num_gates() < minimo.num_gates())
             {
