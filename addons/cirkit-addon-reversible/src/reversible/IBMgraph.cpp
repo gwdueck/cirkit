@@ -614,7 +614,7 @@ namespace cirkit
         initialize_matrix(matrix_custo, circ_in.lines()); // initialize the matrix with zeros
 
         // std::cout << "Number of initial gates: " << circ_in.num_gates() << std::endl;
-        std::cout << "\t" << circ_in.num_gates();
+        // std::cout << "\t" << circ_in.num_gates();
 
         for ( const auto& gate : circ_in )
         {
@@ -679,103 +679,42 @@ namespace cirkit
 
         // std::cout << "\t" << minimo.num_gates();
 
-        // int diminuir = 0;
-        // bool d = false;
-        // for ( auto& gate : minimo )
-        // {
-        //     if(gate.targets().front() == 0)
-        //     {
-        //         if( gate.controls().empty() )
-        //         {
-        //             if(d)
-        //                 diminuir++;
-        //             else
-        //                 d = true;
-        //         }
-        //         else
-        //         {
-        //             d = false;
-        //         }
-        //     }
-        // }
-        // d = false;
-        // for ( auto& gate : minimo )
-        // {
-        //     if(gate.targets().front() == 1)
-        //     {
-        //         if( gate.controls().empty() )
-        //         {
-        //             if(d)
-        //                 diminuir++;
-        //             else
-        //                 d = true;
-        //         }
-        //         else
-        //         {
-        //             d = false;
-        //         }
-        //     }
-        // }
-        // d = false;
-        // for ( auto& gate : minimo )
-        // {
-        //     if(gate.targets().front() == 2)
-        //     {
-        //         if( gate.controls().empty() )
-        //         {
-        //             if(d)
-        //                 diminuir++;
-        //             else
-        //                 d = true;
-        //         }
-        //         else
-        //         {
-        //             d = false;
-        //         }
-        //     }
-        // }
-        // d = false;
-        // for ( auto& gate : minimo )
-        // {
-        //     if(gate.targets().front() == 3)
-        //     {
-        //         if( gate.controls().empty() )
-        //         {
-        //             if(d)
-        //                 diminuir++;
-        //             else
-        //                 d = true;
-        //         }
-        //         else
-        //         {
-        //             d = false;
-        //         }
-        //     }
-        // }
-        // d = false;
-        // for ( auto& gate : minimo )
-        // {
-        //     if(gate.targets().front() == 4)
-        //     {
-        //         if( gate.controls().empty() )
-        //         {
-        //             if(d)
-        //                 diminuir++;
-        //             else
-        //                 d = true;
-        //         }
-        //         else
-        //         {
-        //             d = false;
-        //         }
-        //     }
-        // }
-        // std::cout << "\t" << diminuir;
-        
-        std::cout << "Best mapping: " << minimo.num_gates() << " ->";
-        for (int i = 0; i < map_minimo.size(); ++i)
-            std::cout << " " << map_minimo[i];             
-        std::cout << std::endl;
+        int p = 0;
+        bool d = false;
+        for (int i = 0; i < 5; ++i)
+        {
+            d = false;
+            for (int j = 0; j < minimo.num_gates(); ++j)
+            {
+                if(minimo[j].targets().front() == i)
+                {
+                    if(minimo[j].controls().empty())
+                    {
+                        if(d)
+                        {
+                            // std::cout << i << " posicao: " << j << std::endl;
+                            minimo.remove_gate_at(j);
+                            --j;
+                            // getchar();
+                        }
+                        else
+                            d = true;
+                    }
+                    else
+                    {
+                        d = false;
+                    }
+                }
+                else if(!minimo[j].controls().empty())
+                    d = false;
+            }
+        }
+        // std::cout << minimo << std::endl;
+        std::cout << "\t" << circ_in.num_gates() << "\t" << minimo.num_gates();        
+        // std::cout << "Best mapping: " << minimo.num_gates() << " ->";
+        // for (int i = 0; i < map_minimo.size(); ++i)
+        //     std::cout << " " << map_minimo[i];             
+        // std::cout << std::endl;
        
         return minimo;
     }
