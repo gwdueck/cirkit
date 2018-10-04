@@ -131,8 +131,8 @@ bool levels_command::execute()
   */
         i++;
     }
-    // std::cout << "The circuit has " << max_lev << " levels" << std::endl;
-    std::cout << "\t" << max_lev << "\t";
+    std::cout << "The circuit has " << max_lev << " levels" << std::endl;
+    // std::cout << "levels\t" << max_lev << std::endl;
     if ( is_set( "new" ) )
     {
         circuits.extend();

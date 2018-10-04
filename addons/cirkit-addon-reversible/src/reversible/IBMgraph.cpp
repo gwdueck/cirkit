@@ -679,42 +679,41 @@ namespace cirkit
 
         // std::cout << "\t" << minimo.num_gates();
 
-        int p = 0;
-        bool d = false;
-        for (int i = 0; i < 5; ++i)
-        {
-            d = false;
-            for (int j = 0; j < minimo.num_gates(); ++j)
-            {
-                if(minimo[j].targets().front() == i)
-                {
-                    if(minimo[j].controls().empty())
-                    {
-                        if(d)
-                        {
-                            // std::cout << i << " posicao: " << j << std::endl;
-                            minimo.remove_gate_at(j);
-                            --j;
-                            // getchar();
-                        }
-                        else
-                            d = true;
-                    }
-                    else
-                    {
-                        d = false;
-                    }
-                }
-                else if(!minimo[j].controls().empty())
-                    d = false;
-            }
-        }
+        // bool d = false;
+        // for (int i = 0; i < 5; ++i)
+        // {
+        //     d = false;
+        //     for (int j = 0; j < minimo.num_gates(); ++j)
+        //     {
+        //         if(minimo[j].targets().front() == i)
+        //         {
+        //             if(minimo[j].controls().empty())
+        //             {
+        //                 if(d)
+        //                 {
+        //                     // std::cout << i << " posicao: " << j << std::endl;
+        //                     minimo.remove_gate_at(j);
+        //                     --j;
+        //                     // getchar();
+        //                 }
+        //                 else
+        //                     d = true;
+        //             }
+        //             else
+        //             {
+        //                 d = false;
+        //             }
+        //         }
+        //         else if(!minimo[j].controls().empty())
+        //             d = false;
+        //     }
+        // }
         // std::cout << minimo << std::endl;
         std::cout << "\t" << circ_in.num_gates() << "\t" << minimo.num_gates();        
-        // std::cout << "Best mapping: " << minimo.num_gates() << " ->";
-        // for (int i = 0; i < map_minimo.size(); ++i)
-        //     std::cout << " " << map_minimo[i];             
-        // std::cout << std::endl;
+        std::cout << "Best mapping: " << minimo.num_gates() << " ->";
+        for (int i = 0; i < map_minimo.size(); ++i)
+            std::cout << " " << map_minimo[i];             
+        std::cout << std::endl;
        
         return minimo;
     }
