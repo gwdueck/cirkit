@@ -47,6 +47,8 @@ class alex_command : public cirkit_command
 {
     public:
         alex_command( const environment::ptr& env );
+  		log_opt_t log() const;
+
 		
 	protected:
   		rules_t validity_rules() const;

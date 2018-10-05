@@ -27,6 +27,8 @@
 #include "alex.hpp"
 
 #include <cmath>
+#include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <iostream>
 
 #include <boost/program_options.hpp>
@@ -147,6 +149,7 @@ void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
 
 bool alex_command::execute()
 {
+  using boost::format;
 	const circuit circ = env->store<circuit>().current();
 
   unsigned target, control;
@@ -233,8 +236,16 @@ bool alex_command::execute()
 	// else
 	// 	print_solution(table, qubits);
 
+  // std::cout << format( "[i] memory: %.2f MB" ) % statistics->get<double>( "memory" ) << std::endl;
 
 	return true;
+}
+
+command::log_opt_t alex_command::log() const
+{
+  return log_opt_t({
+      {"runtime",       statistics->get<double>( "runtime" )}
+    });
 }
 
 }
