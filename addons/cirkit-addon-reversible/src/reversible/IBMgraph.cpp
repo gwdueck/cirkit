@@ -725,6 +725,7 @@ namespace cirkit
 
         initialize_matrix(matrix_circuit, circ_in.lines());
 
+        // Count the number of CNOTs in each line
         for ( const auto& gate : circ_in )
         {
             if( !gate.controls().empty() ) // if is not a NOT gate
@@ -735,6 +736,7 @@ namespace cirkit
             }
         }
 
+        // Print the matrix of CNOTs
         for (int i = 0; i < matrix_circuit.size(); ++i)
         {
             for (int j = 0; j < matrix_circuit.size(); ++j)

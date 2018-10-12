@@ -236,7 +236,6 @@ bool alex_command::execute()
 	// else
 	// 	print_solution(table, qubits);
 
-  // std::cout << format( "[i] memory: %.2f MB" ) % statistics->get<double>( "memory" ) << std::endl;
 
 	return true;
 }
