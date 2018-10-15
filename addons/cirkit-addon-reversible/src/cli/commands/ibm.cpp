@@ -100,7 +100,7 @@ bool ibm_command::execute()
     {
         add_line_to_circuit( circ_working, "i" + boost::lexical_cast<std::string>(i) , "o" + boost::lexical_cast<std::string>(i));
     }
-    
+    std::cout << " " << circ_working.num_gates();
     if( !is_set( "all_perm" ) )
     {
         if ( is_set( "ibm_qx4" ) )
@@ -180,12 +180,13 @@ bool ibm_command::execute()
             circuits.extend();
         }
         circuits.current() = circ_best;
-        std::cout << "best permutation = ";
-        for( int i = 0; i < 5; i++ )
-        {
-            std::cout << best_perm[i] << " ";
-        }
-        std::cout << "gates = " << best_cost << std::endl;
+        // std::cout << "best permutation = ";
+        // for( int i = 0; i < 5; i++ )
+        // {
+        //     std::cout << best_perm[i] << " ";
+        // }
+        // std::cout << "gates = " << best_cost << std::endl;
+        std::cout << " " << best_cost;
     }
     return true;
 }
