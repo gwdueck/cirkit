@@ -718,12 +718,58 @@ namespace cirkit
         return minimo;
     }
 
+    int get_max_element(matrix& m, unsigned& l, unsigned& c)
+    {
+        int h = -1;
+        for (int i = 0; i < m.size(); ++i)
+        {
+            for (int j = 0; j < m[i].size(); ++j)
+            {
+                if(m[i][j] > h)
+                {
+                    h = m[i][j];
+                    l = i;
+                    c = j;
+                }
+            }
+        }
+        return h;
+    }
+
+    void mark_element(matrix& m, unsigned& l, unsigned& c)
+    {
+        for (int i = 0; i < m.size(); ++i)
+        {
+            m[l][i] = -1;
+            m[i][l] = -1;
+            m[c][i] = -1;
+            m[i][c] = -1;
+        }
+    }
+
+    void print_matrix(matrix& m)
+    {
+        std::cout << std::endl;
+        for (int i = 0; i < m.size(); ++i)
+        {
+            for (int j = 0; j < m[i].size(); ++j)
+            {
+                std::cout << " " << m[i][j];    
+            }
+            std::cout << std::endl;
+        }
+    }
     void mapping( const circuit& circ_in )
     {
-        unsigned target, control;
+        unsigned target, control, max;
         matrix matrix_circuit;
+        std::vector< std::pair< unsigned, std::pair< unsigned,unsigned > > > allocation;
 
         initialize_matrix(matrix_circuit, circ_in.lines());
+        
+        // CNOT(i,i) no exist
+        for (int i = 0; i < circ_in.lines(); ++i)
+            matrix_circuit[i][i] = -1;
 
         // Count the number of CNOTs in each line
         for ( const auto& gate : circ_in )
@@ -737,17 +783,30 @@ namespace cirkit
         }
 
         // Print the matrix of CNOTs
-        for (int i = 0; i < matrix_circuit.size(); ++i)
+        print_matrix(matrix_circuit);
+
+        // do the mapping
+        // for (int i = 0; i < circ_in.lines(); ++i)
+        while(1)
         {
-            for (int j = 0; j < matrix_circuit.size(); ++j)
-            {
-                std::cout << " " << matrix_circuit[i][j];
-            }
-            std::cout << std::endl;
+            max = get_max_element(matrix_circuit, control, target);
+            if(max == -1)
+                break;
+            matrix_circuit[control][target] = -1;
+            allocation.push_back( std::make_pair( max, std::make_pair(control,target) ) );
+            // mark_element(matrix_circuit, control, target);
+            // std::cout << "=========================" << std::endl;
+            // print_matrix(matrix_circuit);
+            // allocation.push_back(control);
+            // allocation.push_back(target);
+            // std::cout << "maior: " << max << " [" << control << "][" << target << "]" << std::endl; 
         }
 
-        //get the highest cnot value
-
+        for (int i = 0; i < allocation.size(); ++i)
+        {
+            std::cout << "valor: " << allocation[i].first << " (" << allocation[i].second.first << ", " << allocation[i].second.second << ")" << std::endl;
+        }
+        
     }
     
 }
