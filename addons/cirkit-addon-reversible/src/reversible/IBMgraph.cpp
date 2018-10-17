@@ -725,7 +725,7 @@ namespace cirkit
         {
             for (int j = 0; j < m[i].size(); ++j)
             {
-                if(m[i][j] > h)
+                if(i != j && m[i][j] > h)
                 {
                     h = m[i][j];
                     l = i;
@@ -747,7 +747,7 @@ namespace cirkit
         }
     }
 
-    void print_matrix(matrix& m)
+    void print_matrix_circuit(matrix& m)
     {
         std::cout << std::endl;
         for (int i = 0; i < m.size(); ++i)
@@ -759,6 +759,24 @@ namespace cirkit
             std::cout << std::endl;
         }
     }
+
+    void get_min_element(std::vector<unsigned> a, unsigned& l, unsigned& c)
+    {
+        int min = INT_MAX;
+        for( int v = 0; v < graph_size; v++)
+        {
+            for( int w = 0; w < graph_size; w++)
+            {
+                if(trans_cost[v][w] < min && std::find(a.begin(), a.end(), ) == a.end())
+                {
+                    
+                }
+                std::cout << trans_cost[v][w] << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+
     void mapping( const circuit& circ_in )
     {
         unsigned target, control, max;
@@ -767,10 +785,6 @@ namespace cirkit
 
         initialize_matrix(matrix_circuit, circ_in.lines());
         
-        // CNOT(i,i) no exist
-        for (int i = 0; i < circ_in.lines(); ++i)
-            matrix_circuit[i][i] = -1;
-
         // Count the number of CNOTs in each line
         for ( const auto& gate : circ_in )
         {
@@ -783,7 +797,9 @@ namespace cirkit
         }
 
         // Print the matrix of CNOTs
-        print_matrix(matrix_circuit);
+        print_matrix_circuit(matrix_circuit);
+
+        print_matrix();
 
         // do the mapping
         // for (int i = 0; i < circ_in.lines(); ++i)
@@ -806,6 +822,13 @@ namespace cirkit
         {
             std::cout << "valor: " << allocation[i].first << " (" << allocation[i].second.first << ", " << allocation[i].second.second << ")" << std::endl;
         }
+
+        for (int i = 0; i < allocation.size(); ++i)
+        {
+            
+        }
+
+
         
     }
     
