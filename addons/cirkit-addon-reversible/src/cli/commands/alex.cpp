@@ -149,17 +149,16 @@ void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
 
 bool alex_command::execute()
 {
-  using boost::format;
 	const circuit circ = env->store<circuit>().current();
 
   unsigned target, control;
   std::vector<unsigned> v;
   std::vector<std::vector<unsigned>> output;
-  int static const map_method_qx2[5][5] ={{0,0,0,10,10},
-                                          {4,0,0,10,10},
-                                          {4,4,0,4,4},
-                                          {10,10,0,0,0},
-                                          {10,10,0,4,0}};
+  int static const qx4[5][5] ={{0,4,4,10,10},
+                              {0,0,4,10,10},
+                              {0,0,0,4,0},
+                              {3,3,0,0,0},
+                              {10,10,4,4,0}};
 
   // Create a matrix with 0's
   for (int i = 0; i < circ.lines(); ++i){
@@ -180,62 +179,36 @@ bool alex_command::execute()
     }
   }
 
-  // // Print the cost of the transformations
-  // for (int i = 0; i < 5; ++i){
-  //   for (int j = 0; j < 5; ++j){
-  //     std::cout << "\t" << map_method_qx2[i][j];
-  //   }
-  //   std::cout << std::endl;
-  // }
-  
-  // std::cout << std::endl;
-
+  unsigned qtd = 0;
   // Print the cnots in the circuit
-  for (int i = 0; i < circ.lines(); ++i){
-    for (int j = 0; j < circ.lines(); ++j){
+  for (int i = 0; i < circ.lines(); ++i)
+  {
+    for (int j = 0; j < circ.lines(); ++j)
+    {
+      if( output[i][j] > 0 )
+        ++qtd;
       std::cout << "\t" << output[i][j];
     }
     std::cout << std::endl;
   }
-
   std::cout << std::endl;
+
+  std::cout << "min:\t";
+  for (int i = 0; i < qtd; ++i)
+  {
+    for (int j = 0; j < 5; ++j)
+    {
+      for (int k = 0; k < 5; ++k)
+      {
+        if(i == qtd-1 && j == 4 && k == 3)
+          std::cout << qx4[j][k] << "G" << i << "c" << j << k << ";";
+        else if( j != k )
+          std::cout << qx4[j][k] << "G" << i << "c" << j << k << " + ";
+      }
+    }
+    std::cout << std::endl << "\t";
+  }
   
-  // // Print the total cost of the circuit
-  // for (int i = 0; i < circ.lines(); ++i){
-  //   for (int j = 0; j < circ.lines(); ++j){
-  //     std::cout << "\t" << output[i][j]*map_method_qx2[i][j];
-  //   }
-  //   std::cout << std::endl;
-  // }
-
-  // std::cout << std::endl;
-  
-  // // Print a possible approach to hungarian algorithm
-  // for (int i = 0; i < circ.lines(); ++i){
-  //   for (int j = 0; j < circ.lines(); ++j){
-  //     std::cout << "\t" << (output[i][j]*map_method_qx2[i][j])+map_method_qx2[i][j]+1;
-  //   }
-  //   std::cout << std::endl;
-  // }  
-
-
-
-
-
-	// xt::xarray<complex_t> table;
-
- //  	table = matrix_from_clifford_t_circuit( circ, is_set( "progress" ) );
-
- //  	// Number of qubits
- //  	unsigned int qubits = sqrt(table.size());
- // 	// std::cout << "qubits: " << qubits << std::endl;
-
-	// // print_all_matrix(table, qubits);
-	// if(is_set("input"))
-	// 	print_line(table, qubits, input);
-	// else
-	// 	print_solution(table, qubits);
-
 
 	return true;
 }

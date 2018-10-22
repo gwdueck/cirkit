@@ -355,15 +355,15 @@ namespace cirkit
                 }
                 std::cout << std::endl;
             }
-            // std::cout << "== Optimization ==" << std::endl;
-            // for( int v = 0; v < graph_size; v++)
-            // {
-            //     for( int w = 0; w < graph_size; w++)
-            //     {
-            //         std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
-            //     }
-            //     std::cout << std::endl;
-            // }
+            std::cout << "== Optimization ==" << std::endl;
+            for( int v = 0; v < graph_size; v++)
+            {
+                for( int w = 0; w < graph_size; w++)
+                {
+                    std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
+                }
+                std::cout << std::endl;
+            }
             for( int v = 0; v < graph_size; v++)
             {
                 for( int w = 0; w < graph_size; w++)
@@ -372,7 +372,7 @@ namespace cirkit
                     {
                         std::cout << "cnot(" << v << "," << w << ") => ";
                         trans_path[v][w].print();
-                        // std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
+                        std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
             }
@@ -767,10 +767,6 @@ namespace cirkit
         {
             for( int w = 0; w < graph_size; w++)
             {
-                if(trans_cost[v][w] < min && std::find(a.begin(), a.end(), ) == a.end())
-                {
-                    
-                }
                 std::cout << trans_cost[v][w] << " ";
             }
             std::cout << std::endl;
@@ -799,34 +795,34 @@ namespace cirkit
         // Print the matrix of CNOTs
         print_matrix_circuit(matrix_circuit);
 
-        print_matrix();
+        // print_matrix();
 
         // do the mapping
         // for (int i = 0; i < circ_in.lines(); ++i)
-        while(1)
-        {
-            max = get_max_element(matrix_circuit, control, target);
-            if(max == -1)
-                break;
-            matrix_circuit[control][target] = -1;
-            allocation.push_back( std::make_pair( max, std::make_pair(control,target) ) );
-            // mark_element(matrix_circuit, control, target);
-            // std::cout << "=========================" << std::endl;
-            // print_matrix(matrix_circuit);
-            // allocation.push_back(control);
-            // allocation.push_back(target);
-            // std::cout << "maior: " << max << " [" << control << "][" << target << "]" << std::endl; 
-        }
+        // while(1)
+        // {
+        //     max = get_max_element(matrix_circuit, control, target);
+        //     if(max == -1)
+        //         break;
+        //     matrix_circuit[control][target] = -1;
+        //     allocation.push_back( std::make_pair( max, std::make_pair(control,target) ) );
+        //     // mark_element(matrix_circuit, control, target);
+        //     // std::cout << "=========================" << std::endl;
+        //     // print_matrix(matrix_circuit);
+        //     // allocation.push_back(control);
+        //     // allocation.push_back(target);
+        //     // std::cout << "maior: " << max << " [" << control << "][" << target << "]" << std::endl; 
+        // }
 
-        for (int i = 0; i < allocation.size(); ++i)
-        {
-            std::cout << "valor: " << allocation[i].first << " (" << allocation[i].second.first << ", " << allocation[i].second.second << ")" << std::endl;
-        }
+        // for (int i = 0; i < allocation.size(); ++i)
+        // {
+        //     std::cout << "valor: " << allocation[i].first << " (" << allocation[i].second.first << ", " << allocation[i].second.second << ")" << std::endl;
+        // }
 
-        for (int i = 0; i < allocation.size(); ++i)
-        {
+        // for (int i = 0; i < allocation.size(); ++i)
+        // {
             
-        }
+        // }
 
 
         
