@@ -781,7 +781,7 @@ namespace cirkit
 
         initialize_matrix(matrix_circuit, circ_in.lines());
         
-        // Count the number of CNOTs in each line
+        // Count the number of CNOTs 
         for ( const auto& gate : circ_in )
         {
             if( !gate.controls().empty() ) // if is not a NOT gate
@@ -798,34 +798,31 @@ namespace cirkit
         // print_matrix();
 
         // do the mapping
-        // for (int i = 0; i < circ_in.lines(); ++i)
-        // while(1)
-        // {
-        //     max = get_max_element(matrix_circuit, control, target);
-        //     if(max == -1)
-        //         break;
-        //     matrix_circuit[control][target] = -1;
-        //     allocation.push_back( std::make_pair( max, std::make_pair(control,target) ) );
-        //     // mark_element(matrix_circuit, control, target);
-        //     // std::cout << "=========================" << std::endl;
-        //     // print_matrix(matrix_circuit);
-        //     // allocation.push_back(control);
-        //     // allocation.push_back(target);
-        //     // std::cout << "maior: " << max << " [" << control << "][" << target << "]" << std::endl; 
-        // }
+        for (int i = 0; i < circ_in.lines(); ++i)
+        while(1)
+        {
+            max = get_max_element(matrix_circuit, control, target);
+            if(max == -1)
+                break;
+            matrix_circuit[control][target] = -1;
+            allocation.push_back( std::make_pair( max, std::make_pair(control,target) ) );
+            // mark_element(matrix_circuit, control, target);
+            // std::cout << "=========================" << std::endl;
+            // print_matrix(matrix_circuit);
+            // allocation.push_back(control);
+            // allocation.push_back(target);
+            // std::cout << "maior: " << max << " [" << control << "][" << target << "]" << std::endl; 
+        }
 
-        // for (int i = 0; i < allocation.size(); ++i)
-        // {
-        //     std::cout << "valor: " << allocation[i].first << " (" << allocation[i].second.first << ", " << allocation[i].second.second << ")" << std::endl;
-        // }
+        for (int i = 0; i < allocation.size(); ++i)
+        {
+            std::cout << "valor: " << allocation[i].first << " (" << allocation[i].second.first << ", " << allocation[i].second.second << ")" << std::endl;
+        }
 
-        // for (int i = 0; i < allocation.size(); ++i)
-        // {
-            
-        // }
-
-
-        
+        for (int i = 0; i < allocation.size(); ++i)
+        {
+                        
+        }
     }
     
 }

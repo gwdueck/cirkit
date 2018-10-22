@@ -48,11 +48,11 @@ namespace cirkit
 using boost::program_options::value;
 
 alex_command::alex_command( const environment::ptr& env )
-    : cirkit_command( env, "Alex test" )
+	: cirkit_command( env, "Alex test" )
 {
 	opts.add_options()
-	( "input,i",	value( &input ),	"print single input -- use it in binary" )
-    ;
+	( "input,i",    value( &input ),    "print single input -- use it in binary" )
+	;
 
 }
 
@@ -64,13 +64,13 @@ command::rules_t alex_command::validity_rules() const
 
 void print_all_matrix(xt::xarray<complex_t>& t, unsigned int& q)
 {
-  	for (int i = 0; i < t.size(); ++i)
-  	{
-  		if(i % q == 0)
- 			std::cout << std::endl;
-  		std::cout << " " << t[i];
-  	}
- 	std::cout << std::endl;
+	for (int i = 0; i < t.size(); ++i)
+	{
+		if(i % q == 0)
+			std::cout << std::endl;
+		std::cout << " " << t[i];
+	}
+	std::cout << std::endl;
 }
 
 void print_line(xt::xarray<complex_t>& t, unsigned int& q, std::string input)
@@ -81,34 +81,34 @@ void print_line(xt::xarray<complex_t>& t, unsigned int& q, std::string input)
 	unsigned int k = log10(q)/log10(2);
 
 	unsigned int line;
-  	line = std::stoi(input, nullptr, 2);
-  	if(line >= q)
-  	{
-  		std::cout << "Out of range. The circuit has " << k << " qubits." << std::endl;
-  	}
-  	else
-  	{
-  		for (int i = line*q; i < (line+1)*q; ++i, ++j)
-	  	{
+	line = std::stoi(input, nullptr, 2);
+	if(line >= q)
+	{
+		std::cout << "Out of range. The circuit has " << k << " qubits." << std::endl;
+	}
+	else
+	{
+		for (int i = line*q; i < (line+1)*q; ++i, ++j)
+		{
 			if(t[i] != 0.0)
-	  		{
-	  			if(first)
-	  			{
-	  				p = std::bitset<8>(j).to_string();
-	  				// std::cout << std::endl;
+			{
+				if(first)
+				{
+					p = std::bitset<8>(j).to_string();
+					// std::cout << std::endl;
 					std::string pp = std::bitset<8>(line).to_string();
 					std::cout << "input: " << pp.substr(pp.length() - k) << " => " << t[i] << " " << p.substr(p.length() - k);
-	  				first = false;
-	  			}
-	  			else
-	  			{
-	  				p = std::bitset<8>(j).to_string();
-	  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
-	  			}
-	  		}
-	  	}
-	  	std::cout << std::endl;
-  	}
+					first = false;
+				}
+				else
+				{
+					p = std::bitset<8>(j).to_string();
+					std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
+				}
+			}
+		}
+		std::cout << std::endl;
+	}
 }
 
 void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
@@ -117,34 +117,55 @@ void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
 	bool first = true;
 	std::string p;
 	unsigned int k = log10(q)/log10(2);
-  	for (int i = 0; i < t.size(); ++i, ++j)
-  	{
+	for (int i = 0; i < t.size(); ++i, ++j)
+	{
 		if(i % q == 0)
-  		{
-  			p = std::bitset<8>(i/q).to_string();
- 			std::cout << std::endl;
- 			std::cout << "input: " <<  p.substr(p.length() - k) << " => ";
-  			j = 0;
-  			first = true;
-  		}
-  	  	if(t[i] != 0.0)
-  		{
-  			if(first)
-  			{
-  				p = std::bitset<8>(j).to_string();
-  				std::cout << " " << t[i] << " " << p.substr(p.length() - k);
-  				first = false;
-  			}
-  			else
-  			{
-  				p = std::bitset<8>(j).to_string();
-  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
-  			}
-  		}
-  	}
- 	std::cout << std::endl;
+		{
+			p = std::bitset<8>(i/q).to_string();
+			std::cout << std::endl;
+			std::cout << "input: " <<  p.substr(p.length() - k) << " => ";
+			j = 0;
+			first = true;
+		}
+		if(t[i] != 0.0)
+		{
+			if(first)
+			{
+				p = std::bitset<8>(j).to_string();
+				std::cout << " " << t[i] << " " << p.substr(p.length() - k);
+				first = false;
+			}
+			else
+			{
+				p = std::bitset<8>(j).to_string();
+				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
+			}
+		}
+	}
+	std::cout << std::endl;
 
   // std::cout << t << std::endl;
+}
+
+int get_max_element(std::vector<std::vector<unsigned>>& m, unsigned& l, unsigned& c)
+{
+    unsigned h = 0;
+    std::cout << "AAA " << m.size() << std::endl;
+
+    for (int i = 0; i < m.size(); ++i)
+    {
+        for (int j = 0; j < m[i].size(); ++j)
+        {
+            if(i != j && m[i][j] > h)
+            {
+                h = m[i][j];
+                l = i;
+                c = j;
+                std::cout << "AAA" << std::endl;
+            }
+        }
+    }
+    return h;
 }
 
 bool alex_command::execute()
@@ -155,60 +176,65 @@ bool alex_command::execute()
   std::vector<unsigned> v;
   std::vector<std::vector<unsigned>> output;
   int static const qx4[5][5] ={{0,4,4,10,10},
-                              {0,0,4,10,10},
-                              {0,0,0,4,0},
-                              {3,3,0,0,0},
-                              {10,10,4,4,0}};
+							  {0,0,4,10,10},
+							  {0,0,0,4,0},
+							  {3,3,0,0,0},
+							  {10,10,4,4,0}};
 
-  // Create a matrix with 0's
-  for (int i = 0; i < circ.lines(); ++i){
-    for (int j = 0; j < circ.lines(); ++j){
-      v.push_back(0);
-    }
-    output.push_back(v);
-  }
+  	// Create a matrix with 0's
+	for (int i = 0; i < circ.lines(); ++i)
+	{
+		for (int j = 0; j < circ.lines(); ++j)
+		{
+			v.push_back(0);
+		}
+		output.push_back(v);
+	}
   
-  // Create a matrix with the cnots 
-  for ( const auto& gate : circ )
-  {
-    if( !gate.controls().empty() ) // if is not a NOT gate
-    {
-      target = gate.targets().front();
-      control = gate.controls().front().line();
-      ++output[control][target];
-    }
-  }
+	// Create a matrix with the cnots 
+	for ( const auto& gate : circ )
+	{
+		if( !gate.controls().empty() ) // if is not a NOT gate
+		{
+		  target = gate.targets().front();
+		  control = gate.controls().front().line();
+		  ++output[control][target];
+		}
+	}
 
-  unsigned qtd = 0;
-  // Print the cnots in the circuit
-  for (int i = 0; i < circ.lines(); ++i)
-  {
-    for (int j = 0; j < circ.lines(); ++j)
-    {
-      if( output[i][j] > 0 )
-        ++qtd;
-      std::cout << "\t" << output[i][j];
-    }
-    std::cout << std::endl;
-  }
-  std::cout << std::endl;
+	unsigned qtd = 0;
+	// Print the cnots in the circuit
+	for (int i = 0; i < circ.lines(); ++i)
+	{
+		for (int j = 0; j < circ.lines(); ++j)
+		{
+			if( output[i][j] > 0 )
+				++qtd;
+			std::cout << "\t" << output[i][j];
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
 
-  std::cout << "min:\t";
-  for (int i = 0; i < qtd; ++i)
-  {
-    for (int j = 0; j < 5; ++j)
-    {
-      for (int k = 0; k < 5; ++k)
-      {
-        if(i == qtd-1 && j == 4 && k == 3)
-          std::cout << qx4[j][k] << "G" << i << "c" << j << k << ";";
-        else if( j != k )
-          std::cout << qx4[j][k] << "G" << i << "c" << j << k << " + ";
-      }
-    }
-    std::cout << std::endl << "\t";
-  }
-  
+	// Objective function
+	// std::cout << "min:\t";
+	// for (int i = 0; i < qtd; ++i)
+	// {
+	// 	for (int j = 0; j < 5; ++j)
+	// 	{
+	// 		for (int k = 0; k < 5; ++k)
+	// 		{
+	// 			if(i == qtd-1 && j == 4 && k == 3)
+	// 				std::cout << qx4[j][k] << "G" << i << "c" << j << k << ";";
+	// 			else if( j != k )
+	// 				std::cout << qx4[j][k] << "G" << i << "c" << j << k << " + ";
+	// 		}
+	// 	}
+	// 	std::cout << std::endl << "\t";
+	// }
+
+	unsigned l, c;
+	std::cout << get_max_element(output, l, c) << std::endl;
 
 	return true;
 }
@@ -216,8 +242,8 @@ bool alex_command::execute()
 command::log_opt_t alex_command::log() const
 {
   return log_opt_t({
-      {"runtime",       statistics->get<double>( "runtime" )}
-    });
+	  {"runtime",       statistics->get<double>( "runtime" )}
+	});
 }
 
 }
