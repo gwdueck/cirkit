@@ -168,74 +168,146 @@ int get_max_element(std::vector<std::vector<unsigned>>& m, unsigned& l, unsigned
     return h;
 }
 
-bool alex_command::execute()
+ using matrix = std::vector<std::vector<unsigned>>;
+
+
+// return the number of different gates of the circuit
+int getNumberDifGates( matrix& c )
 {
-	const circuit circ = env->store<circuit>().current();
+	unsigned qtd = 0;
+	for (int i = 0; i < c.size(); ++i)
+		for (int j = 0; j < c[i].size(); ++j)
+			if( c[i][j] > 0 )
+				++qtd;
+	return qtd;
+}
 
-  unsigned target, control;
-  std::vector<unsigned> v;
-  std::vector<std::vector<unsigned>> output;
-  int static const qx4[5][5] ={{0,4,4,10,10},
-							  {0,0,4,10,10},
-							  {0,0,0,4,0},
-							  {3,3,0,0,0},
-							  {10,10,4,4,0}};
-
-  	// Create a matrix with 0's
-	for (int i = 0; i < circ.lines(); ++i)
+// Function to print the objective function
+void printObjectiveFunction( matrix& qx, unsigned dif_gates )
+{
+	std::cout << "min:\t";
+	for (int i = 0; i < dif_gates; ++i)
 	{
-		for (int j = 0; j < circ.lines(); ++j)
+		for (int j = 0; j < 5; ++j)
 		{
-			v.push_back(0);
+			for (int k = 0; k < 5; ++k)
+			{
+				if(i == dif_gates-1 && j == 4 && k == 3)
+					std::cout << qx[j][k] << "G" << i << "c" << j << k << ";";
+				else if( j != k )
+					std::cout << qx[j][k] << "G" << i << "c" << j << k << " + ";
+			}
 		}
-		output.push_back(v);
+		std::cout << std::endl << "\t";
 	}
-  
-	// Create a matrix with the cnots 
+}
+
+// Create a matrix with 0's
+void createMatrix( matrix& m, unsigned size )
+{
+	std::cout << "Creating matrix..." << std::endl;
+  	std::vector<unsigned> v;
+	for (int i = 0; i < size; ++i)
+		v.push_back(0);
+	for (int i = 0; i < size; ++i)
+		m.push_back(v);
+}
+
+// Create a matrix with the cnots 
+void generateMatrixCnots( circuit& circ, matrix& m )
+{
+	std::cout << "Generating matrix..." << std::endl;	
+  	unsigned target, control;
 	for ( const auto& gate : circ )
 	{
-		if( !gate.controls().empty() ) // if is not a NOT gate
+		if( !gate.controls().empty() )
 		{
 		  target = gate.targets().front();
 		  control = gate.controls().front().line();
-		  ++output[control][target];
+		  ++m[control][target];
 		}
 	}
+}
 
-	unsigned qtd = 0;
-	// Print the cnots in the circuit
-	for (int i = 0; i < circ.lines(); ++i)
+// Print the cnots in the circuit
+void printMatrixCnots( matrix& m )
+{
+	std::cout << "Printing matrix..." << std::endl;
+	for (int i = 0; i < m.size(); ++i)
 	{
-		for (int j = 0; j < circ.lines(); ++j)
-		{
-			if( output[i][j] > 0 )
-				++qtd;
-			std::cout << "\t" << output[i][j];
-		}
+		for (int j = 0; j < m[i].size(); ++j)
+			std::cout << "\t" << m[i][j];
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
+}
 
-	// Objective function
-	// std::cout << "min:\t";
-	// for (int i = 0; i < qtd; ++i)
-	// {
-	// 	for (int j = 0; j < 5; ++j)
-	// 	{
-	// 		for (int k = 0; k < 5; ++k)
-	// 		{
-	// 			if(i == qtd-1 && j == 4 && k == 3)
-	// 				std::cout << qx4[j][k] << "G" << i << "c" << j << k << ";";
-	// 			else if( j != k )
-	// 				std::cout << qx4[j][k] << "G" << i << "c" << j << k << " + ";
-	// 		}
-	// 	}
-	// 	std::cout << std::endl << "\t";
-	// }
+// Control dependency
+void writeDepControl( unsigned l, unsigned c0, unsigned c1, unsigned size )
+{
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < size; ++j)
+		{
+			if(i != j)
+			{
+				std::cout << "G" << l << c0;
+				std::cout << "c" << i << j;
+				std::cout << " <= ";
+				unsigned aux = 0;
+				for (int k = 0; k < size; ++k)
+				{
+					if(k != j && k != i)
+					{
+						++aux;
+						std::cout << "G" << l << c1;
+						std::cout << "c" << i << k;
+						if(aux == size-2)
+							std::cout << ";";
+						else	
+							std::cout << " + ";	
+					}
+				}
+				std::cout << std::endl;	
+			}
+		}
+	}
+}
 
-	unsigned l, c;
-	std::cout << get_max_element(output, l, c) << std::endl;
+void searchDepControl( matrix& m, unsigned l, unsigned c )
+{
+	
+	for (int i = 0; i < m[l].size(); ++i)
+	{
+		for (int j = i+1; j < m[l].size(); ++j)
+		{
+			
+		}
+	}
+}
 
+// Target dependency
+void writeDepTarget( matrix& m, unsigned l, unsigned c )
+{
+
+}
+
+bool alex_command::execute()
+{
+	circuit circ = env->store<circuit>().current();
+	matrix output;
+	matrix qx4 ={{0,4,4,10,10},
+			  {0,0,4,10,10},
+			  {0,0,0,4,0},
+			  {3,3,0,0,0},
+			  {10,10,4,4,0}};
+
+  	createMatrix( output, circ.lines() );
+  	generateMatrixCnots( circ, output );
+	printMatrixCnots( output );
+	writeDepControl( 0, 1, 2, 5 );
+	writeDepControl( 0, 2, 3, 5 );
+  
 	return true;
 }
 
