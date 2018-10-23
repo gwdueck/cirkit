@@ -242,7 +242,7 @@ void printMatrixCnots( matrix& m )
 	std::cout << std::endl;
 }
 
-// Control dependency
+// Control - Control dependency
 void writeDepControlControl( unsigned l, unsigned c0, unsigned c1, unsigned size )
 {
 	for (int i = 0; i < size; ++i)
@@ -274,7 +274,7 @@ void writeDepControlControl( unsigned l, unsigned c0, unsigned c1, unsigned size
 	}
 }
 
-// Target dependency
+// Target - Target dependency
 void writeDepTargetTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
 {
 	for (int i = 0; i < size; ++i)
@@ -306,8 +306,8 @@ void writeDepTargetTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
 	}
 }
 
-// Control dependency
-void writeDepControlTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
+// Control - Target dependency
+void writeDepControlTarget( unsigned c0, unsigned l0, unsigned c1, unsigned l1, unsigned size )
 {
 	for (int i = 0; i < size; ++i)
 	{
@@ -315,7 +315,39 @@ void writeDepControlTarget( unsigned c, unsigned l0, unsigned l1, unsigned size 
 		{
 			if(i != j)
 			{
-				std::cout << "G" << l0 << c;
+				std::cout << "G" << l0 << c0;
+				std::cout << "c" << i << j;
+				std::cout << " <= ";
+				unsigned aux = 0;
+				for (int k = 0; k < size; ++k)
+				{
+					if(k != j && k != i)
+					{
+						++aux;
+						std::cout << "G" << l1 << c1;
+						std::cout << "c" << k << i;
+						if(aux == size-2)
+							std::cout << ";";
+						else	
+							std::cout << " + ";	
+					}
+				}
+				std::cout << std::endl;	
+			}
+		}
+	}
+}
+
+// Target - Control dependency
+void writeDepTargetControl( unsigned c0, unsigned l0, unsigned c1, unsigned l1, unsigned size )
+{
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < size; ++j)
+		{
+			if(i != j)
+			{
+				std::cout << "G" << l0 << c0;
 				std::cout << "c" << j << i;
 				std::cout << " <= ";
 				unsigned aux = 0;
@@ -324,8 +356,8 @@ void writeDepControlTarget( unsigned c, unsigned l0, unsigned l1, unsigned size 
 					if(k != j && k != i)
 					{
 						++aux;
-						std::cout << "G" << l1 << c;
-						std::cout << "c" << k << i;
+						std::cout << "G" << l1 << c1;
+						std::cout << "c" << i << k;
 						if(aux == size-2)
 							std::cout << ";";
 						else	
@@ -340,14 +372,7 @@ void writeDepControlTarget( unsigned c, unsigned l0, unsigned l1, unsigned size 
 
 void searchDepControl( matrix& m, unsigned l, unsigned c )
 {
-	
-	for (int i = 0; i < m[l].size(); ++i)
-	{
-		for (int j = i+1; j < m[l].size(); ++j)
-		{
-			
-		}
-	}
+
 }
 
 bool alex_command::execute()
@@ -364,7 +389,9 @@ bool alex_command::execute()
   	generateMatrixCnots( circ, output );
 	printMatrixCnots( output );
 	// writeDepControl( 0, 1, 2, 5 );
-	writeDepTarget( 1, 2, 3, 5 );
+	// writeDepTargetTarget( 1, 2, 3, 5 );
+	// writeDepControlTarget( 0, 1, 1, 2, 5 );
+	writeDepTargetControl( 1, 2, 0, 1, 5 );
   
 	return true;
 }
