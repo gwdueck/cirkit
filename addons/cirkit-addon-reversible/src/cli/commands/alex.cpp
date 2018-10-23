@@ -274,6 +274,38 @@ void writeDepControl( unsigned l, unsigned c0, unsigned c1, unsigned size )
 	}
 }
 
+// Control dependency
+void writeDepTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
+{
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < size; ++j)
+		{
+			if(i != j)
+			{
+				std::cout << "G" << l0 << c;
+				std::cout << "c" << j << i;
+				std::cout << " <= ";
+				unsigned aux = 0;
+				for (int k = 0; k < size; ++k)
+				{
+					if(k != j && k != i)
+					{
+						++aux;
+						std::cout << "G" << l1 << c;
+						std::cout << "c" << k << i;
+						if(aux == size-2)
+							std::cout << ";";
+						else	
+							std::cout << " + ";	
+					}
+				}
+				std::cout << std::endl;	
+			}
+		}
+	}
+}
+
 void searchDepControl( matrix& m, unsigned l, unsigned c )
 {
 	
@@ -284,12 +316,6 @@ void searchDepControl( matrix& m, unsigned l, unsigned c )
 			
 		}
 	}
-}
-
-// Target dependency
-void writeDepTarget( matrix& m, unsigned l, unsigned c )
-{
-
 }
 
 bool alex_command::execute()
@@ -305,8 +331,8 @@ bool alex_command::execute()
   	createMatrix( output, circ.lines() );
   	generateMatrixCnots( circ, output );
 	printMatrixCnots( output );
-	writeDepControl( 0, 1, 2, 5 );
-	writeDepControl( 0, 2, 3, 5 );
+	// writeDepControl( 0, 1, 2, 5 );
+	writeDepTarget( 1, 2, 3, 5 );
   
 	return true;
 }
