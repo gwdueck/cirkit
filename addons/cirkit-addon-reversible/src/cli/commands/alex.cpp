@@ -243,7 +243,7 @@ void printMatrixCnots( matrix& m )
 }
 
 // Control dependency
-void writeDepControl( unsigned l, unsigned c0, unsigned c1, unsigned size )
+void writeDepControlControl( unsigned l, unsigned c0, unsigned c1, unsigned size )
 {
 	for (int i = 0; i < size; ++i)
 	{
@@ -274,8 +274,40 @@ void writeDepControl( unsigned l, unsigned c0, unsigned c1, unsigned size )
 	}
 }
 
+// Target dependency
+void writeDepTargetTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
+{
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < size; ++j)
+		{
+			if(i != j)
+			{
+				std::cout << "G" << l0 << c;
+				std::cout << "c" << j << i;
+				std::cout << " <= ";
+				unsigned aux = 0;
+				for (int k = 0; k < size; ++k)
+				{
+					if(k != j && k != i)
+					{
+						++aux;
+						std::cout << "G" << l1 << c;
+						std::cout << "c" << k << i;
+						if(aux == size-2)
+							std::cout << ";";
+						else	
+							std::cout << " + ";	
+					}
+				}
+				std::cout << std::endl;	
+			}
+		}
+	}
+}
+
 // Control dependency
-void writeDepTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
+void writeDepControlTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
 {
 	for (int i = 0; i < size; ++i)
 	{
