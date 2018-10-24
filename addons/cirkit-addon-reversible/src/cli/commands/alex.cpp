@@ -183,25 +183,76 @@ int getNumberDifGates( matrix& c )
 }
 
 // Function to print the objective function
-void printObjectiveFunction( matrix& qx, unsigned dif_gates )
+void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 {
+	unsigned aux = 0;
 	std::cout << "min:\t";
-	for (int i = 0; i < dif_gates; ++i)
+	for (int i = 0; i < qx.size(); ++i)
 	{
-		for (int j = 0; j < 5; ++j)
+		for (int j = 0; j < qx.size(); ++j)
 		{
-			for (int k = 0; k < 5; ++k)
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
 			{
-				if(i == dif_gates-1 && j == 4 && k == 3)
-					std::cout << qx[j][k] << "G" << i << "c" << j << k << ";";
-				else if( j != k )
-					std::cout << qx[j][k] << "G" << i << "c" << j << k << " + ";
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
+							std::cout << qx[k][m] << "G" << i << j << "c" << k << m << ";";
+						else
+							std::cout << qx[k][m] << "G" << i << j << "c" << k << m << " + ";
+						line = true;
+					}
+				}
+			}
+			if(line && aux < difGates-1)
+			{
+				std::cout << std::endl << "\t";
+				++aux;
+			}
+			else if(line)
+			{
+				std::cout << std::endl;
 			}
 		}
-		if(i == dif_gates-1)
-			std::cout << std::endl;
-		else
-			std::cout << std::endl << "\t";
+	}
+}
+
+// Function to print the variables
+void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
+{
+	unsigned aux = 0;
+	std::cout << "int\t";
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
+							std::cout << "G" << i << j << "c" << k << m << ";";
+						else
+							std::cout << "G" << i << j << "c" << k << m << "  ";
+						line = true;
+					}
+				}
+			}
+			if(line && aux < difGates-1)
+			{
+				std::cout << std::endl << "\t";
+				++aux;
+			}
+			else if(line)
+			{
+				std::cout << std::endl;
+			}
+		}
 	}
 }
 
@@ -311,16 +362,21 @@ bool alex_command::execute()
   	createMatrix( output, circ.lines() );
   	generateMatrixCnots( circ, output );
 	printMatrixCnots( output );
-	printObjectiveFunction( qx4, getNumberDifGates( output ) );
+	printObjectiveFunction( qx4, output, getNumberDifGates(output) );
 
-	std::cout << "CC" << std::endl;
-	writeDep( 0, 1, 0, 2, 5, 0 );
-	std::cout << "TT" << std::endl;
-	writeDep( 2, 1, 3, 1, 5, 1 );
-	std::cout << "CT" << std::endl;
-	writeDep( 1, 0, 2, 1, 5, 2 );
-	std::cout << "TC" << std::endl;
-	writeDep( 2, 1, 1, 0, 5, 3 );  
+	// std::cout << "CC" << std::endl;
+	// writeDep( 0, 1, 0, 2, 5, 0 );
+	// std::cout << "TT" << std::endl;
+	// writeDep( 2, 1, 3, 1, 5, 1 );
+	// std::cout << "CT" << std::endl;
+	// writeDep( 1, 0, 2, 1, 5, 2 );
+	// std::cout << "TC" << std::endl;
+	// writeDep( 2, 1, 1, 0, 5, 3 );
+	// std::cout << "CT" << std::endl;
+	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
+
+
+
 	return true;
 }
 
