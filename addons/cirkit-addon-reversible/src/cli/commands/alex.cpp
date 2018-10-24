@@ -186,6 +186,7 @@ int getNumberDifGates( matrix& c )
 void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 {
 	unsigned aux = 0;
+	std::cout << "/* Begin Objective Function */" << std::endl;
 	std::cout << "min:\t";
 	for (int i = 0; i < qx.size(); ++i)
 	{
@@ -217,12 +218,79 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 		}
 	}
+	std::cout << "/* End Objective Function */" << std::endl;
+}
+
+// Function to print the first restriction
+void printFirstRestriction( matrix& qx, matrix& cnot )
+{
+	unsigned aux = 0;
+	std::cout << "/* Begin First Restriction */" << std::endl;
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == qx.size()-1 && m == qx.size()-2 )
+							std::cout << cnot[i][j] << "G" << i << j << "c" << k << m << " = " << cnot[i][j] << ";";
+						else
+							std::cout << cnot[i][j] << "G" << i << j << "c" << k << m << " + ";
+						line = true;
+					}
+				}
+			}
+			if(line)
+				std::cout << std::endl;
+		}
+	}
+	std::cout << "/* End First Restriction */" << std::endl;
+}
+
+// Function to print the final restriction
+void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
+{
+	unsigned aux = 0;
+	std::cout << "/* Begin Final Restriction */" << std::endl;
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
+							std::cout << "G" << i << j << "c" << k << m << " = " << difGates << ";";
+						else
+							std::cout << "G" << i << j << "c" << k << m << " + ";
+						line = true;
+					}
+				}
+			}
+			if(line)
+			{
+				std::cout << std::endl;
+				++aux;
+			}
+		}
+	}
+	std::cout << "/* End Final Restriction */" << std::endl;
 }
 
 // Function to print the variables
 void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 {
 	unsigned aux = 0;
+	std::cout << "/* Begin Integer Variables */" << std::endl;
 	std::cout << "int\t";
 	for (int i = 0; i < qx.size(); ++i)
 	{
@@ -254,6 +322,7 @@ void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 		}
 	}
+	std::cout << "/* End Integer Variables */" << std::endl;
 }
 
 // Create a matrix with 0's
@@ -303,6 +372,23 @@ void printMatrixCnots( matrix& m )
 // type = 3 -> target - control
 void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
 {
+	switch ( type )
+    {
+    	case 0:
+			std::cout << "/* Writing Control - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+    		break;
+    	case 1:
+			std::cout << "/* Writing Target - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+    		break;
+    	case 2:
+			std::cout << "/* Writing Control - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+    		break;
+    	case 3:
+			std::cout << "/* Writing Target - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+    		break;
+    	default:
+			std::cout << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
+    }
 	for (int i = 0; i < size; ++i)
 	{
 		for (int j = 0; j < size; ++j)
@@ -363,9 +449,12 @@ bool alex_command::execute()
   	generateMatrixCnots( circ, output );
 	printMatrixCnots( output );
 	printObjectiveFunction( qx4, output, getNumberDifGates(output) );
+	printFirstRestriction( qx4, output );
 
 	// std::cout << "CC" << std::endl;
-	// writeDep( 0, 1, 0, 2, 5, 0 );
+	writeDep( 4, 2, 3, 2, 5, 1 );
+	writeDep( 3, 2, 0, 3, 5, 2 );
+	writeDep( 0, 3, 3, 1, 5, 3 );
 	// std::cout << "TT" << std::endl;
 	// writeDep( 2, 1, 3, 1, 5, 1 );
 	// std::cout << "CT" << std::endl;
@@ -373,6 +462,7 @@ bool alex_command::execute()
 	// std::cout << "TC" << std::endl;
 	// writeDep( 2, 1, 1, 0, 5, 3 );
 	// std::cout << "CT" << std::endl;
+	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
 
 
