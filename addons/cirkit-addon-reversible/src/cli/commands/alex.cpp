@@ -307,7 +307,7 @@ void writeDepTargetTarget( unsigned c, unsigned l0, unsigned l1, unsigned size )
 }
 
 // Control - Target dependency
-void writeDepControlTarget( unsigned c0, unsigned l0, unsigned c1, unsigned l1, unsigned size )
+void writeDepControlTarget( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size )
 {
 	for (int i = 0; i < size; ++i)
 	{
@@ -339,7 +339,7 @@ void writeDepControlTarget( unsigned c0, unsigned l0, unsigned c1, unsigned l1, 
 }
 
 // Target - Control dependency
-void writeDepTargetControl( unsigned c0, unsigned l0, unsigned c1, unsigned l1, unsigned size )
+void writeDepTargetControl( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size )
 {
 	for (int i = 0; i < size; ++i)
 	{
@@ -370,6 +370,59 @@ void writeDepTargetControl( unsigned c0, unsigned l0, unsigned c1, unsigned l1, 
 	}
 }
 
+// Only function to write almost everything
+// type = 0 -> control - control
+// type = 1 -> target - target
+// type = 2 -> control - target
+// type = 3 -> target - control
+void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
+{
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < size; ++j)
+		{
+			if(i != j)
+			{
+				if(type == 0 || type == 2)
+				{
+					std::cout << "G" << l0 << c0;
+					std::cout << "c" << i << j;
+					std::cout << " <= ";
+				}
+				else
+				{
+					std::cout << "G" << l0 << c0;
+					std::cout << "c" << j << i;
+					std::cout << " <= ";
+				}
+				unsigned aux = 0;
+				for (int k = 0; k < size; ++k)
+				{
+					if(k != j && k != i)
+					{
+						++aux;
+						if(type == 0 || type == 3)
+						{
+							std::cout << "G" << l1 << c1;
+							std::cout << "c" << i << k;	
+						}
+						else
+						{
+							std::cout << "G" << l1 << c1;
+							std::cout << "c" << k << i;
+						}
+						if(aux == size-2)
+							std::cout << ";";
+						else	
+							std::cout << " + ";	
+					}
+				}
+				std::cout << std::endl;	
+			}
+		}
+	}
+}
+
 void searchDepControl( matrix& m, unsigned l, unsigned c )
 {
 
@@ -388,11 +441,22 @@ bool alex_command::execute()
   	createMatrix( output, circ.lines() );
   	generateMatrixCnots( circ, output );
 	printMatrixCnots( output );
-	// writeDepControl( 0, 1, 2, 5 );
-	// writeDepTargetTarget( 1, 2, 3, 5 );
-	// writeDepControlTarget( 0, 1, 1, 2, 5 );
-	writeDepTargetControl( 1, 2, 0, 1, 5 );
-  
+	// writeDepControlControl( 0, 1, 2, 5 );
+	writeDepTargetTarget( 1, 2, 3, 5 );
+	std::cout << " +========TT ====== == " << std::endl;
+	writeDep( 2, 1, 3, 1, 5, 1 );
+	std::cout << " +======== ====== == " << std::endl;
+	std::cout << " +======== ====== == " << std::endl;
+	writeDepControlTarget( 1, 0, 2, 1, 5 );
+	std::cout << " +========CT ====== == " << std::endl;
+	writeDep( 1, 0, 2, 1, 5, 2 );
+	std::cout << " +======== ====== == " << std::endl;
+	std::cout << " +======== ====== == " << std::endl;
+	writeDepTargetControl( 2, 1, 1, 0, 5 );
+	std::cout << " +========TC ====== == " << std::endl;
+	writeDep( 2, 1, 1, 0, 5, 3 );  
+	std::cout << " +======== ====== == " << std::endl;
+	std::cout << " +======== ====== == " << std::endl;
 	return true;
 }
 
