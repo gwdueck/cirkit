@@ -62,96 +62,12 @@ command::rules_t alex_command::validity_rules() const
 }
 
 
-void print_all_matrix(xt::xarray<complex_t>& t, unsigned int& q)
-{
-	for (int i = 0; i < t.size(); ++i)
-	{
-		if(i % q == 0)
-			std::cout << std::endl;
-		std::cout << " " << t[i];
-	}
-	std::cout << std::endl;
-}
+using matrix = std::vector<std::vector<unsigned>>;
 
-void print_line(xt::xarray<complex_t>& t, unsigned int& q, std::string input)
-{
-	unsigned int j = 0;
-	bool first = true;
-	std::string p;
-	unsigned int k = log10(q)/log10(2);
-
-	unsigned int line;
-	line = std::stoi(input, nullptr, 2);
-	if(line >= q)
-	{
-		std::cout << "Out of range. The circuit has " << k << " qubits." << std::endl;
-	}
-	else
-	{
-		for (int i = line*q; i < (line+1)*q; ++i, ++j)
-		{
-			if(t[i] != 0.0)
-			{
-				if(first)
-				{
-					p = std::bitset<8>(j).to_string();
-					// std::cout << std::endl;
-					std::string pp = std::bitset<8>(line).to_string();
-					std::cout << "input: " << pp.substr(pp.length() - k) << " => " << t[i] << " " << p.substr(p.length() - k);
-					first = false;
-				}
-				else
-				{
-					p = std::bitset<8>(j).to_string();
-					std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
-				}
-			}
-		}
-		std::cout << std::endl;
-	}
-}
-
-void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
-{
-	unsigned int j = 0;
-	bool first = true;
-	std::string p;
-	unsigned int k = log10(q)/log10(2);
-	for (int i = 0; i < t.size(); ++i, ++j)
-	{
-		if(i % q == 0)
-		{
-			p = std::bitset<8>(i/q).to_string();
-			std::cout << std::endl;
-			std::cout << "input: " <<  p.substr(p.length() - k) << " => ";
-			j = 0;
-			first = true;
-		}
-		if(t[i] != 0.0)
-		{
-			if(first)
-			{
-				p = std::bitset<8>(j).to_string();
-				std::cout << " " << t[i] << " " << p.substr(p.length() - k);
-				first = false;
-			}
-			else
-			{
-				p = std::bitset<8>(j).to_string();
-				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
-			}
-		}
-	}
-	std::cout << std::endl;
-
-  // std::cout << t << std::endl;
-}
-
-int get_max_element(std::vector<std::vector<unsigned>>& m, unsigned& l, unsigned& c)
+// Return the higher value element in the matrix
+int get_max_element(matrix& m, unsigned& l, unsigned& c)
 {
     unsigned h = 0;
-    std::cout << "AAA " << m.size() << std::endl;
-
     for (int i = 0; i < m.size(); ++i)
     {
         for (int j = 0; j < m[i].size(); ++j)
@@ -161,15 +77,11 @@ int get_max_element(std::vector<std::vector<unsigned>>& m, unsigned& l, unsigned
                 h = m[i][j];
                 l = i;
                 c = j;
-                std::cout << "AAA" << std::endl;
             }
         }
     }
     return h;
 }
-
- using matrix = std::vector<std::vector<unsigned>>;
-
 
 // return the number of different gates of the circuit
 int getNumberDifGates( matrix& c )
