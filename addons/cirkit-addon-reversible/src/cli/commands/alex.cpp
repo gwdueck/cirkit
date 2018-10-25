@@ -51,7 +51,7 @@ alex_command::alex_command( const environment::ptr& env )
 	: cirkit_command( env, "Alex test" )
 {
 	opts.add_options()
-	( "input,i",    value( &input ),    "print single input -- use it in binary" )
+	// ( "input,i",    value( &input ),    "print single input -- use it in binary" )
 	;
 
 }
@@ -282,6 +282,7 @@ void printMatrixCnots( matrix& m )
 // type = 1 -> target - target
 // type = 2 -> control - target
 // type = 3 -> target - control
+// type = 4 -> inverse (control -> target; target -> control)
 void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
 {
 	switch ( type )
@@ -298,6 +299,9 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
     	case 3:
 			std::cout << "/* Writing Target - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
     		break;
+    	case 4:
+			std::cout << "/* Writing Inverse dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+    		break;
     	default:
 			std::cout << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
     }
@@ -305,7 +309,7 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 	{
 		for (int j = 0; j < size; ++j)
 		{
-			if(i != j)
+			if(i != j && type != 4)
 			{
 				if(type == 0 || type == 2)
 				{
@@ -343,9 +347,19 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 				}
 				std::cout << std::endl;	
 			}
+			else if(i != j && type == 4)
+			{
+				std::cout << "G" << l0 << c0;
+				std::cout << "c" << i << j;
+				std::cout << " <= ";
+				std::cout << "G" << l1 << c1;
+				std::cout << "c" << j << i;
+				std::cout << ";" << std::endl;
+			}
 		}
 	}
 }
+
 
 bool alex_command::execute()
 {
@@ -364,16 +378,24 @@ bool alex_command::execute()
 	printFirstRestriction( qx4, output );
 
 	// std::cout << "CC" << std::endl;
-	writeDep( 4, 2, 3, 2, 5, 1 );
-	writeDep( 3, 2, 0, 3, 5, 2 );
-	writeDep( 0, 3, 3, 1, 5, 3 );
-	// std::cout << "TT" << std::endl;
-	// writeDep( 2, 1, 3, 1, 5, 1 );
-	// std::cout << "CT" << std::endl;
-	// writeDep( 1, 0, 2, 1, 5, 2 );
-	// std::cout << "TC" << std::endl;
-	// writeDep( 2, 1, 1, 0, 5, 3 );
-	// std::cout << "CT" << std::endl;
+	writeDep( 0, 1, 1, 2, 5, 3 );
+	writeDep( 0, 1, 0, 2, 5, 0 );
+	writeDep( 0, 1, 1, 0, 5, 4 );
+	
+	writeDep( 1, 2, 0, 2, 5, 1 );
+	writeDep( 1, 2, 1, 0, 5, 0 );
+	writeDep( 1, 2, 2, 3, 5, 3 );
+	writeDep( 1, 2, 2, 4, 5, 3 );
+
+	writeDep( 0, 2, 2, 3, 5, 3 );
+	writeDep( 0, 2, 2, 4, 5, 3 );
+	writeDep( 0, 2, 1, 0, 5, 2 );
+
+	writeDep( 2, 3, 2, 4, 5, 0 );
+	writeDep( 2, 3, 4, 3, 5, 1 );
+
+	writeDep( 2, 4, 4, 3, 5, 3 );
+
 	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
 
