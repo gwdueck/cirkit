@@ -51,7 +51,7 @@ alex_command::alex_command( const environment::ptr& env )
 	: cirkit_command( env, "Alex test" )
 {
 	opts.add_options()
-	// ( "input,i",    value( &input ),    "print single input -- use it in binary" )
+	( "filename,f",    value( &filename ),    "name of the output file" )
 	;
 
 }
@@ -360,6 +360,36 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 	}
 }
 
+void getAllCombinations(matrix& output)
+{
+	enum type { cc, tt, ct, tc, in };
+	for (int i = 0; i < output.size(); ++i)
+	{
+		for (int j = 0; j < output[i].size(); ++j)
+		{
+			for (int m = 0; m < output.size(); ++m)
+			{
+				for (int n = 0; n < output[m].size(); ++n)
+				{
+					if(i != j && m != n && output[i][j] > 0 && output[m][n] > 0)
+					{
+						if(i == m && j != n)
+							writeDep( i, j, m, n, output.size(),  cc);
+						else if(i != m && j == n)
+							writeDep( i, j, m, n, output.size(),  tt);
+						else if(i == n && j != m)
+							writeDep( i, j, m, n, output.size(),  ct);
+						else if(i != n && j == m)
+							writeDep( i, j, m, n, output.size(),  tc);
+						else if(i == n && j == m)
+							writeDep( i, j, m, n, output.size(),  in);
+					}
+				}
+			}		
+		}
+	}
+
+}
 
 bool alex_command::execute()
 {
@@ -377,30 +407,10 @@ bool alex_command::execute()
 	printObjectiveFunction( qx4, output, getNumberDifGates(output) );
 	printFirstRestriction( qx4, output );
 
-	// std::cout << "CC" << std::endl;
-	writeDep( 0, 1, 1, 2, 5, 3 );
-	writeDep( 0, 1, 0, 2, 5, 0 );
-	writeDep( 0, 1, 1, 0, 5, 4 );
-	
-	writeDep( 1, 2, 0, 2, 5, 1 );
-	writeDep( 1, 2, 1, 0, 5, 0 );
-	writeDep( 1, 2, 2, 3, 5, 3 );
-	writeDep( 1, 2, 2, 4, 5, 3 );
-
-	writeDep( 0, 2, 2, 3, 5, 3 );
-	writeDep( 0, 2, 2, 4, 5, 3 );
-	writeDep( 0, 2, 1, 0, 5, 2 );
-
-	writeDep( 2, 3, 2, 4, 5, 0 );
-	writeDep( 2, 3, 4, 3, 5, 1 );
-
-	writeDep( 2, 4, 4, 3, 5, 3 );
+	getAllCombinations(output);
 
 	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
-
-
-
 	return true;
 }
 
