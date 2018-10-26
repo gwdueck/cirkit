@@ -361,11 +361,70 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 	}
 }
 
+void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsigned type )
+{
+	if(type == 5)
+		std::cout << "/* Writing Single Control dependency (" << l << "," << c << ") */" << std::endl;
+	else if(type == 6)
+		std::cout << "/* Writing Single Target dependency (" << l << "," << c  << ") */" << std::endl;
+	else
+		std::cout << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
+
+	for (int i = 0; i < size; ++i)
+	{
+		std::cout << "1";
+		for (int j = 0; j < size; ++j)
+		{
+			if(i != j)
+				std::cout << " - G" << l << "_" << c;
+			if(i != j && type == 5)
+				std::cout << "c" << i << "_" << j;
+			else if(i != j && type == 6)
+				std::cout << "c" << j << "_" << i;
+		}
+		std::cout << " <= ";
+		for (int m = 0; m < size; ++m)
+		{
+			for (int n = 0; n < size; ++n)
+			{
+				if(m == l && n == c)
+				{}	//nothing;
+				else if(output[m][n] > 0)
+				{
+					for (int j = 0; j < size; ++j)
+					{
+						if(i != j)
+						{
+							std::cout << "G" << m << "_" << n;
+							if(type == 5)
+								std::cout << "c" << i << "_" << j << " + ";
+							else if(i != j && type == 6)
+								std::cout << "c" << j << "_" << i << " + ";
+
+							std::cout << "G" << m << "_" << n;
+							if(type == 5)
+								std::cout << "c" << j << "_" << i;
+							else if(i != j && type == 6)
+								std::cout << "c" << i << "_" << j;
+
+							if(i != size-1 && j == size-1 || i == size-1 && j == size-2)
+								std::cout << ";";
+							else
+								std::cout << " + ";
+						}
+					}
+				}
+			}
+		}
+		std::cout << std::endl;
+	}
+}
+
 // Naive solution
 void getAllCombinations(matrix& output)
 {
 	std::cout << "Getting all the dependencies..." << std::endl;
-	enum type { cc, tt, ct, tc, in };
+	enum type { cc, tt, ct, tc, in, sc, st };
 	for (int i = 0; i < output.size(); ++i)
 	{
 		for (int j = 0; j < output[i].size(); ++j)
@@ -389,6 +448,37 @@ void getAllCombinations(matrix& output)
 					}
 				}
 			}		
+		}
+	}
+	unsigned single;
+	// Search for single control or target
+	for (int i = 0; i < output.size(); ++i)
+	{
+		for (int j = 0; j < output[i].size(); ++j)
+		{
+			if(output[i][j] > 0)
+			{
+				single = 0;
+				for (int m = 0; m < output.size(); ++m)
+				{
+					if( output[i][m] > 0 && m != j)
+						++single;
+					if( output[m][i] > 0)
+						++single;
+				}
+				if(single == 0)
+					writeDepSingle( output, i, j, output.size(),  sc);
+				single = 0;
+				for (int m = 0; m < output.size(); ++m)
+				{
+					if( output[m][j] > 0 && m != i)
+						++single;
+					if( output[j][m] > 0)
+						++single;
+				}
+				if(single == 0)
+					writeDepSingle( output, i, j, output.size(),  st);
+			}
 		}
 	}
 	std::cout << "Done!" << std::endl;
