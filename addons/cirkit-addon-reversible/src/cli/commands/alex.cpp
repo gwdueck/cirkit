@@ -113,9 +113,9 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
-							outputFile << qx[k][m] << "G" << i << j << "c" << k << m << ";";
+							outputFile << qx[k][m] << "G" << i << "_" << j << "c" << k << "_" << m << ";";
 						else
-							outputFile << qx[k][m] << "G" << i << j << "c" << k << m << " + ";
+							outputFile << qx[k][m] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
 					}
 				}
@@ -151,9 +151,9 @@ void printFirstRestriction( matrix& qx, matrix& cnot )
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 )
-							outputFile << cnot[i][j] << "G" << i << j << "c" << k << m << " = " << cnot[i][j] << ";";
+							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j] << ";";
 						else
-							outputFile << cnot[i][j] << "G" << i << j << "c" << k << m << " + ";
+							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
 					}
 				}
@@ -182,9 +182,9 @@ void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
-							outputFile << "G" << i << j << "c" << k << m << " = " << difGates << ";";
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << difGates << ";";
 						else
-							outputFile << "G" << i << j << "c" << k << m << " + ";
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
 					}
 				}
@@ -217,9 +217,9 @@ void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
-							outputFile << "G" << i << j << "c" << k << m << ";";
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << ";";
 						else
-							outputFile << "G" << i << j << "c" << k << m << "  ";
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << "  ";
 						line = true;
 					}
 				}
@@ -314,14 +314,14 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 			{
 				if(type == 0 || type == 2)
 				{
-					outputFile << "G" << l0 << c0;
-					outputFile << "c" << i << j;
+					outputFile << "G" << l0 << "_" << c0;
+					outputFile << "c" << i << "_" << j;
 					outputFile << " <= ";
 				}
 				else
 				{
-					outputFile << "G" << l0 << c0;
-					outputFile << "c" << j << i;
+					outputFile << "G" << l0 << "_" << c0;
+					outputFile << "c" << j << "_" << i;
 					outputFile << " <= ";
 				}
 				unsigned aux = 0;
@@ -332,13 +332,13 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 						++aux;
 						if(type == 0 || type == 3)
 						{
-							outputFile << "G" << l1 << c1;
-							outputFile << "c" << i << k;	
+							outputFile << "G" << l1 << "_" << c1;
+							outputFile << "c" << i << "_" << k;	
 						}
 						else
 						{
-							outputFile << "G" << l1 << c1;
-							outputFile << "c" << k << i;
+							outputFile << "G" << l1 << "_" << c1;
+							outputFile << "c" << k << "_" << i;
 						}
 						if(aux == size-2)
 							outputFile << ";";
@@ -350,11 +350,11 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 			}
 			else if(i != j && type == 4)
 			{
-				outputFile << "G" << l0 << c0;
-				outputFile << "c" << i << j;
+				outputFile << "G" << l0 << "_" << c0;
+				outputFile << "c" << i << "_" << j;
 				outputFile << " <= ";
-				outputFile << "G" << l1 << c1;
-				outputFile << "c" << j << i;
+				outputFile << "G" << l1 << "_" << c1;
+				outputFile << "c" << j << "_" << i;
 				outputFile << ";" << std::endl;
 			}
 		}
