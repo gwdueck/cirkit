@@ -364,25 +364,25 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsigned type )
 {
 	if(type == 5)
-		std::cout << "/* Writing Single Control dependency (" << l << "," << c << ") */" << std::endl;
+		outputFile << "/* Writing Single Control dependency (" << l << "," << c << ") */" << std::endl;
 	else if(type == 6)
-		std::cout << "/* Writing Single Target dependency (" << l << "," << c  << ") */" << std::endl;
+		outputFile << "/* Writing Single Target dependency (" << l << "," << c  << ") */" << std::endl;
 	else
-		std::cout << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
+		outputFile << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
 
 	for (int i = 0; i < size; ++i)
 	{
-		std::cout << "1";
+		outputFile << "1";
 		for (int j = 0; j < size; ++j)
 		{
 			if(i != j)
-				std::cout << " - G" << l << "_" << c;
+				outputFile << " - G" << l << "_" << c;
 			if(i != j && type == 5)
-				std::cout << "c" << i << "_" << j;
+				outputFile << "c" << i << "_" << j;
 			else if(i != j && type == 6)
-				std::cout << "c" << j << "_" << i;
+				outputFile << "c" << j << "_" << i;
 		}
-		std::cout << " <= ";
+		outputFile << " <= ";
 		for (int m = 0; m < size; ++m)
 		{
 			for (int n = 0; n < size; ++n)
@@ -395,28 +395,25 @@ void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsi
 					{
 						if(i != j)
 						{
-							std::cout << "G" << m << "_" << n;
+							outputFile << "G" << m << "_" << n;
 							if(type == 5)
-								std::cout << "c" << i << "_" << j << " + ";
+								outputFile << "c" << i << "_" << j << " + ";
 							else if(i != j && type == 6)
-								std::cout << "c" << j << "_" << i << " + ";
+								outputFile << "c" << j << "_" << i << " + ";
 
-							std::cout << "G" << m << "_" << n;
+							outputFile << "G" << m << "_" << n;
 							if(type == 5)
-								std::cout << "c" << j << "_" << i;
+								outputFile << "c" << j << "_" << i;
 							else if(i != j && type == 6)
-								std::cout << "c" << i << "_" << j;
+								outputFile << "c" << i << "_" << j;
 
-							if(i != size-1 && j == size-1 || i == size-1 && j == size-2)
-								std::cout << ";";
-							else
-								std::cout << " + ";
+							outputFile << " + ";
 						}
 					}
 				}
 			}
 		}
-		std::cout << std::endl;
+		outputFile << "0;" << std::endl;
 	}
 }
 
