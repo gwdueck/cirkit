@@ -709,7 +709,7 @@ namespace cirkit
         //     }
         // }
         // std::cout << minimo << std::endl;
-        std::cout << "\t" << circ_in.num_gates() << "\t" << minimo.num_gates();        
+        // std::cout << "\t" << circ_in.num_gates() << "\t" << minimo.num_gates();        
         std::cout << "Best mapping: " << minimo.num_gates() << " ->";
         for (int i = 0; i < map_minimo.size(); ++i)
             std::cout << " " << map_minimo[i];             
