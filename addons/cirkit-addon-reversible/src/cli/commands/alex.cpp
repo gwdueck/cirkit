@@ -241,7 +241,7 @@ void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 // Create a matrix with 0's
 void createMatrix( matrix& m, unsigned size )
 {
-	std::cout << "Creating matrix..." << std::endl;
+	// std::cout << "Creating matrix..." << std::endl;
   	std::vector<unsigned> v;
 	for (int i = 0; i < size; ++i)
 		v.push_back(0);
@@ -252,7 +252,7 @@ void createMatrix( matrix& m, unsigned size )
 // Create a matrix with the cnots 
 void generateMatrixCnots( circuit& circ, matrix& m )
 {
-	std::cout << "Generating matrix..." << std::endl;	
+	// std::cout << "Generating matrix..." << std::endl;	
   	unsigned target, control;
 	for ( const auto& gate : circ )
 	{
@@ -268,7 +268,7 @@ void generateMatrixCnots( circuit& circ, matrix& m )
 // Print the cnots in the circuit
 void printMatrixCnots( matrix& m )
 {
-	std::cout << "Printing matrix..." << std::endl;
+	// std::cout << "Printing matrix..." << std::endl;
 	for (int i = 0; i < m.size(); ++i)
 	{
 		for (int j = 0; j < m[i].size(); ++j)
@@ -420,7 +420,7 @@ void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsi
 // Naive solution
 void getAllCombinations(matrix& output)
 {
-	std::cout << "Getting all the dependencies..." << std::endl;
+	// std::cout << "Getting all the dependencies..." << std::endl;
 	enum type { cc, tt, ct, tc, in, sc, st };
 	for (int i = 0; i < output.size(); ++i)
 	{
@@ -478,7 +478,7 @@ void getAllCombinations(matrix& output)
 			}
 		}
 	}
-	std::cout << "Done!" << std::endl;
+	// std::cout << "Done!" << std::endl;
 }
 
 bool alex_command::execute()
