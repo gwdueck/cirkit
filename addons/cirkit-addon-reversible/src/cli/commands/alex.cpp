@@ -372,48 +372,51 @@ void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsi
 
 	for (int i = 0; i < size; ++i)
 	{
-		outputFile << "1";
-		for (int j = 0; j < size; ++j)
+		if( i == l || i == c)
 		{
-			if(i != j)
-				outputFile << " - G" << l << "_" << c;
-			if(i != j && type == 5)
-				outputFile << "c" << i << "_" << j;
-			else if(i != j && type == 6)
-				outputFile << "c" << j << "_" << i;
-		}
-		outputFile << " <= ";
-		for (int m = 0; m < size; ++m)
-		{
-			for (int n = 0; n < size; ++n)
+			outputFile << "1";
+			for (int j = 0; j < size; ++j)
 			{
-				if(m == l && n == c)
-				{}	//nothing;
-				else if(output[m][n] > 0)
+				if(i != j)
+					outputFile << " - G" << l << "_" << c;
+				if(i != j && type == 5)
+					outputFile << "c" << i << "_" << j;
+				else if(i != j && type == 6)
+					outputFile << "c" << j << "_" << i;
+			}
+			outputFile << " <= ";
+			for (int m = 0; m < size; ++m)
+			{
+				for (int n = 0; n < size; ++n)
 				{
-					for (int j = 0; j < size; ++j)
+					if(m == l && n == c)
+					{}	//nothing;
+					else if(output[m][n] > 0)
 					{
-						if(i != j)
+						for (int j = 0; j < size; ++j)
 						{
-							outputFile << "G" << m << "_" << n;
-							if(type == 5)
-								outputFile << "c" << i << "_" << j << " + ";
-							else if(i != j && type == 6)
-								outputFile << "c" << j << "_" << i << " + ";
+							if(i != j)
+							{
+								outputFile << "G" << m << "_" << n;
+								if(type == 5)
+									outputFile << "c" << i << "_" << j << " + ";
+								else if(i != j && type == 6)
+									outputFile << "c" << j << "_" << i << " + ";
 
-							outputFile << "G" << m << "_" << n;
-							if(type == 5)
-								outputFile << "c" << j << "_" << i;
-							else if(i != j && type == 6)
-								outputFile << "c" << i << "_" << j;
+								outputFile << "G" << m << "_" << n;
+								if(type == 5)
+									outputFile << "c" << j << "_" << i;
+								else if(i != j && type == 6)
+									outputFile << "c" << i << "_" << j;
 
-							outputFile << " + ";
+								outputFile << " + ";
+							}
 						}
 					}
 				}
 			}
+			outputFile << "0;" << std::endl;
 		}
-		outputFile << "0;" << std::endl;
 	}
 }
 
@@ -502,7 +505,11 @@ bool alex_command::execute()
 	// 				{10,20,10,4,10,20,30,42,52,42,32,20,14,4,0,4},
 	// 				{0,10,0,3,9,19,29,41,51,54,44,32,20,10,0,0}};
 	// matrix qx4 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{3,3,0,0,0},{10,10,4,4,0}};
-	matrix qx4 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{12,12,0,0,0},{10,10,4,4,0}};
+	matrix qx4 ={	{0,4,4,10,10},
+					{0,0,4,10,10},
+					{0,0,0,4,0},
+					{12,12,0,0,0},
+					{10,10,4,4,0}};
 
 	if(filename.empty())
 	{
