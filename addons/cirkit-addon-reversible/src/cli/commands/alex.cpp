@@ -135,22 +135,22 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 }
 
 // Function to print the first restriction
-void printFirstRestriction( matrix& qx, matrix& cnot )
+void printFirstRestriction( matrix& cnot )
 {
 	unsigned aux = 0;
 	outputFile << "/* Begin First Restriction */" << std::endl;
-	for (int i = 0; i < qx.size(); ++i)
+	for (int i = 0; i < cnot.size(); ++i)
 	{
-		for (int j = 0; j < qx.size(); ++j)
+		for (int j = 0; j < cnot.size(); ++j)
 		{
 			bool line = false;
-			for (int k = 0; k < qx.size(); ++k)
+			for (int k = 0; k < cnot.size(); ++k)
 			{
-				for (int m = 0; m < qx.size(); ++m)
+				for (int m = 0; m < cnot.size(); ++m)
 				{
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
-						if(k == qx.size()-1 && m == qx.size()-2 )
+						if(k == cnot.size()-1 && m == cnot.size()-2 )
 							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j] << ";";
 						else
 							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
@@ -434,10 +434,10 @@ void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsi
 }
 
 // Create the ghost gates
-void ghostConnections(matrix cnot)
+void ghostConnections(matrix& cnot)
 {
 	unsigned single;
-	std::vector<int> ghost;
+	std::vector<int> ghost, a, b;
 	// Search for single control or target
 	for (int i = 0; i < cnot.size(); ++i)
 	{
@@ -453,11 +453,11 @@ void ghostConnections(matrix cnot)
 			ghost.push_back(i);
 	}
 
-	for (int i = 0; i < ghost.size(); ++i)
-	{
-		std::cout << " " << ghost[i];
-	}
-	std::cout << std::endl;
+	// for (int i = 0; i < ghost.size(); ++i)
+	// {
+	// 	std::cout << " " << ghost[i];
+	// }
+	// std::cout << std::endl;
 
 	for (int i = 0; i < ghost.size(); ++i)
 	{
@@ -469,25 +469,31 @@ void ghostConnections(matrix cnot)
 				{
 					if( cnot[ghost[i]][k] > 0 )
 					{
-						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << ghost[i] << "-" << k << std::endl;
+						// std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << ghost[i] << "-" << k << std::endl;
 						writeDep(ghost[i], k, ghost[i], ghost[j], cnot.size(), 0);
+						a.push_back(ghost[i]);
+						b.push_back(ghost[j]);
 					}
 					else if( cnot[k][ghost[i]] > 0 )
 					{
-						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << k << "-" << ghost[i] << std::endl;
+						// std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << k << "-" << ghost[i] << std::endl;
 						writeDep(k, ghost[i], ghost[i], ghost[j], cnot.size(), 3);
+						a.push_back(ghost[i]);
+						b.push_back(ghost[j]);
 					}
 					if( cnot[ghost[j]][k] > 0 )
 					{
-						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << ghost[j] << "-" << ghost[k] << std::endl;
+						// std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << ghost[j] << "-" << ghost[k] << std::endl;
 						writeDep(ghost[j], k, ghost[i], ghost[j], cnot.size(), 2);
-						break;
+						a.push_back(ghost[i]);
+						b.push_back(ghost[j]);
 					}
 					else if( cnot[k][ghost[j]] > 0 )
 					{
-						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << k << "-" << ghost[j] << std::endl;
+						// std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << k << "-" << ghost[j] << std::endl;
 						writeDep(k, ghost[j], ghost[i], ghost[j], cnot.size(), 1);
-						break;
+						a.push_back(ghost[i]);
+						b.push_back(ghost[j]);
 					}		
 				}
 				ghost[j] = -1;
@@ -496,6 +502,8 @@ void ghostConnections(matrix cnot)
 			}
 		}
 	}
+	for (int i = 0; i < a.size(); ++i)
+		cnot[a[i]][b[i]] = 1;
 }
 
 // Naive solution
@@ -570,11 +578,11 @@ bool alex_command::execute()
   	generateMatrixCnots( circ, output );
 	// printMatrixCnots( output );
 	printObjectiveFunction( qx4, output, getNumberDifGates(output) );
-	printFirstRestriction( qx4, output );
 	if(getNumberDifGates(output) > 1)
 		getAllCombinations(output);
-	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	ghostConnections(output);
+	printFirstRestriction( output );
+	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
   	outputFile.close();
   	filename.clear();
