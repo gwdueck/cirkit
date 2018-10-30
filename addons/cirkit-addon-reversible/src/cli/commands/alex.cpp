@@ -524,9 +524,8 @@ bool alex_command::execute()
 	// printMatrixCnots( output );
 	printObjectiveFunction( qx4, output, getNumberDifGates(output) );
 	printFirstRestriction( qx4, output );
-
-	getAllCombinations(output);
-
+	if(getNumberDifGates(output) > 1)
+		getAllCombinations(output);
 	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
   	outputFile.close();
