@@ -284,6 +284,7 @@ void printMatrixCnots( matrix& m )
 // type = 2 -> control - target
 // type = 3 -> target - control
 // type = 4 -> inverse (control -> target; target -> control)
+// type = 13 -> Ghost gates
 void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
 {
 	switch ( type )
@@ -361,6 +362,18 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 	}
 }
 
+bool empty_line(matrix& cnot, unsigned line)
+{
+	for (int i = 0; i < cnot.size(); ++i)
+	{
+		if( cnot[i][line] > 0 )
+			return false;
+		if( cnot[line][i] > 0 )
+			return false;
+	}
+	return true;
+}
+
 void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsigned type )
 {
 	if(type == 5)
@@ -372,8 +385,8 @@ void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsi
 
 	for (int i = 0; i < size; ++i)
 	{
-		if( i == l || i == c)
-		{
+		// if( i == l || i == c)
+		// {
 			outputFile << "1";
 			for (int j = 0; j < size; ++j)
 			{
@@ -416,6 +429,71 @@ void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsi
 				}
 			}
 			outputFile << "0;" << std::endl;
+		// }
+	}
+}
+
+// Create the ghost gates
+void ghostConnections(matrix cnot)
+{
+	unsigned single;
+	std::vector<int> ghost;
+	// Search for single control or target
+	for (int i = 0; i < cnot.size(); ++i)
+	{
+		single = 0;
+		for (int j = 0; j < cnot.size(); ++j)
+		{
+			if( cnot[i][j] > 0 )
+				++single;
+			if( cnot[j][i] > 0)
+				++single;
+		}
+		if( single == 1)
+			ghost.push_back(i);
+	}
+
+	for (int i = 0; i < ghost.size(); ++i)
+	{
+		std::cout << " " << ghost[i];
+	}
+	std::cout << std::endl;
+
+	for (int i = 0; i < ghost.size(); ++i)
+	{
+		for (int j = i + 1; j < ghost.size(); ++j)
+		{
+			if( ghost[i] >= 0 && ghost[j] >= 0 && cnot[ghost[i]][ghost[j]] == 0 && cnot[ghost[j]][ghost[i]] == 0 )
+			{
+				for (int k = 0; k < cnot.size(); ++k)
+				{
+					if( cnot[ghost[i]][k] > 0 )
+					{
+						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << ghost[i] << "-" << k << std::endl;
+						writeDep(ghost[i], k, ghost[i], ghost[j], cnot.size(), 0);
+					}
+					else if( cnot[k][ghost[i]] > 0 )
+					{
+						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << k << "-" << ghost[i] << std::endl;
+						writeDep(k, ghost[i], ghost[i], ghost[j], cnot.size(), 3);
+					}
+					if( cnot[ghost[j]][k] > 0 )
+					{
+						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << ghost[j] << "-" << ghost[k] << std::endl;
+						writeDep(ghost[j], k, ghost[i], ghost[j], cnot.size(), 2);
+						break;
+					}
+					else if( cnot[k][ghost[j]] > 0 )
+					{
+						std::cout << "Create ghost gate: " << ghost[i] << "-" << ghost[j] << " " << k << "-" << ghost[j] << std::endl;
+						writeDep(k, ghost[j], ghost[i], ghost[j], cnot.size(), 1);
+						break;
+					}		
+				}
+				ghost[j] = -1;
+				ghost[i] = -1;
+				break;
+			}
 		}
 	}
 }
@@ -448,37 +526,6 @@ void getAllCombinations(matrix& output)
 					}
 				}
 			}		
-		}
-	}
-	unsigned single;
-	// Search for single control or target
-	for (int i = 0; i < output.size(); ++i)
-	{
-		for (int j = 0; j < output[i].size(); ++j)
-		{
-			if(output[i][j] > 0)
-			{
-				single = 0;
-				for (int m = 0; m < output.size(); ++m)
-				{
-					if( output[i][m] > 0 && m != j)
-						++single;
-					if( output[m][i] > 0)
-						++single;
-				}
-				if(single == 0)
-					writeDepSingle( output, i, j, output.size(),  sc);
-				single = 0;
-				for (int m = 0; m < output.size(); ++m)
-				{
-					if( output[m][j] > 0 && m != i)
-						++single;
-					if( output[j][m] > 0)
-						++single;
-				}
-				if(single == 0)
-					writeDepSingle( output, i, j, output.size(),  st);
-			}
 		}
 	}
 	// std::cout << "Done!" << std::endl;
@@ -527,6 +574,7 @@ bool alex_command::execute()
 	if(getNumberDifGates(output) > 1)
 		getAllCombinations(output);
 	printEndRestriction( qx4, output, getNumberDifGates( output ) );
+	ghostConnections(output);
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
   	outputFile.close();
   	filename.clear();
