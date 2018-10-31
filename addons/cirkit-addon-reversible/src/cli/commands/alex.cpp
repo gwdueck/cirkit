@@ -453,12 +453,41 @@ void ghostConnections(matrix& cnot)
 			ghost.push_back(i);
 	}
 
+	// for (int i = 0; i < ghost.size(); ++i)
+	// {
+	// 	std::cout << " " << ghost[i];
+	// }
+	// std::cout << std::endl;
 	if( ghost.size() > 1)
 	{
+		if( ghost.size() == 2 )
+		{
+			bool end = false;
+			if( cnot[ghost[0]][ghost[1]] > 0 || cnot[ghost[1]][ghost[0]] > 0 )
+			{
+				for (int i = 0; i < cnot.size(); ++i)
+				{
+					if(end)
+						break;
+					for (int j = 0; j < cnot.size(); ++j)
+					{
+						if( i != ghost[0] && i!= ghost[1] && j != ghost[0] && j != ghost[1] && cnot[i][j] > 0 )
+						{
+							ghost.push_back(i);
+							ghost.push_back(j);
+							end = true;
+							break;
+						}
+					}
+				}
+			}
+
+		}
+
 		do
 		{
 			bool valid = true;
-			for (int i = 0; i < ghost.size(); i = i + 2)
+			for (int i = 0; i < ghost.size()-1; i = i + 2)
 			{
 				if( cnot[ghost[i]][ghost[i+1]] > 0 || cnot[ghost[i+1]][ghost[i]] > 0 )
 					valid = false;
@@ -467,7 +496,7 @@ void ghostConnections(matrix& cnot)
 				break;
 	    } while (std::next_permutation(ghost.begin(), ghost.end()));
 
-	    for (int i = 0; i < ghost.size(); i = i + 2)
+	    for (int i = 0; i < ghost.size()-1; i = i + 2)
 		{
 			for (int j = 0; j < cnot.size(); ++j)
 			{
@@ -576,8 +605,10 @@ bool alex_command::execute()
 	// printMatrixCnots( output );
 	printObjectiveFunction( qx4, output, getNumberDifGates(output) );
 	if(getNumberDifGates(output) > 1)
+	{
 		getAllCombinations(output);
-	ghostConnections(output);
+		ghostConnections(output);
+	}
 	printFirstRestriction( output );
 	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
