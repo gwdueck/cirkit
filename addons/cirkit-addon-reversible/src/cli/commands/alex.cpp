@@ -436,32 +436,52 @@ void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsi
 // Create the ghost gates
 void ghostConnections(matrix& cnot)
 {
-	unsigned single;
+	unsigned single, difGates;
 	std::vector<int> ghost;
+	bool inverse;
+
+	difGates = getNumberDifGates(cnot);
+	if(difGates == 2)
+	{
+		for (int i = 0; i < cnot.size(); ++i)
+		{
+			for (int j = 0; j < cnot[i].size(); ++j)
+			{
+				if(cnot[i][j] > 0 && cnot[j][i] > 0)
+					return;
+			}
+		}
+	}
+
+
 	// Search for single control or target
 	for (int i = 0; i < cnot.size(); ++i)
 	{
 		single = 0;
+		inverse = false;
 		for (int j = 0; j < cnot.size(); ++j)
 		{
 			if( cnot[i][j] > 0 )
 				++single;
 			if( cnot[j][i] > 0)
 				++single;
+			if( cnot[i][j] > 0 && cnot[j][i] > 0)
+				inverse = true;
 		}
-		if( single == 1)
+		if( single == 1 || (single == 2 && inverse == true) )
 			ghost.push_back(i);
 	}
 
 	if(ghost.empty())
 		return;
-	for (int i = 0; i < ghost.size(); ++i)
-	{
-		std::cout << " " << ghost[i];
-	}
-	std::cout << std::endl;
 
-	if (ghost.size() % 2 != 0)
+	// for (int i = 0; i < ghost.size(); ++i)
+	// {
+	// 	std::cout << " " << ghost[i];
+	// }
+	// std::cout << std::endl;
+
+    if (ghost.size() % 2 != 0)
 	{
 		bool end = false;
 		unsigned p = ghost[ghost.size()-1];
@@ -490,78 +510,74 @@ void ghostConnections(matrix& cnot)
 		}
 	}
 
-	// if( ghost.size() > 1)
-	// {
-		if( ghost.size() == 2 )
+
+	if( ghost.size() == 2 )
+	{
+		bool end = false;
+		if( cnot[ghost[0]][ghost[1]] > 0 || cnot[ghost[1]][ghost[0]] > 0 )
 		{
-			bool end = false;
-			if( cnot[ghost[0]][ghost[1]] > 0 || cnot[ghost[1]][ghost[0]] > 0 )
+			for (int i = 0; i < cnot.size(); ++i)
 			{
-				for (int i = 0; i < cnot.size(); ++i)
+				if(end)
+					break;
+				for (int j = 0; j < cnot.size(); ++j)
 				{
-					if(end)
-						break;
-					for (int j = 0; j < cnot.size(); ++j)
+					if( i != ghost[0] && i!= ghost[1] && j != ghost[0] && j != ghost[1] && cnot[i][j] > 0 )
 					{
-						if( i != ghost[0] && i!= ghost[1] && j != ghost[0] && j != ghost[1] && cnot[i][j] > 0 )
-						{
-							ghost.push_back(i);
-							ghost.push_back(j);
-							end = true;
-							break;
-						}
+						ghost.push_back(i);
+						ghost.push_back(j);
+						end = true;
+						break;
 					}
 				}
 			}
-
 		}
-
-		do
-		{
-			bool valid = true;
-			for (int i = 0; i < ghost.size()-1; i = i + 2)
-			{
-				if( cnot[ghost[i]][ghost[i+1]] > 0 || cnot[ghost[i+1]][ghost[i]] > 0 )
-					valid = false;
-			}
-			if(valid)
-				break;
-	    } while (std::next_permutation(ghost.begin(), ghost.end()));
-
-	    for (int i = 0; i < ghost.size()-1; i = i + 2)
-		{
-			for (int j = 0; j < cnot.size(); ++j)
-			{
-				if( cnot[ghost[i]][j] > 0 )
-				{
-					// std::cout << "Create ghost gate: " << ghost[i] << "-" << j << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
-					writeDep(ghost[i], j, ghost[i], ghost[i+1], cnot.size(), 0);
-				}
-				else if( cnot[j][ghost[i]] > 0 )
-				{
-					// std::cout << "Create ghost gate: " << j << "-" << ghost[i] << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
-					writeDep(j, ghost[i], ghost[i], ghost[i+1], cnot.size(), 3);
-				}
-				if( cnot[ghost[i+1]][j] > 0 )
-				{
-					// std::cout << "Create ghost gate: " << ghost[i+1] << "-" << j << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
-					writeDep(ghost[i+1], j, ghost[i], ghost[i+1], cnot.size(), 2);
-				}
-				else if( cnot[j][ghost[i+1]] > 0 )
-				{
-					// std::cout << "Create ghost gate: " << j << "-" << ghost[i+1] << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
-					writeDep(j, ghost[i+1], ghost[i], ghost[i+1], cnot.size(), 1);
-				}		
-			}
-			cnot[ghost[i]][ghost[i+1]] = 1;
-		}
-	// }
-	
-	for (int i = 0; i < ghost.size(); ++i)
-	{
-		std::cout << " " << ghost[i];
 	}
-	std::cout << std::endl;
+	do
+	{
+		bool valid = true;
+		for (int i = 0; i < ghost.size()-1; i = i + 2)
+		{
+			if( cnot[ghost[i]][ghost[i+1]] > 0 || cnot[ghost[i+1]][ghost[i]] > 0 )
+				valid = false;
+		}
+		if(valid)
+			break;
+    } while (std::next_permutation(ghost.begin(), ghost.end()));
+
+    for (int i = 0; i < ghost.size()-1; i = i + 2)
+	{
+		for (int j = 0; j < cnot.size(); ++j)
+		{
+			if( cnot[ghost[i]][j] > 0 )
+			{
+				// std::cout << "Create ghost gate(cc): " << ghost[i] << "-" << j << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
+				writeDep(ghost[i], j, ghost[i], ghost[i+1], cnot.size(), 0);
+			}
+			else if( cnot[j][ghost[i]] > 0 )
+			{
+				// std::cout << "Create ghost gate(tc): " << j << "-" << ghost[i] << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
+				writeDep(j, ghost[i], ghost[i], ghost[i+1], cnot.size(), 3);
+			}
+			if( cnot[ghost[i+1]][j] > 0 )
+			{
+				// std::cout << "Create ghost gate(ct): " << ghost[i+1] << "-" << j << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
+				writeDep(ghost[i+1], j, ghost[i], ghost[i+1], cnot.size(), 2);
+			}
+			else if( cnot[j][ghost[i+1]] > 0 )
+			{
+				// std::cout << "Create ghost gate(tt): " << j << "-" << ghost[i+1] << " " << ghost[i] << "-" << ghost[i+1] << std::endl;
+				writeDep(j, ghost[i+1], ghost[i], ghost[i+1], cnot.size(), 1);
+			}		
+		}
+		cnot[ghost[i]][ghost[i+1]] = 1;
+	}
+	
+	// for (int i = 0; i < ghost.size(); ++i)
+	// {
+	// 	std::cout << " " << ghost[i];
+	// }
+	// std::cout << std::endl;
 }
 
 // Naive solution
