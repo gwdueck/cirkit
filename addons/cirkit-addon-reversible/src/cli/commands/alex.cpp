@@ -453,13 +453,45 @@ void ghostConnections(matrix& cnot)
 			ghost.push_back(i);
 	}
 
-	// for (int i = 0; i < ghost.size(); ++i)
-	// {
-	// 	std::cout << " " << ghost[i];
-	// }
-	// std::cout << std::endl;
-	if( ghost.size() > 1)
+	if(ghost.empty())
+		return;
+	for (int i = 0; i < ghost.size(); ++i)
 	{
+		std::cout << " " << ghost[i];
+	}
+	std::cout << std::endl;
+
+	if (ghost.size() % 2 != 0)
+	{
+		bool end = false;
+		unsigned p = ghost[ghost.size()-1];
+		for (int i = 0; i < cnot.size(); ++i)
+		{
+			if(end)
+				break;
+			for (int j = 0; j < cnot.size(); ++j)
+			{
+				if( cnot[i][j] > 0)
+				{
+					if(cnot[i][p] == 0 && cnot[p][i] == 0 && i != p)
+					{
+						ghost.push_back(i);
+						end = true;
+						break;
+					}
+					else if(cnot[j][p] == 0 && cnot[p][j] == 0 && j != p)
+					{
+						ghost.push_back(j);
+						end = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	// if( ghost.size() > 1)
+	// {
 		if( ghost.size() == 2 )
 		{
 			bool end = false;
@@ -523,13 +555,13 @@ void ghostConnections(matrix& cnot)
 			}
 			cnot[ghost[i]][ghost[i+1]] = 1;
 		}
-	}
-	
-	// for (int i = 0; i < ghost.size(); ++i)
-	// {
-	// 	std::cout << " " << ghost[i];
 	// }
-	// std::cout << std::endl;
+	
+	for (int i = 0; i < ghost.size(); ++i)
+	{
+		std::cout << " " << ghost[i];
+	}
+	std::cout << std::endl;
 }
 
 // Naive solution
