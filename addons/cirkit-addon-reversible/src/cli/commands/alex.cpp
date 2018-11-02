@@ -199,6 +199,30 @@ void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
 	outputFile << "/* End Final Restriction */" << std::endl;
 }
 
+// Function to print the variables limits
+void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
+{
+	unsigned aux = 0;
+	outputFile << "/* Begin Limit Variables */" << std::endl;
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1;\n";
+					}
+				}
+			}
+		}
+	}
+	outputFile << "/* End Limit Variables */" << std::endl;
+}
+
 // Function to print the variables
 void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 {
@@ -589,9 +613,9 @@ void getAllCombinations(matrix& output)
 	{
 		for (int j = 0; j < output[i].size(); ++j)
 		{
-			for (int m = 0; m < output.size(); ++m)
+			for (int m = i; m < output.size(); ++m)
 			{
-				for (int n = 0; n < output[m].size(); ++n)
+				for (int n = j+1; n < output[m].size(); ++n)
 				{
 					if(i != j && m != n && output[i][j] > 0 && output[m][n] > 0)
 					{
@@ -659,6 +683,7 @@ bool alex_command::execute()
 	}
 	printFirstRestriction( output );
 	printEndRestriction( qx4, output, getNumberDifGates( output ) );
+	printLimitVariables( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
   	outputFile.close();
   	filename.clear();
