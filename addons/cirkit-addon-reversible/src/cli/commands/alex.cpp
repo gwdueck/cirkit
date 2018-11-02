@@ -51,7 +51,9 @@ alex_command::alex_command( const environment::ptr& env )
 	: cirkit_command( env, "Alex test" )
 {
 	opts.add_options()
-	( "filename,f",    value( &filename ),    "name of the output file" )
+	( "filename,f",    value( &filename ),  "name of the output file" )
+	( "cplex,c",  					    	"outuput file in cplex lp format (lp_solve is default)" )
+	// ( "architecture,a", value( &architecture ) ,"select architecture (qx4 is default)" )
 	;
 
 }
@@ -64,6 +66,7 @@ command::rules_t alex_command::validity_rules() const
 
 using matrix = std::vector<std::vector<unsigned>>;
 std::ofstream outputFile;
+bool cplex = false;
 
 // Return the higher value element in the matrix
 int get_max_element(matrix& m, unsigned& l, unsigned& c)
@@ -99,9 +102,13 @@ int getNumberDifGates( matrix& c )
 void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 {
 	unsigned aux = 0;
-	// outputFile << "/* Begin Objective Function */" << std::endl;
-	// outputFile << "min:\t";
-	outputFile << "Minimize" << std::endl;
+	if(!cplex)
+	{
+		outputFile << "/* Begin Objective Function */" << std::endl;
+		outputFile << "min:\t";
+	}
+	else
+		outputFile << "Minimize" << std::endl;
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -113,8 +120,10 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 				{
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
-						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
-							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;// << ";";
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
+							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << ";";
+						else if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && cplex)
+							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
 						else
 							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
@@ -132,15 +141,18 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 		}
 	}
-	outputFile << "st" << std::endl;
-	// outputFile << "/* End Objective Function */" << std::endl;
+	if(cplex)
+		outputFile << "st" << std::endl;
+	else
+		outputFile << "/* End Objective Function */" << std::endl;
 }
 
-// Function to print the first restriction
-void printFirstRestriction( matrix& cnot )
+// Function to print the one qubit restriction
+void printOneQubitRestriction( matrix& cnot )
 {
 	unsigned aux = 0;
-	// outputFile << "/* Begin First Restriction */" << std::endl;
+	if(!cplex)
+		outputFile << "/* Begin One Qubit Restriction */" << std::endl;
 	for (int i = 0; i < cnot.size(); ++i)
 	{
 		for (int j = 0; j < cnot.size(); ++j)
@@ -152,8 +164,10 @@ void printFirstRestriction( matrix& cnot )
 				{
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
-						if(k == cnot.size()-1 && m == cnot.size()-2 )
-							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j]; // << ";";
+						if(k == cnot.size()-1 && m == cnot.size()-2 && !cplex)
+							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j] << ";";
+						else if(k == cnot.size()-1 && m == cnot.size()-2 && cplex)
+							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j];
 						else
 							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
@@ -164,14 +178,16 @@ void printFirstRestriction( matrix& cnot )
 				outputFile << std::endl;
 		}
 	}
-	// outputFile << "/* End First Restriction */" << std::endl;
+	if(!cplex)
+		outputFile << "/* End One Qubit Restriction */" << std::endl;
 }
 
 // Function to print the final restriction
 void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
 {
 	unsigned aux = 0;
-	// outputFile << "/* Begin Final Restriction */" << std::endl;
+	if(!cplex)
+		outputFile << "/* Begin Final Restriction */" << std::endl;
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -183,8 +199,10 @@ void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
 				{
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
-						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
-							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << difGates; //<< ";";
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << difGates << ";";
+						else if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << difGates;
 						else
 							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
@@ -198,15 +216,18 @@ void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 		}
 	}
-	// outputFile << "/* End Final Restriction */" << std::endl;
+	if(!cplex)
+		outputFile << "/* End Final Restriction */" << std::endl;
 }
 
 // Function to print the variables limits
 void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
 {
 	unsigned aux = 0;
-	// outputFile << "/* Begin Limit Variables */" << std::endl;
-	outputFile << "Bounds" << std::endl;
+	if(!cplex)
+		outputFile << "/* Begin Limit Variables */" << std::endl;
+	else
+		outputFile << "Bounds" << std::endl;
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -217,22 +238,30 @@ void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
 				{
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
-						outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1\n";
+						if(cplex)
+							outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1" << std::endl;
+						else
+							outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1;" << std::endl;
 					}
 				}
 			}
 		}
 	}
-	// outputFile << "/* End Limit Variables */" << std::endl;
+	if(!cplex)
+		outputFile << "/* End Limit Variables */" << std::endl;
 }
 
 // Function to print the variables
 void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 {
 	unsigned aux = 0;
-	// outputFile << "/* Begin Integer Variables */" << std::endl;
-	// outputFile << "int\t";
-	outputFile << "General" << std::endl;
+	if(!cplex)
+	{
+		outputFile << "/* Begin Integer Variables */" << std::endl;
+		outputFile << "int\t";
+	}
+	else
+		outputFile << "General" << std::endl;
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -244,9 +273,9 @@ void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 				{
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
-						// if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
-						// 	outputFile << "G" << i << "_" << j << "c" << k << "_" << m << ";";
-						// else
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << ";";
+						else
 							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << "  ";
 						line = true;
 					}
@@ -263,8 +292,10 @@ void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 		}
 	}
-	// outputFile << "/* End Integer Variables */" << std::endl;
-	outputFile << "End" << std::endl;
+	if(!cplex)
+		outputFile << "/* End Integer Variables */" << std::endl;
+	else
+		outputFile << "End" << std::endl;
 }
 
 // Create a matrix with 0's
@@ -316,26 +347,29 @@ void printMatrixCnots( matrix& m )
 // type = 13 -> Ghost gates
 void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
 {
-	// switch ( type )
- //    {
- //    	case 0:
-	// 		outputFile << "/* Writing Control - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
- //    		break;
- //    	case 1:
-	// 		outputFile << "/* Writing Target - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
- //    		break;
- //    	case 2:
-	// 		outputFile << "/* Writing Control - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
- //    		break;
- //    	case 3:
-	// 		outputFile << "/* Writing Target - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
- //    		break;
- //    	case 4:
-	// 		outputFile << "/* Writing Inverse dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
- //    		break;
- //    	default:
-	// 		outputFile << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
- //    }
+	if(!cplex)
+	{
+		switch ( type )
+	    {
+	    	case 0:
+				outputFile << "/* Writing Control - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 1:
+				outputFile << "/* Writing Target - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 2:
+				outputFile << "/* Writing Control - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 3:
+				outputFile << "/* Writing Target - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 4:
+				outputFile << "/* Writing Inverse dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	default:
+				outputFile << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
+	    }
+	}
 	for (int i = 0; i < size; ++i)
 	{
 		for (int j = 0; j < size; ++j)
@@ -346,15 +380,19 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 				{
 					outputFile << "G" << l0 << "_" << c0;
 					outputFile << "c" << i << "_" << j;
-					outputFile << " - ";
-					// outputFile << " <= ";
+					if(cplex)
+						outputFile << " - ";
+					else
+						outputFile << " <= ";
 				}
 				else
 				{
 					outputFile << "G" << l0 << "_" << c0;
 					outputFile << "c" << j << "_" << i;
-					// outputFile << " <= ";
-					outputFile << " - ";
+					if(!cplex)
+						outputFile << " <= ";
+					else
+						outputFile << " - ";
 				}
 				unsigned aux = 0;
 				for (int k = 0; k < size; ++k)
@@ -372,8 +410,12 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 							outputFile << "G" << l1 << "_" << c1;
 							outputFile << "c" << k << "_" << i;
 						}
-						if(aux == size-2)
+						if(aux == size-2 && cplex)
 							outputFile << " <= 0";
+						else if(aux == size-2 && !cplex)
+							outputFile << ";";						
+						else if(!cplex)
+							outputFile << " + ";	
 						else	
 							outputFile << " - ";	
 					}
@@ -384,11 +426,15 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 			{
 				outputFile << "G" << l0 << "_" << c0;
 				outputFile << "c" << i << "_" << j;
-				// outputFile << " <= ";
+				if(!cplex)
+					outputFile << " <= ";
 				outputFile << "-G" << l1 << "_" << c1;
 				outputFile << "c" << j << "_" << i;
-				outputFile << " <= 0" << std::endl;
-				// outputFile << ";" << std::endl;
+				if(!cplex)
+					outputFile << ";" << std::endl;
+				else
+					outputFile << " <= 0" << std::endl;
+
 			}
 		}
 	}
@@ -404,65 +450,6 @@ bool empty_line(matrix& cnot, unsigned line)
 			return false;
 	}
 	return true;
-}
-
-void writeDepSingle( matrix& output, unsigned l, unsigned c, unsigned size, unsigned type )
-{
-	// if(type == 5)
-	// 	outputFile << "/* Writing Single Control dependency (" << l << "," << c << ") */" << std::endl;
-	// else if(type == 6)
-	// 	outputFile << "/* Writing Single Target dependency (" << l << "," << c  << ") */" << std::endl;
-	// else
-	// 	outputFile << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
-
-	for (int i = 0; i < size; ++i)
-	{
-		// if( i == l || i == c)
-		// {
-			outputFile << "1";
-			for (int j = 0; j < size; ++j)
-			{
-				if(i != j)
-					outputFile << " - G" << l << "_" << c;
-				if(i != j && type == 5)
-					outputFile << "c" << i << "_" << j;
-				else if(i != j && type == 6)
-					outputFile << "c" << j << "_" << i;
-			}
-			outputFile << " <= ";
-			for (int m = 0; m < size; ++m)
-			{
-				for (int n = 0; n < size; ++n)
-				{
-					if(m == l && n == c)
-					{}	//nothing;
-					else if(output[m][n] > 0)
-					{
-						for (int j = 0; j < size; ++j)
-						{
-							if(i != j)
-							{
-								outputFile << "G" << m << "_" << n;
-								if(type == 5)
-									outputFile << "c" << i << "_" << j << " + ";
-								else if(i != j && type == 6)
-									outputFile << "c" << j << "_" << i << " + ";
-
-								outputFile << "G" << m << "_" << n;
-								if(type == 5)
-									outputFile << "c" << j << "_" << i;
-								else if(i != j && type == 6)
-									outputFile << "c" << i << "_" << j;
-
-								outputFile << " + ";
-							}
-						}
-					}
-				}
-			}
-			outputFile << "0;" << std::endl;
-		// }
-	}
 }
 
 // Create the ghost gates
@@ -677,6 +664,8 @@ bool alex_command::execute()
 		std::cout << "Missing output file. Use -f" << std::endl;
 		return true;
 	}
+	if( is_set("cplex") )
+		cplex = true;
 	
 	outputFile.open (filename);
 
@@ -689,7 +678,7 @@ bool alex_command::execute()
 		getAllCombinations(output);
 		ghostConnections(output);
 	}
-	printFirstRestriction( output );
+	printOneQubitRestriction( output );
 	printEndRestriction( qx4, output, getNumberDifGates( output ) );
 	printLimitVariables( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );

@@ -56,6 +56,7 @@ class alex_command : public cirkit_command
 
 	private:
 		std::string filename;
+		unsigned architecture;
 };
 
 }
