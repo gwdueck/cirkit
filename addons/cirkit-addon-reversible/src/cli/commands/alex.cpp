@@ -114,7 +114,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1)
-							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << ";";
+							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;// << ";";
 						else
 							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
@@ -123,7 +123,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 			if(line && aux < difGates-1)
 			{
-				outputFile << std::endl << "\t";
+				outputFile << std::endl;
 				++aux;
 			}
 			else if(line)
@@ -132,6 +132,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 		}
 	}
+	outputFile << "st" << std::endl;
 	// outputFile << "/* End Objective Function */" << std::endl;
 }
 
@@ -216,7 +217,7 @@ void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
 				{
 					if( i != j && cnot[i][j] > 0 && k != m)
 					{
-						outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1;\n";
+						outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1\n";
 					}
 				}
 			}
@@ -253,7 +254,7 @@ void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 			}
 			if(line && aux < difGates-1)
 			{
-				outputFile << std::endl << "\t";
+				outputFile << std::endl;
 				++aux;
 			}
 			else if(line)
@@ -345,13 +346,15 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 				{
 					outputFile << "G" << l0 << "_" << c0;
 					outputFile << "c" << i << "_" << j;
-					outputFile << " <= ";
+					outputFile << " - ";
+					// outputFile << " <= ";
 				}
 				else
 				{
 					outputFile << "G" << l0 << "_" << c0;
 					outputFile << "c" << j << "_" << i;
-					outputFile << " <= ";
+					// outputFile << " <= ";
+					outputFile << " - ";
 				}
 				unsigned aux = 0;
 				for (int k = 0; k < size; ++k)
@@ -370,9 +373,9 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 							outputFile << "c" << k << "_" << i;
 						}
 						if(aux == size-2)
-							outputFile << ";";
+							outputFile << " <= 0";
 						else	
-							outputFile << " + ";	
+							outputFile << " - ";	
 					}
 				}
 				outputFile << std::endl;	
@@ -381,10 +384,11 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 			{
 				outputFile << "G" << l0 << "_" << c0;
 				outputFile << "c" << i << "_" << j;
-				outputFile << " <= ";
-				outputFile << "G" << l1 << "_" << c1;
+				// outputFile << " <= ";
+				outputFile << "-G" << l1 << "_" << c1;
 				outputFile << "c" << j << "_" << i;
-				outputFile << ";" << std::endl;
+				outputFile << " <= 0" << std::endl;
+				// outputFile << ";" << std::endl;
 			}
 		}
 	}
