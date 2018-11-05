@@ -614,7 +614,7 @@ void ghostConnections(matrix& cnot)
 				}
 				else
 				{
-					std::cout << "Create ghost gate(tc): " << i << "-" << qa.second << " " << i << "-" << j << std::endl;
+					std::cout << "Create ghost gate(tc): " << qa.second << "-" << i << " " << i << "-" << j << std::endl;
 					writeDep(qa.second, i, i, j, cnot.size(), 3);
 				}
 				if( qb.first != -1 )
