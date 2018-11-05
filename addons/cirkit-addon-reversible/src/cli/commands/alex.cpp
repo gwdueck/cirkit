@@ -424,17 +424,11 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 			}
 			else if(i != j && type == 4)
 			{
-				outputFile << "G" << l0 << "_" << c0;
-				outputFile << "c" << i << "_" << j;
-				if(!cplex)
-					outputFile << " <= ";
-				outputFile << "-G" << l1 << "_" << c1;
-				outputFile << "c" << j << "_" << i;
-				if(!cplex)
-					outputFile << ";" << std::endl;
+				outputFile << "G" << l0 << "_" << c0 << "c" << i << "_" << j;
+				if(cplex)
+					outputFile << " -G" << l1 << "_" << c1 << "c" << j << "_" << i << " <= 0\n";
 				else
-					outputFile << " <= 0" << std::endl;
-
+					outputFile << " <= G" << l1 << "_" << c1 << "c" << j << "_" << i << ";\n";
 			}
 		}
 	}
@@ -459,111 +453,6 @@ void ghostConnections(matrix& cnot)
 	std::vector<int> ghost;
 	bool inverse;
 
-	// difGates = getNumberDifGates(cnot);
-	// if(difGates == 2)
-	// {
-	// 	for (int i = 0; i < cnot.size(); ++i)
-	// 	{
-	// 		for (int j = 0; j < cnot[i].size(); ++j)
-	// 		{
-	// 			if(cnot[i][j] > 0 && cnot[j][i] > 0)
-	// 				return;
-	// 		}
-	// 	}
-	// }
-
-
-	// // Search for single control or target
-	// for (int i = 0; i < cnot.size(); ++i)
-	// {
-	// 	single = 0;
-	// 	inverse = false;
-	// 	for (int j = 0; j < cnot.size(); ++j)
-	// 	{
-	// 		if( cnot[i][j] > 0 )
-	// 			++single;
-	// 		if( cnot[j][i] > 0)
-	// 			++single;
-	// 		if( cnot[i][j] > 0 && cnot[j][i] > 0)
-	// 			inverse = true;
-	// 	}
-	// 	if( single == 1 || (single == 2 && inverse == true) )
-	// 		ghost.push_back(i);
-	// }
-
-	// if(ghost.empty())
-	// 	return;
-
-	// // for (int i = 0; i < ghost.size(); ++i)
-	// // {
-	// // 	std::cout << " " << ghost[i];
-	// // }
-	// // std::cout << std::endl;
-
- //    if (ghost.size() % 2 != 0)
-	// {
-	// 	bool end = false;
-	// 	unsigned p = ghost[ghost.size()-1];
-	// 	for (int i = 0; i < cnot.size(); ++i)
-	// 	{
-	// 		if(end)
-	// 			break;
-	// 		for (int j = 0; j < cnot.size(); ++j)
-	// 		{
-	// 			if( cnot[i][j] > 0)
-	// 			{
-	// 				if(cnot[i][p] == 0 && cnot[p][i] == 0 && i != p)
-	// 				{
-	// 					ghost.push_back(i);
-	// 					end = true;
-	// 					break;
-	// 				}
-	// 				else if(cnot[j][p] == 0 && cnot[p][j] == 0 && j != p)
-	// 				{
-	// 					ghost.push_back(j);
-	// 					end = true;
-	// 					break;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-
-	// if( ghost.size() == 2 )
-	// {
-	// 	bool end = false;
-	// 	if( cnot[ghost[0]][ghost[1]] > 0 || cnot[ghost[1]][ghost[0]] > 0 )
-	// 	{
-	// 		for (int i = 0; i < cnot.size(); ++i)
-	// 		{
-	// 			if(end)
-	// 				break;
-	// 			for (int j = 0; j < cnot.size(); ++j)
-	// 			{
-	// 				if( i != ghost[0] && i!= ghost[1] && j != ghost[0] && j != ghost[1] && cnot[i][j] > 0 )
-	// 				{
-	// 					ghost.push_back(i);
-	// 					ghost.push_back(j);
-	// 					end = true;
-	// 					break;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// do
-	// {
-	// 	bool valid = true;
-	// 	for (int i = 0; i < ghost.size()-1; i = i + 2)
-	// 	{
-	// 		if( cnot[ghost[i]][ghost[i+1]] > 0 || cnot[ghost[i+1]][ghost[i]] > 0 )
-	// 			valid = false;
-	// 	}
-	// 	if(valid)
-	// 		break;
- //    } while (std::next_permutation(ghost.begin(), ghost.end()));
-
 	bool qi, qj;
 	std::pair<int, int> qa, qb;
     for (int i = 0; i < cnot.size()-1; ++i)
@@ -572,35 +461,30 @@ void ghostConnections(matrix& cnot)
 		{
 			qi = qj = false;
 			qa.first = qa.second = qb.first = qb.second = -1;
-			std::cout << "Verificando... " << i << "-" << j << ":" << std::endl; 
 			for (int k = 0; k < cnot.size(); ++k)
 			{
 				if( cnot[i][j] > 0 || cnot[j][i] > 0 )
 				{
-					std::cout << "Dont need to create ghost gate " << i << "-" << j << std::endl;
+					// std::cout << "Dont need to create ghost gate " << i << "-" << j << std::endl;
 					break;
 				}
 				if( cnot[i][k] > 0 )
 				{
-					std::cout << "True... " << i << "-" << k << std::endl; 
 					qi = true;
 					qa.first = k;
 				}
 				else if( cnot[k][i] > 0 )
 				{
-					std::cout << "True... " << k << "-" << i << std::endl; 
 					qi = true;
 					qa.second = k;
 				}
 				if( cnot[k][j] > 0 )
 				{
-					std::cout << "True... " << k << "-" << j << std::endl; 
 					qj = true;
 					qb.first = k;
 				}
 				else if( cnot[j][k] > 0 )
 				{
-					std::cout << "True... " << j << "-" << k << std::endl; 
 					qj = true;
 					qb.second = k;
 				}
@@ -609,34 +493,28 @@ void ghostConnections(matrix& cnot)
 			{
 				if( qa.first != -1 )
 				{
-					std::cout << "Create ghost gate(cc): " << i << "-" << qa.first << " " << i << "-" << j << std::endl;
+					// std::cout << "Create ghost gate(cc): " << i << "-" << qa.first << " " << i << "-" << j << std::endl;
 					writeDep(i, qa.first, i, j, cnot.size(), 0);
 				}
 				else
 				{
-					std::cout << "Create ghost gate(tc): " << qa.second << "-" << i << " " << i << "-" << j << std::endl;
+					// std::cout << "Create ghost gate(tc): " << qa.second << "-" << i << " " << i << "-" << j << std::endl;
 					writeDep(qa.second, i, i, j, cnot.size(), 3);
 				}
 				if( qb.first != -1 )
 				{
-					std::cout << "Create ghost gate(tt): " << qb.first << "-" << j << " " << i << "-" << j << std::endl;
+					// std::cout << "Create ghost gate(tt): " << qb.first << "-" << j << " " << i << "-" << j << std::endl;
 					writeDep(qb.first, j, i, j, cnot.size(), 1);
 				}
 				else
 				{
-					std::cout << "Create ghost gate(ct): " << j << "-" << qb.second << " " << i << "-" << j << std::endl;
+					// std::cout << "Create ghost gate(ct): " << j << "-" << qb.second << " " << i << "-" << j << std::endl;
 					writeDep(j, qb.second, i, j, cnot.size(), 2);
 				}
 				cnot[i][j] = 1;
 			}	
 		}
 	}
-	
-	// for (int i = 0; i < ghost.size(); ++i)
-	// {
-	// 	std::cout << " " << ghost[i];
-	// }
-	// std::cout << std::endl;
 }
 
 // Naive solution
@@ -672,8 +550,57 @@ void getAllCombinations(matrix& output)
 	// std::cout << "Done!" << std::endl;
 }
 
+// Better approach
+void getCombinations(matrix& output)
+{
+	// std::cout << "Getting all the dependencies..." << std::endl;
+	enum type { cc, tt, ct, tc, in, sc, st };
+	for (int i = 0; i < output.size(); ++i)
+	{
+		bool next = false;
+		for (int j = 0; j < output.size(); ++j)
+		{
+			if(next)
+				break;
+			if( output[i][j] > 0 )
+			{
+				for (int k = j+1; k < output.size(); ++k)
+				{
+					if( output[i][k] > 0 )
+						writeDep( i, j, i, k, output.size(), cc);
+				}
+				for (int k = 0; k < output.size(); ++k)
+				{
+					if( output[k][i] > 0 )
+						if( k == j )
+							writeDep( i, j, k, i, output.size(), in);
+						else
+							writeDep( i, j, k, i, output.size(), ct);
+				}
+				next = true;
+			}
+		}
+		if(!next)
+		{	
+			for (int j = 0; j < output.size(); ++j)
+			{
+				if( output[j][i] > 0 )
+				{
+					for (int k = j+1; k < output.size(); ++k)
+					{
+						if( output[k][i] > 0 )
+							writeDep( i, j, k, i, output.size(), tt);
+					}
+				}
+			}
+		}
+	}
+	// std::cout << "Done!" << std::endl;
+}
+
 bool alex_command::execute()
 {
+	cplex = false;
 	circuit circ = env->store<circuit>().current();
 	matrix output;
 	// matrix qx4 = {{0,4,10,20,19,29,39,51,61,64,54,42,30,20,10,4},
@@ -711,11 +638,12 @@ bool alex_command::execute()
 
   	createMatrix( output, circ.lines() );
   	generateMatrixCnots( circ, output );
-	printMatrixCnots( output );
+	// printMatrixCnots( output );
 	printObjectiveFunction( qx4, output, getNumberDifGates(output) );
-	if(getNumberDifGates(output) > 1)
+	if( getNumberDifGates(output) > 1 )
 	{
-		getAllCombinations(output);
+		// getAllCombinations(output);
+		getCombinations(output);
 		ghostConnections(output);
 	}
 	printOneQubitRestriction( output );
