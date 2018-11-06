@@ -598,33 +598,79 @@ void getCombinations(matrix& output)
 	// std::cout << "Done!" << std::endl;
 }
 
+// Better approach
+void getCombinationAnotherApproach(matrix& output)
+{
+	enum type { cc, tt, ct, tc, in, sc, st };	
+	std::vector< std::pair< int,int > > q;
+	for (int i = 0; i < output.size(); ++i)
+	{
+		for (int j = 0; j < output.size(); ++j)
+		{
+			if( output[i][j] > 0 )
+				q.push_back(std::make_pair(i,j));
+			if( output[j][i] > 0 )
+				q.push_back(std::make_pair(j,i));
+		}
+		// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
+		for (int m = 0; m < output.size(); ++m)
+		{
+			bool first = true;
+			for (int j = 0; j < q.size(); ++j)
+			{
+				for (int n = 0; n < output.size(); ++n)
+				{
+					if( m != n )
+					{
+						if(first)
+							outputFile << q.size()-1;
+						outputFile << "G" << q[j].first << "_" << q[j].second; 
+						if(q[j].first == i)
+							outputFile << "c" << m << "_" << n;
+						else
+							outputFile << "c" << n << "_" << m;
+						if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
+							outputFile << " = ";
+						else
+							outputFile << " + ";
+					}
+				}
+				first = false;
+			}
+			outputFile << "0;" << std::endl;
+		}
+		outputFile << std::endl;
+		q.clear(); 
+	}
+}
+
 bool alex_command::execute()
 {
 	cplex = false;
 	circuit circ = env->store<circuit>().current();
 	matrix output;
-	// matrix qx4 = {{0,4,10,20,19,29,39,51,61,64,54,42,30,20,10,4},
-	// 				{0,0,0,3,9,19,29,41,51,61,53,41,29,19,9,10},
-	// 				{10,4,0,0,3,22,32,44,54,64,54,42,30,20,3,4},
-	// 				{20,14,4,0,0,10,20,32,42,52,44,32,20,10,0,10},
-	// 				{30,24,14,4,0,4,14,20,30,40,32,20,14,4,10,20},
-	// 				{42,30,20,10,0,0,4,10,20,30,22,10,4,10,22,30},
-	// 				{54,42,32,22,3,0,0,0,10,20,3,0,10,22,34,42},
-	// 				{64,52,42,32,22,10,4,0,4,10,0,10,20,32,44,52},
-	// 				{76,64,54,44,34,22,10,0,0,4,3,20,30,42,54,64},
-	// 				{66,74,64,54,44,32,20,3,0,0,0,10,20,32,44,54},
-	// 				{54,62,52,42,32,20,14,4,10,4,0,4,14,20,32,42},
-	// 				{44,52,42,32,22,10,4,10,20,10,0,0,4,10,22,32},
-	// 				{34,42,32,22,3,0,10,22,32,22,3,0,0,0,3,22},
-	// 				{22,30,20,10,0,10,20,32,42,32,22,10,4,0,0,10},
-	// 				{10,20,10,4,10,20,30,42,52,42,32,20,14,4,0,4},
-	// 				{0,10,0,3,9,19,29,41,51,54,44,32,20,10,0,0}};
+	matrix qx4 = {{0,4,10,20,19,29,39,51,61,64,54,42,30,20,10,4},
+					{0,0,0,3,9,19,29,41,51,61,53,41,29,19,9,10},
+					{10,4,0,0,3,22,32,44,54,64,54,42,30,20,3,4},
+					{20,14,4,0,0,10,20,32,42,52,44,32,20,10,0,10},
+					{30,24,14,4,0,4,14,20,30,40,32,20,14,4,10,20},
+					{42,30,20,10,0,0,4,10,20,30,22,10,4,10,22,30},
+					{54,42,32,22,3,0,0,0,10,20,3,0,10,22,34,42},
+					{64,52,42,32,22,10,4,0,4,10,0,10,20,32,44,52},
+					{76,64,54,44,34,22,10,0,0,4,3,20,30,42,54,64},
+					{66,74,64,54,44,32,20,3,0,0,0,10,20,32,44,54},
+					{54,62,52,42,32,20,14,4,10,4,0,4,14,20,32,42},
+					{44,52,42,32,22,10,4,10,20,10,0,0,4,10,22,32},
+					{34,42,32,22,3,0,10,22,32,22,3,0,0,0,3,22},
+					{22,30,20,10,0,10,20,32,42,32,22,10,4,0,0,10},
+					{10,20,10,4,10,20,30,42,52,42,32,20,14,4,0,4},
+					{0,10,0,3,9,19,29,41,51,54,44,32,20,10,0,0}};
 	// matrix qx4 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{3,3,0,0,0},{10,10,4,4,0}};
-	matrix qx4 ={	{0,4,4,10,10},
-					{0,0,4,10,10},
-					{0,0,0,4,0},
-					{12,12,0,0,0},
-					{10,10,4,4,0}};
+	// matrix qx4 ={	{0,4,4,10,10},
+	// 				{0,0,4,10,10},
+	// 				{0,0,0,4,0},
+	// 				{12,12,0,0,0},
+	// 				{10,10,4,4,0}};
 
 	if(filename.empty())
 	{
@@ -643,12 +689,13 @@ bool alex_command::execute()
 	if( getNumberDifGates(output) > 1 )
 	{
 		// getAllCombinations(output);
-		getCombinations(output);
-		ghostConnections(output);
+		getCombinationAnotherApproach(output);
+		// getCombinations(output);
+		// ghostConnections(output);
 	}
 	printOneQubitRestriction( output );
-	printEndRestriction( qx4, output, getNumberDifGates( output ) );
-	printLimitVariables( qx4, output, getNumberDifGates( output ) );
+	// printEndRestriction( qx4, output, getNumberDifGates( output ) );
+	// printLimitVariables( qx4, output, getNumberDifGates( output ) );
 	printIntegerVariables( qx4, output, getNumberDifGates( output ) );
   	outputFile.close();
   	filename.clear();
