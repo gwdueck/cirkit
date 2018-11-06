@@ -601,47 +601,95 @@ void getCombinations(matrix& output)
 // Better approach
 void getCombinationAnotherApproach(matrix& output)
 {
-	enum type { cc, tt, ct, tc, in, sc, st };	
 	std::vector< std::pair< int,int > > q;
-	for (int i = 0; i < output.size(); ++i)
+	if(!cplex)
 	{
-		for (int j = 0; j < output.size(); ++j)
+		for (int i = 0; i < output.size(); ++i)
 		{
-			if( output[i][j] > 0 )
-				q.push_back(std::make_pair(i,j));
-			if( output[j][i] > 0 )
-				q.push_back(std::make_pair(j,i));
-		}
-		// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
-		for (int m = 0; m < output.size(); ++m)
-		{
-			bool first = true;
-			for (int j = 0; j < q.size(); ++j)
+			for (int j = 0; j < output.size(); ++j)
 			{
-				for (int n = 0; n < output.size(); ++n)
-				{
-					if( m != n )
-					{
-						if(first)
-							outputFile << q.size()-1;
-						outputFile << "G" << q[j].first << "_" << q[j].second; 
-						if(q[j].first == i)
-							outputFile << "c" << m << "_" << n;
-						else
-							outputFile << "c" << n << "_" << m;
-						if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
-							outputFile << " = ";
-						else
-							outputFile << " + ";
-					}
-				}
-				first = false;
+				if( output[i][j] > 0 )
+					q.push_back(std::make_pair(i,j));
+				if( output[j][i] > 0 )
+					q.push_back(std::make_pair(j,i));
 			}
-			outputFile << "0;" << std::endl;
+			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
+			for (int m = 0; m < output.size(); ++m)
+			{
+				bool first = true;
+				for (int j = 0; j < q.size(); ++j)
+				{
+					for (int n = 0; n < output.size(); ++n)
+					{
+						if( m != n )
+						{
+							if(first)
+								outputFile << q.size()-1;
+							outputFile << "G" << q[j].first << "_" << q[j].second; 
+							if(q[j].first == i)
+								outputFile << "c" << m << "_" << n;
+							else
+								outputFile << "c" << n << "_" << m;
+							if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
+								outputFile << " = ";
+							else
+								outputFile << " + ";
+						}
+					}
+					first = false;
+				}
+				outputFile << "0;" << std::endl;
+			}
+			outputFile << std::endl;
+			q.clear(); 
 		}
-		outputFile << std::endl;
-		q.clear(); 
 	}
+	else
+	{
+		for (int i = 0; i < output.size(); ++i)
+		{
+			for (int j = 0; j < output.size(); ++j)
+			{
+				if( output[i][j] > 0 )
+					q.push_back(std::make_pair(i,j));
+				if( output[j][i] > 0 )
+					q.push_back(std::make_pair(j,i));
+			}
+			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
+			for (int m = 0; m < output.size(); ++m)
+			{
+				bool first = true;
+				for (int j = 0; j < q.size(); ++j)
+				{
+					for (int n = 0; n < output.size(); ++n)
+					{
+						if( m != n )
+						{
+							if(first)
+								outputFile << q.size()-1;
+							outputFile << "G" << q[j].first << "_" << q[j].second; 
+							if(q[j].first == i)
+								outputFile << "c" << m << "_" << n;
+							else
+								outputFile << "c" << n << "_" << m;
+							
+							if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
+								outputFile << " - ";
+							else if(first)
+								outputFile << " + ";
+							else
+								outputFile << " - ";
+						}
+					}
+					first = false;
+				}
+				outputFile << "0 = 0" << std::endl;
+			}
+			outputFile << std::endl;
+			q.clear(); 
+		}
+	}
+	
 }
 
 bool alex_command::execute()
