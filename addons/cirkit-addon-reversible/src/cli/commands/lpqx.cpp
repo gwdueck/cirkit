@@ -40,6 +40,7 @@
 #include <cli/reversible_stores.hpp>
 #include <reversible/utils/matrix_utils.hpp>
 #include <alice/rules.hpp>
+#include <core/utils/program_options.hpp>
 
 
 namespace cirkit
@@ -53,10 +54,13 @@ lpqx_command::lpqx_command( const environment::ptr& env )
 	opts.add_options()
 	( "filename,f",    value( &filename ),  "name of the output file" )
 	( "cplex,c",  					    	"write in cplex lp format (lp_solve is default)" )
-	( "architecture,a", value( &architecture ) ,"select architecture\n" 
-												"4: qx4 (5  qubits) -> default)\n"
-												"2: qx2 (5  qubits)\n"
-												"5: qx5 (16 qubits)" )
+	( "architecture,a", value_with_default( &architecture ) ,"select architecture\n" 
+															"4: qx4 (5  qubits) -> default)\n"
+															"2: qx2 (5  qubits)\n"
+															"5: qx5 (16 qubits)" )
+	( "version,v",value_with_default( &version ), "write LP in different versions\n" 
+												  "1: write the gate version (default)\n"
+												  "2: write the qubit version")
 	;
 
 }
@@ -70,23 +74,34 @@ std::ofstream outputFile;
 unsigned architecture;
 bool cplex = false;
 using matrix = std::vector<std::vector<unsigned>>;
-// Return the higher value element in the matrix
-int get_max_element(matrix& m, unsigned& l, unsigned& c)
+
+// Create a matrix with the cnots 
+void generateMatrixCnots( circuit& circ, matrix& m )
 {
-    unsigned h = 0;
-    for (int i = 0; i < m.size(); ++i)
-    {
-        for (int j = 0; j < m[i].size(); ++j)
-        {
-            if(i != j && m[i][j] > h)
-            {
-                h = m[i][j];
-                l = i;
-                c = j;
-            }
-        }
-    }
-    return h;
+	// std::cout << "Generating matrix..." << std::endl;	
+  	unsigned target, control;
+	for ( const auto& gate : circ )
+	{
+		if( !gate.controls().empty() )
+		{
+		  target = gate.targets().front();
+		  control = gate.controls().front().line();
+		  ++m[control][target];
+		}
+	}
+}
+
+// Print the cnots in the circuit
+void printMatrixCnots( matrix& m )
+{
+	// std::cout << "Printing matrix..." << std::endl;
+	for (int i = 0; i < m.size(); ++i)
+	{
+		for (int j = 0; j < m[i].size(); ++j)
+			std::cout << "\t" << m[i][j];
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
 }
 
 // return the number of different gates of the circuit
@@ -101,7 +116,7 @@ int getNumberDifGates( matrix& c )
 }
 
 // Function to print the objective function
-void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
+void printObjectiveFunction( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
 	if(!cplex)
@@ -120,14 +135,14 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 			{
 				for (int m = 0; m < qx.size(); ++m)
 				{
-					if( i != j && cnot[i][j] > 0 && k != m)
+					if( i != j && cnots[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
-							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << ";";
+							outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << ";";
 						else if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && cplex)
-							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
+							outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
 						else
-							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+							outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
 					}
 				}
@@ -149,29 +164,29 @@ void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
 		outputFile << "/* End Objective Function */" << std::endl;
 }
 
-// Function to print the one qubit restriction
-void printOneQubitRestriction( matrix& cnot )
+// Function to print the one gate restriction
+void printOneGateRestriction( matrix& cnots )
 {
 	unsigned aux = 0;
 	if(!cplex)
-		outputFile << "/* Begin One Qubit Restriction */" << std::endl;
-	for (int i = 0; i < cnot.size(); ++i)
+		outputFile << "/* Begin One Gate Restriction */" << std::endl;
+	for (int i = 0; i < cnots.size(); ++i)
 	{
-		for (int j = 0; j < cnot.size(); ++j)
+		for (int j = 0; j < cnots.size(); ++j)
 		{
 			bool line = false;
-			for (int k = 0; k < cnot.size(); ++k)
+			for (int k = 0; k < cnots.size(); ++k)
 			{
-				for (int m = 0; m < cnot.size(); ++m)
+				for (int m = 0; m < cnots.size(); ++m)
 				{
-					if( i != j && cnot[i][j] > 0 && k != m)
+					if( i != j && cnots[i][j] > 0 && k != m)
 					{
-						if(k == cnot.size()-1 && m == cnot.size()-2 && !cplex)
-							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j] << ";";
-						else if(k == cnot.size()-1 && m == cnot.size()-2 && cplex)
-							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j];
+						if(k == cnots.size()-1 && m == cnots.size()-2 && !cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << "1" << ";";
+						else if(k == cnots.size()-1 && m == cnots.size()-2 && cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << "1";
 						else
-							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
 					}
 				}
@@ -181,11 +196,11 @@ void printOneQubitRestriction( matrix& cnot )
 		}
 	}
 	if(!cplex)
-		outputFile << "/* End One Qubit Restriction */" << std::endl;
+		outputFile << "/* End One Gate Restriction */" << std::endl;
 }
 
 // Function to print the final restriction
-void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
+void printEndRestriction( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
 	if(!cplex)
@@ -199,7 +214,7 @@ void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
 			{
 				for (int m = 0; m < qx.size(); ++m)
 				{
-					if( i != j && cnot[i][j] > 0 && k != m)
+					if( i != j && cnots[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
 							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << difGates << ";";
@@ -223,7 +238,7 @@ void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
 }
 
 // Function to print the variables limits
-void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
+void printLimitVariables( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
 	if(!cplex)
@@ -238,7 +253,7 @@ void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
 			{
 				for (int m = 0; m < qx.size(); ++m)
 				{
-					if( i != j && cnot[i][j] > 0 && k != m)
+					if( i != j && cnots[i][j] > 0 && k != m)
 					{
 						if(cplex)
 							outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1" << std::endl;
@@ -254,7 +269,7 @@ void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
 }
 
 // Function to print the variables
-void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
+void printIntegerVariables( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
 	if(!cplex)
@@ -273,7 +288,7 @@ void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
 			{
 				for (int m = 0; m < qx.size(); ++m)
 				{
-					if( i != j && cnot[i][j] > 0 && k != m)
+					if( i != j && cnots[i][j] > 0 && k != m)
 					{
 						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
 							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << ";";
@@ -311,34 +326,7 @@ void createMatrix( matrix& m, unsigned size )
 		m.push_back(v);
 }
 
-// Create a matrix with the cnots 
-void generateMatrixCnots( circuit& circ, matrix& m )
-{
-	// std::cout << "Generating matrix..." << std::endl;	
-  	unsigned target, control;
-	for ( const auto& gate : circ )
-	{
-		if( !gate.controls().empty() )
-		{
-		  target = gate.targets().front();
-		  control = gate.controls().front().line();
-		  ++m[control][target];
-		}
-	}
-}
 
-// Print the cnots in the circuit
-void printMatrixCnots( matrix& m )
-{
-	// std::cout << "Printing matrix..." << std::endl;
-	for (int i = 0; i < m.size(); ++i)
-	{
-		for (int j = 0; j < m[i].size(); ++j)
-			std::cout << "\t" << m[i][j];
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
-}
 
 // Only function to write almost everything
 // type = 0 -> control - control
@@ -346,7 +334,6 @@ void printMatrixCnots( matrix& m )
 // type = 2 -> control - target
 // type = 3 -> target - control
 // type = 4 -> inverse (control -> target; target -> control)
-// type = 13 -> Ghost gates
 void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
 {
 	if(!cplex)
@@ -436,20 +423,20 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 	}
 }
 
-bool empty_line(matrix& cnot, unsigned line)
+bool empty_line(matrix& cnots, unsigned line)
 {
-	for (int i = 0; i < cnot.size(); ++i)
+	for (int i = 0; i < cnots.size(); ++i)
 	{
-		if( cnot[i][line] > 0 )
+		if( cnots[i][line] > 0 )
 			return false;
-		if( cnot[line][i] > 0 )
+		if( cnots[line][i] > 0 )
 			return false;
 	}
 	return true;
 }
 
 // Create the ghost gates
-void ghostConnections(matrix& cnot)
+void artificialGates(matrix& cnots)
 {
 	unsigned single, difGates;
 	std::vector<int> ghost;
@@ -457,35 +444,43 @@ void ghostConnections(matrix& cnot)
 
 	bool qi, qj;
 	std::pair<int, int> qa, qb;
-    for (int i = 0; i < cnot.size()-1; ++i)
+
+    //going trough the cnots matrix
+    for (int i = 0; i < cnots.size()-1; ++i)
 	{
-		for (int j = i+1; j < cnot.size(); ++j)
+		for (int j = i+1; j < cnots.size(); ++j)
 		{
+			//"clear" the variables
 			qi = qj = false;
 			qa.first = qa.second = qb.first = qb.second = -1;
-			for (int k = 0; k < cnot.size(); ++k)
+			//the cnot(i,j) is fixed... 
+			//now the 'k' for will go trough the rest of the matrix in the lines and columns of 'i' and 'j'
+			for (int k = 0; k < cnots.size(); ++k)
 			{
-				if( cnot[i][j] > 0 || cnot[j][i] > 0 )
+				//if exists a cnot in (i,j) or (j,i), no need for a artificial gate
+				if( cnots[i][j] > 0 || cnots[j][i] > 0 )
 				{
 					// std::cout << "Dont need to create ghost gate " << i << "-" << j << std::endl;
 					break;
 				}
-				if( cnot[i][k] > 0 )
+				//check if exists a gate in the line and column of 'i'
+				if( cnots[i][k] > 0 )
 				{
 					qi = true;
 					qa.first = k;
 				}
-				else if( cnot[k][i] > 0 )
+				else if( cnots[k][i] > 0 )
 				{
 					qi = true;
 					qa.second = k;
 				}
-				if( cnot[k][j] > 0 )
+				//check if exists a gate in the line and column of 'j'
+				if( cnots[k][j] > 0 )
 				{
 					qj = true;
 					qb.first = k;
 				}
-				else if( cnot[j][k] > 0 )
+				else if( cnots[j][k] > 0 )
 				{
 					qj = true;
 					qb.second = k;
@@ -493,135 +488,72 @@ void ghostConnections(matrix& cnot)
 			}
 			if( qi && qj )
 			{
-				if( qa.first != -1 )
-				{
-					// std::cout << "Create ghost gate(cc): " << i << "-" << qa.first << " " << i << "-" << j << std::endl;
-					writeDep(i, qa.first, i, j, cnot.size(), 0);
-				}
-				else
-				{
-					// std::cout << "Create ghost gate(tc): " << qa.second << "-" << i << " " << i << "-" << j << std::endl;
-					writeDep(qa.second, i, i, j, cnot.size(), 3);
-				}
-				if( qb.first != -1 )
-				{
-					// std::cout << "Create ghost gate(tt): " << qb.first << "-" << j << " " << i << "-" << j << std::endl;
-					writeDep(qb.first, j, i, j, cnot.size(), 1);
-				}
-				else
-				{
-					// std::cout << "Create ghost gate(ct): " << j << "-" << qb.second << " " << i << "-" << j << std::endl;
-					writeDep(j, qb.second, i, j, cnot.size(), 2);
-				}
-				cnot[i][j] = 1;
-			}	
+				// std::cout << "Need artificial gate: " << i << "-" << j << std::endl;
+				cnots[i][j] = 1;
+			}
 		}
 	}
 }
 
 // Naive solution
-void getAllCombinations(matrix& output)
+void getAllCombinations(matrix cnots)
 {
 	// std::cout << "Getting all the dependencies..." << std::endl;
 	enum type { cc, tt, ct, tc, in, sc, st };
-	for (int i = 0; i < output.size(); ++i)
+	for (int i = 0; i < cnots.size(); ++i)
 	{
-		for (int j = 0; j < output[i].size(); ++j)
+		for (int j = 0; j < cnots[i].size(); ++j)
 		{
-			for (int m = i; m < output.size(); ++m)
+			bool done = false;
+			for (int m = 0; m < cnots.size(); ++m)
 			{
-				for (int n = j+1; n < output[m].size(); ++n)
+				for (int n = 0; n < cnots[m].size(); ++n)
 				{
-					if(i != j && m != n && output[i][j] > 0 && output[m][n] > 0)
+					if(i != j && m != n && cnots[i][j] > 0 && cnots[m][n] > 0)
 					{
 						if(i == m && j != n)
-							writeDep( i, j, m, n, output.size(),  cc);
+							writeDep( i, j, m, n, cnots.size(),  cc);
 						else if(i != m && j == n)
-							writeDep( i, j, m, n, output.size(),  tt);
+							writeDep( i, j, m, n, cnots.size(),  tt);
 						else if(i == n && j != m)
-							writeDep( i, j, m, n, output.size(),  ct);
+							writeDep( i, j, m, n, cnots.size(),  ct);
 						else if(i != n && j == m)
-							writeDep( i, j, m, n, output.size(),  tc);
+							writeDep( i, j, m, n, cnots.size(),  tc);
 						else if(i == n && j == m)
-							writeDep( i, j, m, n, output.size(),  in);
+							writeDep( i, j, m, n, cnots.size(),  in);
+						done = true;
 					}
 				}
-			}		
+			}
+			if(done)
+				cnots[i][j] = 0;		
 		}
 	}
 	// std::cout << "Done!" << std::endl;
 }
 
 // Better approach
-void getCombinations(matrix& output)
-{
-	// std::cout << "Getting all the dependencies..." << std::endl;
-	enum type { cc, tt, ct, tc, in, sc, st };
-	for (int i = 0; i < output.size(); ++i)
-	{
-		bool next = false;
-		for (int j = 0; j < output.size(); ++j)
-		{
-			if(next)
-				break;
-			if( output[i][j] > 0 )
-			{
-				for (int k = j+1; k < output.size(); ++k)
-				{
-					if( output[i][k] > 0 )
-						writeDep( i, j, i, k, output.size(), cc);
-				}
-				for (int k = 0; k < output.size(); ++k)
-				{
-					if( output[k][i] > 0 )
-						if( k == j )
-							writeDep( i, j, k, i, output.size(), in);
-						else
-							writeDep( i, j, k, i, output.size(), ct);
-				}
-				next = true;
-			}
-		}
-		if(!next)
-		{	
-			for (int j = 0; j < output.size(); ++j)
-			{
-				if( output[j][i] > 0 )
-				{
-					for (int k = j+1; k < output.size(); ++k)
-					{
-						if( output[k][i] > 0 )
-							writeDep( i, j, k, i, output.size(), tt);
-					}
-				}
-			}
-		}
-	}
-	// std::cout << "Done!" << std::endl;
-}
-
-// Better approach
-void getCombinationAnotherApproach(matrix& output)
+void getCombinationAnotherApproach(matrix& cnots)
 {
 	std::vector< std::pair< int,int > > q;
 	if(!cplex)
 	{
-		for (int i = 0; i < output.size(); ++i)
+		for (int i = 0; i < cnots.size(); ++i)
 		{
-			for (int j = 0; j < output.size(); ++j)
+			for (int j = 0; j < cnots.size(); ++j)
 			{
-				if( output[i][j] > 0 )
+				if( cnots[i][j] > 0 )
 					q.push_back(std::make_pair(i,j));
-				if( output[j][i] > 0 )
+				if( cnots[j][i] > 0 )
 					q.push_back(std::make_pair(j,i));
 			}
 			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
-			for (int m = 0; m < output.size(); ++m)
+			for (int m = 0; m < cnots.size(); ++m)
 			{
 				bool first = true;
 				for (int j = 0; j < q.size(); ++j)
 				{
-					for (int n = 0; n < output.size(); ++n)
+					for (int n = 0; n < cnots.size(); ++n)
 					{
 						if( m != n )
 						{
@@ -632,7 +564,7 @@ void getCombinationAnotherApproach(matrix& output)
 								outputFile << "c" << m << "_" << n;
 							else
 								outputFile << "c" << n << "_" << m;
-							if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
+							if(first && n == cnots.size()-1 || first && n == cnots.size()-2  && m == cnots.size()-1)
 								outputFile << " = ";
 							else
 								outputFile << " + ";
@@ -649,22 +581,22 @@ void getCombinationAnotherApproach(matrix& output)
 	}
 	else
 	{
-		for (int i = 0; i < output.size(); ++i)
+		for (int i = 0; i < cnots.size(); ++i)
 		{
-			for (int j = 0; j < output.size(); ++j)
+			for (int j = 0; j < cnots.size(); ++j)
 			{
-				if( output[i][j] > 0 )
+				if( cnots[i][j] > 0 )
 					q.push_back(std::make_pair(i,j));
-				if( output[j][i] > 0 )
+				if( cnots[j][i] > 0 )
 					q.push_back(std::make_pair(j,i));
 			}
 			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
-			for (int m = 0; m < output.size(); ++m)
+			for (int m = 0; m < cnots.size(); ++m)
 			{
 				bool first = true;
 				for (int j = 0; j < q.size(); ++j)
 				{
-					for (int n = 0; n < output.size(); ++n)
+					for (int n = 0; n < cnots.size(); ++n)
 					{
 						if( m != n )
 						{
@@ -676,11 +608,11 @@ void getCombinationAnotherApproach(matrix& output)
 							else
 								outputFile << "c" << n << "_" << m;
 							
-							if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
+							if(first && n == cnots.size()-1 || first && n == cnots.size()-2  && m == cnots.size()-1)
 								outputFile << " - ";
 							else if(first)
 								outputFile << " + ";
-							else if(m!=output.size()-1 && n == output.size()-1 && j == q.size()-1 || m==output.size()-1 && n == output.size()-2 && j == q.size()-1)
+							else if(m!=cnots.size()-1 && n == cnots.size()-1 && j == q.size()-1 || m==cnots.size()-1 && n == cnots.size()-2 && j == q.size()-1)
 								outputFile << " ";
 							else
 								outputFile << " - ";
@@ -700,9 +632,13 @@ void getCombinationAnotherApproach(matrix& output)
 
 bool lpqx_command::execute()
 {
-	cplex = false;
+	//circuit from store
 	circuit circ = env->store<circuit>().current();
-	matrix output;
+	//matrix of the cnots in the circuit
+	matrix cnots;
+	//matrix that assumes which architecture will be used
+	matrix arch;
+	//matrix of cost for ibm qx5
 	matrix qx5 = {{0,4,10,20,19,29,39,51,61,64,54,42,30,20,10,4},
 				{0,0,0,3,9,19,29,41,51,61,53,41,29,19,9,10},
 				{10,4,0,0,3,22,32,44,54,64,54,42,30,20,3,4},
@@ -719,16 +655,17 @@ bool lpqx_command::execute()
 				{22,30,20,10,0,10,20,32,42,32,22,10,4,0,0,10},
 				{10,20,10,4,10,20,30,42,52,42,32,20,14,4,0,4},
 				{0,10,0,3,9,19,29,41,51,54,44,32,20,10,0,0}};
-	//That is not qx2, has to update.
+	//matrix of cost for ibm qx2 -- That is not qx2, has to update it.
 	matrix qx2 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{3,3,0,0,0},{10,10,4,4,0}};
 	//matrix qx4 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{3,3,0,0,0},{10,10,4,4,0}};
+	//matrix of cost for ibm qx4
 	matrix qx4 ={{0,4,4,10,10},
 				{0,0,4,10,10},
 				{0,0,0,4,0},
 				{12,12,0,0,0},
 				{10,10,4,4,0}};
 
-	matrix arch;
+	//update the variable arch
 	switch ( architecture )
     {
     	case 2:
@@ -744,39 +681,62 @@ bool lpqx_command::execute()
     		std::cout << "Wrong architecture" << std::endl;
     		return true;
     }
+    //check the number of qubits and the architecture selected
     if( arch.size() < circ.lines() )
 	{
 		std::cout << "This circuit requires an architecture with more qubits." << std::endl;
 		return true;
 	}
+	//check if the output filename is missing
 	if(filename.empty())
 	{
 		std::cout << "Missing output file. Use -f" << std::endl;
 		return true;
 	}
+	//check version
+	if(version != 1 && version != 2)
+	{
+		std::cout << "Wrong version" << std::endl;
+		return true;
+	}
+
+	//check the file format
 	if( is_set("cplex") )
 		cplex = true;
+	else
+		cplex = false;
 	
 	outputFile.open (filename);
-
 	
-  	createMatrix( output, circ.lines() );
-  	generateMatrixCnots( circ, output );
-	// printMatrixCnots( output );
-	printObjectiveFunction( arch, output, getNumberDifGates(output) );
-	if( getNumberDifGates(output) > 1 )
+	//create the matrix of cnots of the circuit
+  	createMatrix( cnots, circ.lines() );
+  	
+  	//fullfill the matrix with the cnots of the circuit
+  	generateMatrixCnots( circ, cnots );
+	// printMatrixCnots( cnots );
+
+	//print the objective function for the LP
+	printObjectiveFunction( arch, cnots, getNumberDifGates(cnots) );
+	
+	//if the circuit has only one gate, no need to get combinations
+	if( getNumberDifGates(cnots) > 1 )
 	{
-		// getAllCombinations(output);
-		getCombinationAnotherApproach(output);
-		// getCombinations(output);
-		// ghostConnections(output);
+		artificialGates(cnots);
+		if( version == 1 )
+			getAllCombinations(cnots);
+		else if( version == 2 )
+			getCombinationAnotherApproach(cnots);
 	}
-	printOneQubitRestriction( output );
-	// printEndRestriction( arch, output, getNumberDifGates( output ) );
-	// printLimitVariables( arch, output, getNumberDifGates( output ) );
-	printIntegerVariables( arch, output, getNumberDifGates( output ) );
+	//print the restriction that limits to one gate
+	printOneGateRestriction( cnots );
+
+	//print the type of variables of the LP
+	printIntegerVariables( arch, cnots, getNumberDifGates( cnots ) );
+	
+	//clear the variables
   	outputFile.close();
   	filename.clear();
+
 	return true;
 }
 
