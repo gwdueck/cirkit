@@ -119,13 +119,18 @@ int getNumberDifGates( matrix& c )
 void printObjectiveFunction( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
-	if(!cplex)
-	{
-		outputFile << "/* Begin Objective Function */" << std::endl;
-		outputFile << "min:\t";
-	}
+	if(cplex)
+		outputFile << "\\";
 	else
+		outputFile << "//";
+
+	outputFile << " Begin Objective Function" << std::endl;
+
+	if(cplex)
 		outputFile << "Minimize" << std::endl;
+	else
+		outputFile << "min:\t" << std::endl;
+
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -159,17 +164,27 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, unsigned difGates )
 		}
 	}
 	if(cplex)
-		outputFile << "st" << std::endl;
+		outputFile << "\\";
 	else
-		outputFile << "/* End Objective Function */" << std::endl;
+		outputFile << "//";
+	
+	outputFile << " End Objective Function" << std::endl;
+
+	if(cplex)
+		outputFile << "st" << std::endl;
 }
 
 // Function to print the one gate restriction
 void printOneGateRestriction( matrix& cnots )
 {
 	unsigned aux = 0;
-	if(!cplex)
-		outputFile << "/* Begin One Gate Restriction */" << std::endl;
+	if(cplex)
+		outputFile << "\\";
+	else
+		outputFile << "//";
+
+	outputFile << " Begin One Gate Restriction" << std::endl;
+
 	for (int i = 0; i < cnots.size(); ++i)
 	{
 		for (int j = 0; j < cnots.size(); ++j)
@@ -195,16 +210,23 @@ void printOneGateRestriction( matrix& cnots )
 				outputFile << std::endl;
 		}
 	}
-	if(!cplex)
-		outputFile << "/* End One Gate Restriction */" << std::endl;
+	if(cplex)
+		outputFile << "\\";
+	else
+		outputFile << "//";
+	outputFile << " End One Gate Restriction" << std::endl;
 }
 
 // Function to print the final restriction
 void printEndRestriction( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
-	if(!cplex)
-		outputFile << "/* Begin Final Restriction */" << std::endl;
+	if(cplex)
+		outputFile << "\\";
+	else
+		outputFile << "//";
+	outputFile << " Begin Final Restriction" << std::endl;
+
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -233,14 +255,19 @@ void printEndRestriction( matrix& qx, matrix& cnots, unsigned difGates )
 			}
 		}
 	}
+	if(cplex)
+		outputFile << "\\";
+	else
+		outputFile << "//";
 	if(!cplex)
-		outputFile << "/* End Final Restriction */" << std::endl;
+		outputFile << " End Final Restriction" << std::endl;
 }
 
 // Function to print the variables limits
 void printLimitVariables( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
+	
 	if(!cplex)
 		outputFile << "/* Begin Limit Variables */" << std::endl;
 	else
@@ -272,13 +299,17 @@ void printLimitVariables( matrix& qx, matrix& cnots, unsigned difGates )
 void printIntegerVariables( matrix& qx, matrix& cnots, unsigned difGates )
 {
 	unsigned aux = 0;
-	if(!cplex)
-	{
-		outputFile << "/* Begin Integer Variables */" << std::endl;
-		outputFile << "int\t";
-	}
+	if(cplex)
+		outputFile << "\\";
 	else
+		outputFile << "//";
+
+	outputFile << " Begin Integer Variables" << std::endl;
+	if(cplex)
 		outputFile << "General" << std::endl;
+	else
+		outputFile << "int" << std::endl;
+
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -309,9 +340,14 @@ void printIntegerVariables( matrix& qx, matrix& cnots, unsigned difGates )
 			}
 		}
 	}
-	if(!cplex)
-		outputFile << "/* End Integer Variables */" << std::endl;
+	if(cplex)
+		outputFile << "\\";
 	else
+		outputFile << "//";
+
+	outputFile << " End Integer Variables" << std::endl;
+
+	if(cplex)
 		outputFile << "End" << std::endl;
 }
 
