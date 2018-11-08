@@ -1,0 +1,796 @@
+/* CirKit: A circuit toolkit
+ * Copyright (C) 2009-2015  University of Bremen
+ * Copyright (C) 2015-2017  EPFL
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+#include "lpqx.hpp"
+
+#include <cmath>
+#include <boost/format.hpp>
+#include <boost/optional.hpp>
+#include <iostream>
+
+#include <boost/program_options.hpp>
+
+#include <xtensor/xio.hpp>
+#include <xtensor/xmath.hpp>
+#include <xtensor-blas/xlinalg.hpp>
+
+#include <cli/reversible_stores.hpp>
+#include <reversible/utils/matrix_utils.hpp>
+#include <alice/rules.hpp>
+
+
+namespace cirkit
+{
+
+using boost::program_options::value;
+
+lpqx_command::lpqx_command( const environment::ptr& env )
+	: cirkit_command( env, "Linear Programming to find the best mapping for IBM QX architecture" )
+{
+	opts.add_options()
+	( "filename,f",    value( &filename ),  "name of the output file" )
+	( "cplex,c",  					    	"write in cplex lp format (lp_solve is default)" )
+	( "architecture,a", value( &architecture ) ,"select architecture\n" 
+												"4: qx4 (5  qubits) -> default)\n"
+												"2: qx2 (5  qubits)\n"
+												"5: qx5 (16 qubits)" )
+	;
+
+}
+
+command::rules_t lpqx_command::validity_rules() const
+{
+  return {has_store_element<circuit>( env )};
+}
+
+std::ofstream outputFile;
+unsigned architecture;
+bool cplex = false;
+using matrix = std::vector<std::vector<unsigned>>;
+// Return the higher value element in the matrix
+int get_max_element(matrix& m, unsigned& l, unsigned& c)
+{
+    unsigned h = 0;
+    for (int i = 0; i < m.size(); ++i)
+    {
+        for (int j = 0; j < m[i].size(); ++j)
+        {
+            if(i != j && m[i][j] > h)
+            {
+                h = m[i][j];
+                l = i;
+                c = j;
+            }
+        }
+    }
+    return h;
+}
+
+// return the number of different gates of the circuit
+int getNumberDifGates( matrix& c )
+{
+	unsigned qtd = 0;
+	for (int i = 0; i < c.size(); ++i)
+		for (int j = 0; j < c[i].size(); ++j)
+			if( c[i][j] > 0 )
+				++qtd;
+	return qtd;
+}
+
+// Function to print the objective function
+void printObjectiveFunction( matrix& qx, matrix& cnot, unsigned difGates )
+{
+	unsigned aux = 0;
+	if(!cplex)
+	{
+		outputFile << "/* Begin Objective Function */" << std::endl;
+		outputFile << "min:\t";
+	}
+	else
+		outputFile << "Minimize" << std::endl;
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
+							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << ";";
+						else if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && cplex)
+							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
+						else
+							outputFile << qx[k][m]*cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+						line = true;
+					}
+				}
+			}
+			if(line && aux < difGates-1)
+			{
+				outputFile << std::endl;
+				++aux;
+			}
+			else if(line)
+			{
+				outputFile << std::endl;
+			}
+		}
+	}
+	if(cplex)
+		outputFile << "st" << std::endl;
+	else
+		outputFile << "/* End Objective Function */" << std::endl;
+}
+
+// Function to print the one qubit restriction
+void printOneQubitRestriction( matrix& cnot )
+{
+	unsigned aux = 0;
+	if(!cplex)
+		outputFile << "/* Begin One Qubit Restriction */" << std::endl;
+	for (int i = 0; i < cnot.size(); ++i)
+	{
+		for (int j = 0; j < cnot.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < cnot.size(); ++k)
+			{
+				for (int m = 0; m < cnot.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == cnot.size()-1 && m == cnot.size()-2 && !cplex)
+							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j] << ";";
+						else if(k == cnot.size()-1 && m == cnot.size()-2 && cplex)
+							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " = " << cnot[i][j];
+						else
+							outputFile << cnot[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+						line = true;
+					}
+				}
+			}
+			if(line)
+				outputFile << std::endl;
+		}
+	}
+	if(!cplex)
+		outputFile << "/* End One Qubit Restriction */" << std::endl;
+}
+
+// Function to print the final restriction
+void printEndRestriction( matrix& qx, matrix& cnot, unsigned difGates )
+{
+	unsigned aux = 0;
+	if(!cplex)
+		outputFile << "/* Begin Final Restriction */" << std::endl;
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << difGates << ";";
+						else if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << difGates;
+						else
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+						line = true;
+					}
+				}
+			}
+			if(line)
+			{
+				outputFile << std::endl;
+				++aux;
+			}
+		}
+	}
+	if(!cplex)
+		outputFile << "/* End Final Restriction */" << std::endl;
+}
+
+// Function to print the variables limits
+void printLimitVariables( matrix& qx, matrix& cnot, unsigned difGates )
+{
+	unsigned aux = 0;
+	if(!cplex)
+		outputFile << "/* Begin Limit Variables */" << std::endl;
+	else
+		outputFile << "Bounds" << std::endl;
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(cplex)
+							outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1" << std::endl;
+						else
+							outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1;" << std::endl;
+					}
+				}
+			}
+		}
+	}
+	if(!cplex)
+		outputFile << "/* End Limit Variables */" << std::endl;
+}
+
+// Function to print the variables
+void printIntegerVariables( matrix& qx, matrix& cnot, unsigned difGates )
+{
+	unsigned aux = 0;
+	if(!cplex)
+	{
+		outputFile << "/* Begin Integer Variables */" << std::endl;
+		outputFile << "int\t";
+	}
+	else
+		outputFile << "General" << std::endl;
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnot[i][j] > 0 && k != m)
+					{
+						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << ";";
+						else
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << "  ";
+						line = true;
+					}
+				}
+			}
+			if(line && aux < difGates-1)
+			{
+				outputFile << std::endl;
+				++aux;
+			}
+			else if(line)
+			{
+				outputFile << std::endl;
+			}
+		}
+	}
+	if(!cplex)
+		outputFile << "/* End Integer Variables */" << std::endl;
+	else
+		outputFile << "End" << std::endl;
+}
+
+// Create a matrix with 0's
+void createMatrix( matrix& m, unsigned size )
+{
+	// std::cout << "Creating matrix..." << std::endl;
+  	std::vector<unsigned> v;
+	for (int i = 0; i < size; ++i)
+		v.push_back(0);
+	for (int i = 0; i < size; ++i)
+		m.push_back(v);
+}
+
+// Create a matrix with the cnots 
+void generateMatrixCnots( circuit& circ, matrix& m )
+{
+	// std::cout << "Generating matrix..." << std::endl;	
+  	unsigned target, control;
+	for ( const auto& gate : circ )
+	{
+		if( !gate.controls().empty() )
+		{
+		  target = gate.targets().front();
+		  control = gate.controls().front().line();
+		  ++m[control][target];
+		}
+	}
+}
+
+// Print the cnots in the circuit
+void printMatrixCnots( matrix& m )
+{
+	// std::cout << "Printing matrix..." << std::endl;
+	for (int i = 0; i < m.size(); ++i)
+	{
+		for (int j = 0; j < m[i].size(); ++j)
+			std::cout << "\t" << m[i][j];
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+// Only function to write almost everything
+// type = 0 -> control - control
+// type = 1 -> target - target
+// type = 2 -> control - target
+// type = 3 -> target - control
+// type = 4 -> inverse (control -> target; target -> control)
+// type = 13 -> Ghost gates
+void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
+{
+	if(!cplex)
+	{
+		switch ( type )
+	    {
+	    	case 0:
+				outputFile << "/* Writing Control - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 1:
+				outputFile << "/* Writing Target - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 2:
+				outputFile << "/* Writing Control - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 3:
+				outputFile << "/* Writing Target - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	case 4:
+				outputFile << "/* Writing Inverse dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
+	    		break;
+	    	default:
+				outputFile << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
+	    }
+	}
+	for (int i = 0; i < size; ++i)
+	{
+		for (int j = 0; j < size; ++j)
+		{
+			if(i != j && type != 4)
+			{
+				if(type == 0 || type == 2)
+				{
+					outputFile << "G" << l0 << "_" << c0;
+					outputFile << "c" << i << "_" << j;
+					if(cplex)
+						outputFile << " - ";
+					else
+						outputFile << " <= ";
+				}
+				else
+				{
+					outputFile << "G" << l0 << "_" << c0;
+					outputFile << "c" << j << "_" << i;
+					if(!cplex)
+						outputFile << " <= ";
+					else
+						outputFile << " - ";
+				}
+				unsigned aux = 0;
+				for (int k = 0; k < size; ++k)
+				{
+					if(k != j && k != i)
+					{
+						++aux;
+						if(type == 0 || type == 3)
+						{
+							outputFile << "G" << l1 << "_" << c1;
+							outputFile << "c" << i << "_" << k;	
+						}
+						else
+						{
+							outputFile << "G" << l1 << "_" << c1;
+							outputFile << "c" << k << "_" << i;
+						}
+						if(aux == size-2 && cplex)
+							outputFile << " <= 0";
+						else if(aux == size-2 && !cplex)
+							outputFile << ";";						
+						else if(!cplex)
+							outputFile << " + ";	
+						else	
+							outputFile << " - ";	
+					}
+				}
+				outputFile << std::endl;	
+			}
+			else if(i != j && type == 4)
+			{
+				outputFile << "G" << l0 << "_" << c0 << "c" << i << "_" << j;
+				if(cplex)
+					outputFile << " -G" << l1 << "_" << c1 << "c" << j << "_" << i << " <= 0\n";
+				else
+					outputFile << " <= G" << l1 << "_" << c1 << "c" << j << "_" << i << ";\n";
+			}
+		}
+	}
+}
+
+bool empty_line(matrix& cnot, unsigned line)
+{
+	for (int i = 0; i < cnot.size(); ++i)
+	{
+		if( cnot[i][line] > 0 )
+			return false;
+		if( cnot[line][i] > 0 )
+			return false;
+	}
+	return true;
+}
+
+// Create the ghost gates
+void ghostConnections(matrix& cnot)
+{
+	unsigned single, difGates;
+	std::vector<int> ghost;
+	bool inverse;
+
+	bool qi, qj;
+	std::pair<int, int> qa, qb;
+    for (int i = 0; i < cnot.size()-1; ++i)
+	{
+		for (int j = i+1; j < cnot.size(); ++j)
+		{
+			qi = qj = false;
+			qa.first = qa.second = qb.first = qb.second = -1;
+			for (int k = 0; k < cnot.size(); ++k)
+			{
+				if( cnot[i][j] > 0 || cnot[j][i] > 0 )
+				{
+					// std::cout << "Dont need to create ghost gate " << i << "-" << j << std::endl;
+					break;
+				}
+				if( cnot[i][k] > 0 )
+				{
+					qi = true;
+					qa.first = k;
+				}
+				else if( cnot[k][i] > 0 )
+				{
+					qi = true;
+					qa.second = k;
+				}
+				if( cnot[k][j] > 0 )
+				{
+					qj = true;
+					qb.first = k;
+				}
+				else if( cnot[j][k] > 0 )
+				{
+					qj = true;
+					qb.second = k;
+				}
+			}
+			if( qi && qj )
+			{
+				if( qa.first != -1 )
+				{
+					// std::cout << "Create ghost gate(cc): " << i << "-" << qa.first << " " << i << "-" << j << std::endl;
+					writeDep(i, qa.first, i, j, cnot.size(), 0);
+				}
+				else
+				{
+					// std::cout << "Create ghost gate(tc): " << qa.second << "-" << i << " " << i << "-" << j << std::endl;
+					writeDep(qa.second, i, i, j, cnot.size(), 3);
+				}
+				if( qb.first != -1 )
+				{
+					// std::cout << "Create ghost gate(tt): " << qb.first << "-" << j << " " << i << "-" << j << std::endl;
+					writeDep(qb.first, j, i, j, cnot.size(), 1);
+				}
+				else
+				{
+					// std::cout << "Create ghost gate(ct): " << j << "-" << qb.second << " " << i << "-" << j << std::endl;
+					writeDep(j, qb.second, i, j, cnot.size(), 2);
+				}
+				cnot[i][j] = 1;
+			}	
+		}
+	}
+}
+
+// Naive solution
+void getAllCombinations(matrix& output)
+{
+	// std::cout << "Getting all the dependencies..." << std::endl;
+	enum type { cc, tt, ct, tc, in, sc, st };
+	for (int i = 0; i < output.size(); ++i)
+	{
+		for (int j = 0; j < output[i].size(); ++j)
+		{
+			for (int m = i; m < output.size(); ++m)
+			{
+				for (int n = j+1; n < output[m].size(); ++n)
+				{
+					if(i != j && m != n && output[i][j] > 0 && output[m][n] > 0)
+					{
+						if(i == m && j != n)
+							writeDep( i, j, m, n, output.size(),  cc);
+						else if(i != m && j == n)
+							writeDep( i, j, m, n, output.size(),  tt);
+						else if(i == n && j != m)
+							writeDep( i, j, m, n, output.size(),  ct);
+						else if(i != n && j == m)
+							writeDep( i, j, m, n, output.size(),  tc);
+						else if(i == n && j == m)
+							writeDep( i, j, m, n, output.size(),  in);
+					}
+				}
+			}		
+		}
+	}
+	// std::cout << "Done!" << std::endl;
+}
+
+// Better approach
+void getCombinations(matrix& output)
+{
+	// std::cout << "Getting all the dependencies..." << std::endl;
+	enum type { cc, tt, ct, tc, in, sc, st };
+	for (int i = 0; i < output.size(); ++i)
+	{
+		bool next = false;
+		for (int j = 0; j < output.size(); ++j)
+		{
+			if(next)
+				break;
+			if( output[i][j] > 0 )
+			{
+				for (int k = j+1; k < output.size(); ++k)
+				{
+					if( output[i][k] > 0 )
+						writeDep( i, j, i, k, output.size(), cc);
+				}
+				for (int k = 0; k < output.size(); ++k)
+				{
+					if( output[k][i] > 0 )
+						if( k == j )
+							writeDep( i, j, k, i, output.size(), in);
+						else
+							writeDep( i, j, k, i, output.size(), ct);
+				}
+				next = true;
+			}
+		}
+		if(!next)
+		{	
+			for (int j = 0; j < output.size(); ++j)
+			{
+				if( output[j][i] > 0 )
+				{
+					for (int k = j+1; k < output.size(); ++k)
+					{
+						if( output[k][i] > 0 )
+							writeDep( i, j, k, i, output.size(), tt);
+					}
+				}
+			}
+		}
+	}
+	// std::cout << "Done!" << std::endl;
+}
+
+// Better approach
+void getCombinationAnotherApproach(matrix& output)
+{
+	std::vector< std::pair< int,int > > q;
+	if(!cplex)
+	{
+		for (int i = 0; i < output.size(); ++i)
+		{
+			for (int j = 0; j < output.size(); ++j)
+			{
+				if( output[i][j] > 0 )
+					q.push_back(std::make_pair(i,j));
+				if( output[j][i] > 0 )
+					q.push_back(std::make_pair(j,i));
+			}
+			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
+			for (int m = 0; m < output.size(); ++m)
+			{
+				bool first = true;
+				for (int j = 0; j < q.size(); ++j)
+				{
+					for (int n = 0; n < output.size(); ++n)
+					{
+						if( m != n )
+						{
+							if(first)
+								outputFile << q.size()-1;
+							outputFile << "G" << q[j].first << "_" << q[j].second; 
+							if(q[j].first == i)
+								outputFile << "c" << m << "_" << n;
+							else
+								outputFile << "c" << n << "_" << m;
+							if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
+								outputFile << " = ";
+							else
+								outputFile << " + ";
+						}
+					}
+					first = false;
+				}
+				if(!first)
+					outputFile << "0;" << std::endl;
+			}
+			outputFile << std::endl;
+			q.clear(); 
+		}
+	}
+	else
+	{
+		for (int i = 0; i < output.size(); ++i)
+		{
+			for (int j = 0; j < output.size(); ++j)
+			{
+				if( output[i][j] > 0 )
+					q.push_back(std::make_pair(i,j));
+				if( output[j][i] > 0 )
+					q.push_back(std::make_pair(j,i));
+			}
+			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
+			for (int m = 0; m < output.size(); ++m)
+			{
+				bool first = true;
+				for (int j = 0; j < q.size(); ++j)
+				{
+					for (int n = 0; n < output.size(); ++n)
+					{
+						if( m != n )
+						{
+							if(first)
+								outputFile << q.size()-1;
+							outputFile << "G" << q[j].first << "_" << q[j].second; 
+							if(q[j].first == i)
+								outputFile << "c" << m << "_" << n;
+							else
+								outputFile << "c" << n << "_" << m;
+							
+							if(first && n == output.size()-1 || first && n == output.size()-2  && m == output.size()-1)
+								outputFile << " - ";
+							else if(first)
+								outputFile << " + ";
+							else if(m!=output.size()-1 && n == output.size()-1 && j == q.size()-1 || m==output.size()-1 && n == output.size()-2 && j == q.size()-1)
+								outputFile << " ";
+							else
+								outputFile << " - ";
+						}
+					}
+					first = false;
+				}
+				if(!first)
+					outputFile << "= 0" << std::endl;
+			}
+			outputFile << std::endl;
+			q.clear(); 
+		}
+	}
+	
+}
+
+bool lpqx_command::execute()
+{
+	cplex = false;
+	circuit circ = env->store<circuit>().current();
+	matrix output;
+	matrix qx5 = {{0,4,10,20,19,29,39,51,61,64,54,42,30,20,10,4},
+				{0,0,0,3,9,19,29,41,51,61,53,41,29,19,9,10},
+				{10,4,0,0,3,22,32,44,54,64,54,42,30,20,3,4},
+				{20,14,4,0,0,10,20,32,42,52,44,32,20,10,0,10},
+				{30,24,14,4,0,4,14,20,30,40,32,20,14,4,10,20},
+				{42,30,20,10,0,0,4,10,20,30,22,10,4,10,22,30},
+				{54,42,32,22,3,0,0,0,10,20,3,0,10,22,34,42},
+				{64,52,42,32,22,10,4,0,4,10,0,10,20,32,44,52},
+				{76,64,54,44,34,22,10,0,0,4,3,20,30,42,54,64},
+				{66,74,64,54,44,32,20,3,0,0,0,10,20,32,44,54},
+				{54,62,52,42,32,20,14,4,10,4,0,4,14,20,32,42},
+				{44,52,42,32,22,10,4,10,20,10,0,0,4,10,22,32},
+				{34,42,32,22,3,0,10,22,32,22,3,0,0,0,3,22},
+				{22,30,20,10,0,10,20,32,42,32,22,10,4,0,0,10},
+				{10,20,10,4,10,20,30,42,52,42,32,20,14,4,0,4},
+				{0,10,0,3,9,19,29,41,51,54,44,32,20,10,0,0}};
+	//That is not qx2, has to update.
+	matrix qx2 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{3,3,0,0,0},{10,10,4,4,0}};
+	//matrix qx4 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{3,3,0,0,0},{10,10,4,4,0}};
+	matrix qx4 ={{0,4,4,10,10},
+				{0,0,4,10,10},
+				{0,0,0,4,0},
+				{12,12,0,0,0},
+				{10,10,4,4,0}};
+
+	matrix arch;
+	switch ( architecture )
+    {
+    	case 2:
+			arch = qx2;
+    		break;
+    	case 4:
+			arch = qx4;
+    		break;
+    	case 5:
+			arch = qx5;
+    		break;
+    	default:
+    		std::cout << "Wrong architecture" << std::endl;
+    		return true;
+    }
+    if( arch.size() < circ.lines() )
+	{
+		std::cout << "This circuit requires an architecture with more qubits." << std::endl;
+		return true;
+	}
+	if(filename.empty())
+	{
+		std::cout << "Missing output file. Use -f" << std::endl;
+		return true;
+	}
+	if( is_set("cplex") )
+		cplex = true;
+	
+	outputFile.open (filename);
+
+	
+  	createMatrix( output, circ.lines() );
+  	generateMatrixCnots( circ, output );
+	// printMatrixCnots( output );
+	printObjectiveFunction( arch, output, getNumberDifGates(output) );
+	if( getNumberDifGates(output) > 1 )
+	{
+		// getAllCombinations(output);
+		getCombinationAnotherApproach(output);
+		// getCombinations(output);
+		// ghostConnections(output);
+	}
+	printOneQubitRestriction( output );
+	// printEndRestriction( arch, output, getNumberDifGates( output ) );
+	// printLimitVariables( arch, output, getNumberDifGates( output ) );
+	printIntegerVariables( arch, output, getNumberDifGates( output ) );
+  	outputFile.close();
+  	filename.clear();
+	return true;
+}
+
+command::log_opt_t lpqx_command::log() const
+{
+  return log_opt_t({
+	  {"runtime",       statistics->get<double>( "runtime" )}
+	});
+}
+
+}
+
+// Local Variables:
+// c-basic-offset: 2
+// eval: (c-set-offset 'substatement-open 0)
+// eval: (c-set-offset 'innamespace 0)
+// End:

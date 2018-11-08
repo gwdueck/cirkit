@@ -106,6 +106,7 @@
 #include <cli/commands/reduce.hpp>
 #include <cli/commands/graph.hpp>
 #include <cli/commands/tabu.hpp>
+#include <cli/commands/lpqx.hpp>
 
 
 using namespace cirkit;
@@ -209,6 +210,7 @@ ALICE_BEGIN(revkit)
     ADD_COMMAND( reduce );
     ADD_COMMAND( qxg );
     ADD_COMMAND( graph );
+    ADD_COMMAND( lpqx );
 
   cli.set_category( "Various" );
 

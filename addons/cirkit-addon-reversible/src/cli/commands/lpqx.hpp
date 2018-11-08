@@ -25,16 +25,16 @@
  */
 
 /**
- * @file alex.hpp
+ * @file lpqx.hpp
  *
- * @brief Test
+ * @brief Formulate the linear programming problem for a ibm qx architecture
  *
- * @author A.G.A.
+ * @author Alexandre++
  * @2
  */
 
-#ifndef CLI_ALEX_COMMAND_HPP
-#define CLI_ALEX_COMMAND_HPP
+#ifndef CLI_LPQX_COMMAND_HPP
+#define CLI_LPQX_COMMAND_HPP
 
 #include <vector>
 
@@ -43,10 +43,10 @@
 namespace cirkit
 {
 	
-class alex_command : public cirkit_command
+class lpqx_command : public cirkit_command
 {
     public:
-        alex_command( const environment::ptr& env );
+        lpqx_command( const environment::ptr& env );
   		log_opt_t log() const;
 
 		
@@ -55,8 +55,9 @@ class alex_command : public cirkit_command
   		bool execute();
 
 	private:
-		// std::string filename;
-		// unsigned architecture;
+		std::string filename;
+		unsigned int architecture;
+
 };
 
 }
