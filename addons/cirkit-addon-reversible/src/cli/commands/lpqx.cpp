@@ -568,98 +568,55 @@ void getAllCombinations(matrix cnots)
 void getCombinationAnotherApproach(matrix& cnots)
 {
 	std::vector< std::pair< int,int > > q;
-	if(!cplex)
+
+	for (int i = 0; i < cnots.size(); ++i)
 	{
-		for (int i = 0; i < cnots.size(); ++i)
+		for (int j = 0; j < cnots.size(); ++j)
 		{
-			for (int j = 0; j < cnots.size(); ++j)
-			{
-				if( cnots[i][j] > 0 )
-					q.push_back(std::make_pair(i,j));
-				if( cnots[j][i] > 0 )
-					q.push_back(std::make_pair(j,i));
-			}
-			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
-			for (int m = 0; m < cnots.size(); ++m)
-			{
-				bool first = true;
-				for (int j = 0; j < q.size(); ++j)
-				{
-					for (int n = 0; n < cnots.size(); ++n)
-					{
-						if( m != n )
-						{
-							if(first)
-								outputFile << q.size()-1;
-							outputFile << "G" << q[j].first << "_" << q[j].second; 
-							if(q[j].first == i)
-								outputFile << "c" << m << "_" << n;
-							else
-								outputFile << "c" << n << "_" << m;
-							if(first && n == cnots.size()-1 || first && n == cnots.size()-2  && m == cnots.size()-1)
-								outputFile << " = ";
-							else
-								outputFile << " + ";
-						}
-					}
-					first = false;
-				}
-				if(!first)
-					outputFile << "0;" << std::endl;
-			}
-			outputFile << std::endl;
-			q.clear(); 
+			if( cnots[i][j] > 0 )
+				q.push_back(std::make_pair(i,j));
+			if( cnots[j][i] > 0 )
+				q.push_back(std::make_pair(j,i));
 		}
-	}
-	else
-	{
-		for (int i = 0; i < cnots.size(); ++i)
+		bool first;
+		for (int m = 0; m < cnots.size(); ++m)
 		{
-			for (int j = 0; j < cnots.size(); ++j)
+			first = true;
+			for (int j = 0; j < q.size(); ++j)
 			{
-				if( cnots[i][j] > 0 )
-					q.push_back(std::make_pair(i,j));
-				if( cnots[j][i] > 0 )
-					q.push_back(std::make_pair(j,i));
-			}
-			// std::cout << "tamanho " << i << " -> " << q.size() << std::endl;
-			for (int m = 0; m < cnots.size(); ++m)
-			{
-				bool first = true;
-				for (int j = 0; j < q.size(); ++j)
+				for (int n = 0; n < cnots.size(); ++n)
 				{
-					for (int n = 0; n < cnots.size(); ++n)
+					if( m != n )
 					{
-						if( m != n )
-						{
-							if(first)
-								outputFile << q.size()-1;
-							outputFile << "G" << q[j].first << "_" << q[j].second; 
-							if(q[j].first == i)
-								outputFile << "c" << m << "_" << n;
-							else
-								outputFile << "c" << n << "_" << m;
-							
-							if(first && n == cnots.size()-1 || first && n == cnots.size()-2  && m == cnots.size()-1)
-								outputFile << " - ";
-							else if(first)
-								outputFile << " + ";
-							else if(m!=cnots.size()-1 && n == cnots.size()-1 && j == q.size()-1 || m==cnots.size()-1 && n == cnots.size()-2 && j == q.size()-1)
-								outputFile << " ";
-							else
-								outputFile << " - ";
-						}
+						if(first)
+							outputFile << q.size()-1;
+						outputFile << "G" << q[j].first << "_" << q[j].second; 
+						if(q[j].first == i)
+							outputFile << "c" << m << "_" << n;
+						else
+							outputFile << "c" << n << "_" << m;
+						
+						if(first && n == cnots.size()-1 || first && n == cnots.size()-2  && m == cnots.size()-1)
+							outputFile << " - ";
+						else if(first)
+							outputFile << " + ";
+						else if(m!=cnots.size()-1 && n == cnots.size()-1 && j == q.size()-1 || m==cnots.size()-1 && n == cnots.size()-2 && j == q.size()-1)
+							outputFile << " ";
+						else
+							outputFile << " - ";
 					}
-					first = false;
 				}
-				if(!first)
-					outputFile << "= 0" << std::endl;
+				first = false;
 			}
-			outputFile << std::endl;
-			q.clear(); 
+			if(!first && cplex)
+				outputFile << "= 0" << std::endl;
+			else if(!first && !cplex)
+				outputFile << "= 0;" << std::endl;
 		}
+		if(!first)
+			outputFile << std::endl;
+		q.clear(); 
 	}
-	
 }
 
 bool lpqx_command::execute()
