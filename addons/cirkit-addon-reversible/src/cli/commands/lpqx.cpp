@@ -372,29 +372,31 @@ void createMatrix( matrix& m, unsigned size )
 // type = 4 -> inverse (control -> target; target -> control)
 void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size, unsigned type )
 {
-	if(!cplex)
-	{
-		switch ( type )
-	    {
-	    	case 0:
-				outputFile << "/* Writing Control - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
-	    		break;
-	    	case 1:
-				outputFile << "/* Writing Target - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
-	    		break;
-	    	case 2:
-				outputFile << "/* Writing Control - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
-	    		break;
-	    	case 3:
-				outputFile << "/* Writing Target - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
-	    		break;
-	    	case 4:
-				outputFile << "/* Writing Inverse dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ") */" << std::endl;
-	    		break;
-	    	default:
-				outputFile << "/* ERRORRRRRRRRRRRRRRRRR */" << std::endl;
-	    }
-	}
+	if(cplex)
+		outputFile << "\\";
+	else
+		outputFile << "//";
+
+	switch ( type )
+    {
+    	case 0:
+			outputFile << " Writing Control - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ")" << std::endl;
+    		break;
+    	case 1:
+			outputFile << " Writing Target - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ")" << std::endl;
+    		break;
+    	case 2:
+			outputFile << " Writing Control - Target dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ")" << std::endl;
+    		break;
+    	case 3:
+			outputFile << " Writing Target - Control dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ")" << std::endl;
+    		break;
+    	case 4:
+			outputFile << " Writing Inverse dependency (" << l0 << "," << c0 << ")(" << l1 << "," << c1 << ")" << std::endl;
+    		break;
+    	default:
+			outputFile << " ERRORRRRRRRRRRRRRRRRR" << std::endl;
+    }
 	for (int i = 0; i < size; ++i)
 	{
 		for (int j = 0; j < size; ++j)
@@ -405,19 +407,14 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 				{
 					outputFile << "G" << l0 << "_" << c0;
 					outputFile << "c" << i << "_" << j;
-					if(cplex)
-						outputFile << " - ";
-					else
-						outputFile << " <= ";
+					outputFile << " - ";
+
 				}
 				else
 				{
 					outputFile << "G" << l0 << "_" << c0;
 					outputFile << "c" << j << "_" << i;
-					if(!cplex)
-						outputFile << " <= ";
-					else
-						outputFile << " - ";
+					outputFile << " - ";
 				}
 				unsigned aux = 0;
 				for (int k = 0; k < size; ++k)
@@ -438,9 +435,7 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 						if(aux == size-2 && cplex)
 							outputFile << " <= 0";
 						else if(aux == size-2 && !cplex)
-							outputFile << ";";						
-						else if(!cplex)
-							outputFile << " + ";	
+							outputFile << " <= 0;";						
 						else	
 							outputFile << " - ";	
 					}
@@ -450,10 +445,11 @@ void writeDep( unsigned l0, unsigned c0, unsigned l1, unsigned c1, unsigned size
 			else if(i != j && type == 4)
 			{
 				outputFile << "G" << l0 << "_" << c0 << "c" << i << "_" << j;
+				outputFile << " -G" << l1 << "_" << c1 << "c" << j << "_" << i;
 				if(cplex)
-					outputFile << " -G" << l1 << "_" << c1 << "c" << j << "_" << i << " <= 0\n";
+					outputFile << " <= 0" << std::endl;
 				else
-					outputFile << " <= G" << l1 << "_" << c1 << "c" << j << "_" << i << ";\n";
+					outputFile << " <= 0;" << std::endl;
 			}
 		}
 	}
