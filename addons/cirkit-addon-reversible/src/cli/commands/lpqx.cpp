@@ -54,6 +54,7 @@ lpqx_command::lpqx_command( const environment::ptr& env )
 	opts.add_options()
 	( "filename,f",    value( &filename ),  "name of the output file" )
 	( "lp_solve,l",  					    	"write in lp_solve format (cplex is default)" )
+	( "artificial,g",  					    	"use artificial gates" )
 	( "architecture,a", value_with_default( &architecture ) ,"select architecture\n" 
 															"4: qx4 (5  qubits) -> default)\n"
 															"2: qx2 (5  qubits)\n"
@@ -578,6 +579,8 @@ void getCombinationAnotherApproach(matrix& cnots)
 			if( cnots[j][i] > 0 )
 				q.push_back(std::make_pair(j,i));
 		}
+		if(q.size() < 2)
+			break;
 		bool first;
 		for (int m = 0; m < cnots.size(); ++m)
 		{
@@ -619,17 +622,44 @@ void getCombinationAnotherApproach(matrix& cnots)
 	}
 }
 
-void writeBlockRestrictions(matrix& res)
+void writeBlockRestrictions(matrix& res, unsigned s)
 {
-	for (int i = 0; i < res.size(); ++i)
+	// for (int i = 0; i < res.size(); ++i)
+	// {
+	// 	for (int j = 0; j < res[i].size(); ++j)
+	// 	{
+	// 		std::cout << " " << res[i][j];
+	// 	}
+	// 	std::cout << std::endl;
+	// }
+	for (int i = 0; i < s; ++i)
 	{
-		for (int j = 0; j < res[i].size(); ++j)
+		for (int r = 0; r < res.size(); ++r)
 		{
-			std::cout << " " << res[i][j];
-		}
-		std::cout << std::endl;
-	}
+			for (int j = 0; j < s; ++j)
+			{
+				if(i != j)
+				{
+					if(res[r][2] == 0)
+						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
+					else
+						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
+					
+					if(r == res.size()-1 && i == s-1 && j == s-2)	
+					{}
+					else if(r == res.size()-1 && i != s-1 && j == s-1)
+					{}
+					else	
+						outputFile << " + ";
 
+				}
+			}	
+		}
+		if(cplex)
+			outputFile << " <= 1" << std::endl;
+		else
+			outputFile << " <= 1;" << std::endl;
+	}
 }
 
 void getBlockLessEqualRestrictions(matrix& cnots )
@@ -664,11 +694,12 @@ void getBlockLessEqualRestrictions(matrix& cnots )
 			res.push_back(c);
 	}
 
-	writeBlockRestrictions(res);
+	writeBlockRestrictions(res, cnots.size());
 }
 
 bool lpqx_command::execute()
 {
+	bool artificial = false;
 	//circuit from store
 	circuit circ = env->store<circuit>().current();
 	//matrix of the cnots in the circuit
@@ -742,6 +773,11 @@ bool lpqx_command::execute()
 		cplex = false;
 	else
 		cplex = true;
+
+	if( is_set("artificial") )
+		artificial = true;
+	else
+		artificial = false;
 	
 	outputFile.open (filename);
 	
@@ -758,12 +794,14 @@ bool lpqx_command::execute()
 	//if the circuit has only one gate, no need to get combinations
 	if( getNumberDifGates(cnots) > 1 )
 	{
-		// artificialGates(cnots);
+		if(artificial)
+			artificialGates(cnots);
 		if( version == 1 )
 			getAllCombinations(cnots);
 		else if( version == 2 )
 			getCombinationAnotherApproach(cnots);
-		getBlockLessEqualRestrictions(cnots);
+		if(!artificial)
+			getBlockLessEqualRestrictions(cnots);
 	}
 	//print the restriction that limits to one gate
 	printOneGateRestriction( cnots );
