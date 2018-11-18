@@ -53,14 +53,14 @@ lpqx_command::lpqx_command( const environment::ptr& env )
 {
 	opts.add_options()
 	( "filename,f",    value( &filename ),  "name of the output file" )
-	( "cplex,c",  					    	"write in cplex lp format (lp_solve is default)" )
+	( "lp_solve,l",  					    	"write in lp_solve format (cplex is default)" )
 	( "architecture,a", value_with_default( &architecture ) ,"select architecture\n" 
 															"4: qx4 (5  qubits) -> default)\n"
 															"2: qx2 (5  qubits)\n"
 															"5: qx5 (16 qubits)" )
 	( "version,v",value_with_default( &version ), "write LP in different versions\n" 
-												  "1: write the gate version (default)\n"
-												  "2: write the qubit version")
+												  "1: write the gate version\n"
+												  "2: write the qubit version (default)")
 	;
 
 }
@@ -72,7 +72,7 @@ command::rules_t lpqx_command::validity_rules() const
 
 std::ofstream outputFile;
 unsigned architecture;
-bool cplex = false;
+bool cplex = true;;
 using matrix = std::vector<std::vector<unsigned>>;
 
 // Create a matrix with the cnots 
@@ -619,6 +619,54 @@ void getCombinationAnotherApproach(matrix& cnots)
 	}
 }
 
+void writeBlockRestrictions(matrix& res)
+{
+	for (int i = 0; i < res.size(); ++i)
+	{
+		for (int j = 0; j < res[i].size(); ++j)
+		{
+			std::cout << " " << res[i][j];
+		}
+		std::cout << std::endl;
+	}
+
+}
+
+void getBlockLessEqualRestrictions(matrix& cnots )
+{
+	matrix res;
+	std::vector<unsigned> c;
+	bool insert;
+	for (int i = 0; i < cnots.size(); ++i)
+	{
+		insert = false;
+		c.clear();
+		for (int j = 0; j < cnots.size(); ++j)
+		{
+			if( cnots[i][j] > 0 )
+			{
+				c.push_back(i);
+				c.push_back(j);
+				c.push_back(0);
+				insert = true;
+				break;
+			}
+			else if( cnots[j][i] > 0 )
+			{
+				c.push_back(j);
+				c.push_back(i);
+				c.push_back(1);
+				insert = true;
+				break;
+			}
+		}
+		if(insert)
+			res.push_back(c);
+	}
+
+	writeBlockRestrictions(res);
+}
+
 bool lpqx_command::execute()
 {
 	//circuit from store
@@ -690,10 +738,10 @@ bool lpqx_command::execute()
 	}
 
 	//check the file format
-	if( is_set("cplex") )
-		cplex = true;
-	else
+	if( is_set("lp_solve") )
 		cplex = false;
+	else
+		cplex = true;
 	
 	outputFile.open (filename);
 	
@@ -710,11 +758,12 @@ bool lpqx_command::execute()
 	//if the circuit has only one gate, no need to get combinations
 	if( getNumberDifGates(cnots) > 1 )
 	{
-		artificialGates(cnots);
+		// artificialGates(cnots);
 		if( version == 1 )
 			getAllCombinations(cnots);
 		else if( version == 2 )
 			getCombinationAnotherApproach(cnots);
+		getBlockLessEqualRestrictions(cnots);
 	}
 	//print the restriction that limits to one gate
 	printOneGateRestriction( cnots );

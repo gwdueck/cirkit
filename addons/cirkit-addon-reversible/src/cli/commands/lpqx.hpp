@@ -57,7 +57,7 @@ class lpqx_command : public cirkit_command
 	private:
 		std::string filename;
 		unsigned int architecture = 4;
-		unsigned int version = 1;
+		unsigned int version = 2;
 
 };
 
