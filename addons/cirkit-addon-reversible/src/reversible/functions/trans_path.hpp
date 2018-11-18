@@ -58,8 +58,8 @@ namespace cirkit
         int costPlus();
         int cnot3Cost();
         void addInverse();
-        unsigned int TransPath::getQA( int );
-        unsigned int TransPath::getQB( int );
+        unsigned int getQA( int );
+        unsigned int getQB( int );
     };
 
 }
