@@ -842,7 +842,7 @@ bool lpqx_command::execute()
 	printOneGateRestriction( cnots );
 
 	//print bounds
-	printBounds( arch, cnots );
+	// printBounds( arch, cnots );
 
 	//print the type of variables of the LP
 	printIntegerVariables( arch, cnots, getNumberDifGates( cnots ) );
