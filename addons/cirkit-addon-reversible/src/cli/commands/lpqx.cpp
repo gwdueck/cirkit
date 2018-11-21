@@ -352,6 +352,48 @@ void printIntegerVariables( matrix& qx, matrix& cnots, unsigned difGates )
 		outputFile << "End" << std::endl;
 }
 
+// Function to print the variables bounds
+void printBounds( matrix& qx, matrix& cnots )
+{
+	// if(cplex)
+	// 	outputFile << "\\";
+	// else
+	// 	outputFile << "//";
+
+	// outputFile << " Begin Integer Variables" << std::endl;
+	if(cplex)
+		outputFile << "Bounds" << std::endl;
+	else
+		outputFile << "" << std::endl;
+
+	for (int i = 0; i < qx.size(); ++i)
+	{
+		for (int j = 0; j < qx.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					if( i != j && cnots[i][j] > 0 && k != m)
+					{
+						if(!cplex)
+							outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1;" << std::endl;
+						else
+							outputFile << "0 <= G" << i << "_" << j << "c" << k << "_" << m << " <= 1"  << std::endl;
+					}
+				}
+			}
+		}
+	}
+	// if(cplex)
+	// 	outputFile << "\\";
+	// else
+	// 	outputFile << "//";
+
+	// outputFile << " End Integer Variables" << std::endl;
+}
+
 // Create a matrix with 0's
 void createMatrix( matrix& m, unsigned size )
 {
@@ -798,6 +840,9 @@ bool lpqx_command::execute()
 	}
 	//print the restriction that limits to one gate
 	printOneGateRestriction( cnots );
+
+	//print bounds
+	printBounds( arch, cnots );
 
 	//print the type of variables of the LP
 	printIntegerVariables( arch, cnots, getNumberDifGates( cnots ) );
