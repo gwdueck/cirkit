@@ -699,7 +699,9 @@ command::rules_t alex_command::validity_rules() const
 bool alex_command::execute()
 {
 	// cplex = false;
-	// circuit circ = env->store<circuit>().current();
+	circuit circ = env->store<circuit>().current();
+	std::cout << "	" << circ.num_gates() << std::endl;
+
 	// matrix output;
 	// matrix qx4 = {{0,4,10,20,19,29,39,51,61,64,54,42,30,20,10,4},
 	// 				{0,0,0,3,9,19,29,41,51,61,53,41,29,19,9,10},
@@ -752,7 +754,7 @@ bool alex_command::execute()
  //  	outputFile.close();
  //  	filename.clear();
 
-	std::cout << "Command to create random projects" << std::endl;
+	// std::cout << "Command to create random projects" << std::endl;
 	return true;
 }
 
