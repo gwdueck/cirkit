@@ -115,6 +115,7 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
 {
   xt::xarray<complex_t> matrix_X = get_2by2_matrix( 0.0, 1.0, 1.0, 0.0 );
   xt::xarray<complex_t> matrix_H = 1.0 / sqrt( 2.0 ) * get_2by2_matrix( 1.0, 1.0, 1.0, -1.0 );
+  xt::xarray<complex_t> matrix_Y = get_2by2_matrix( 0.0, -1i, 1i, 0.0 );
   xt::xarray<complex_t> matrix_Z = get_2by2_matrix( 1.0, 0.0, 0.0, -1.0 );
   xt::xarray<complex_t> matrix_S = get_2by2_matrix( 1.0, 0.0, 0.0, 1i );
   xt::xarray<complex_t> matrix_Sdag = get_2by2_matrix( 1.0, 0.0, 0.0, -1i );

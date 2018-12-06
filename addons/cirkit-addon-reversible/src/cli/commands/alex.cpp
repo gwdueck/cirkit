@@ -58,6 +58,7 @@ alex_command::alex_command( const environment::ptr& env )
 	: cirkit_command( env, "Random projects" )
 {
 	opts.add_options()
+    ( "interchange,c",  "interchange controls" )
 	;
 
 }
@@ -88,43 +89,114 @@ bool alex_command::execute()
         {
         	controls_a.clear();
         	controls_b.clear();
-        	controls_a.push_back(gate.controls()[0].line());
-        	controls_b.push_back(gate.controls()[1].line());
+        	if (is_set("interchange"))
+        	{
+	        	controls_a.push_back(gate.controls()[1].line());
+	        	controls_b.push_back(gate.controls()[0].line());
+        	}
+        	else
+        	{
+        		controls_a.push_back(gate.controls()[0].line());
+	        	controls_b.push_back(gate.controls()[1].line());	
+        	}
             if( gate.controls().size() == 2 )
             {
             	std::cout << "change it!" << std::endl;
-                append_hadamard( outputCircuit, gate.targets().front() );
-                append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+            	// only positive control
+    			// append_hadamard( outputCircuit, gate.targets().front() );
+    			// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, false );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+	   			// append_hadamard( outputCircuit, gate.targets().front() );
+
+    			// append_toffoli( outputCircuit, controls_a, controls_b.front() );
+
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, true );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				
+				// append_toffoli( outputCircuit, controls_a, controls_b.front() );
+				
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				// append_hadamard( outputCircuit, gate.targets().front() );
+            	
+            	// one negative control
+    			// append_hadamard( outputCircuit, gate.targets().front() );
+    			// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, true );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+	   			// append_hadamard( outputCircuit, gate.targets().front() );
+
+    			// append_toffoli( outputCircuit, controls_a, controls_b.front() );
+
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, true );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				
+				// append_toffoli( outputCircuit, controls_a, controls_b.front() );
+				
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				// append_hadamard( outputCircuit, gate.targets().front() );
+            
+				// only positive control
+    			append_hadamard( outputCircuit, gate.targets().front() );
+    			append_toffoli( outputCircuit, controls_a, gate.targets().front() );
 				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-                append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+				append_toffoli( outputCircuit, controls_a, gate.targets().front() );
 				append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, false );
 				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-	            append_hadamard( outputCircuit, gate.targets().front() );
+	   			append_hadamard( outputCircuit, gate.targets().front() );
 
-                append_toffoli( outputCircuit, controls_a, controls_b.front() );
+    			append_toffoli( outputCircuit, controls_a, controls_b.front() );
 
 				append_hadamard( outputCircuit, gate.targets().front() );
-                append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-                append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, true );
+				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
 				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-	            append_hadamard( outputCircuit, gate.targets().front() );
-
-                append_toffoli( outputCircuit, controls_a, controls_b.front() );
-
-                append_hadamard( outputCircuit, gate.targets().front() );
-                append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-                append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
 				append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
 				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-	            append_hadamard( outputCircuit, gate.targets().front() );
+				append_hadamard( outputCircuit, gate.targets().front() );
+				
+				append_toffoli( outputCircuit, controls_a, controls_b.front() );
+				
+				append_hadamard( outputCircuit, gate.targets().front() );
+				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
+				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				append_hadamard( outputCircuit, gate.targets().front() );
+				
+				append_not( outputCircuit, gate.targets().front() );
+
             }
             else 
             {
             	std::cout << "not change it!" << std::endl;
 				outputCircuit.append_gate() = gate;
+
 			}
 		}
 		else
@@ -135,6 +207,8 @@ bool alex_command::execute()
 	}
 	circuits.extend();
 	circuits.current() = outputCircuit;
+
+	
 	return true;
 }
 

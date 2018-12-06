@@ -87,7 +87,7 @@ std::string print_circuit_settings::target_type_char( const gate& g ) const
       case 1u:
         return "Z";
       case 2u:
-        return "S";
+        return tag.adjoint ? "$" : "S";
       case 4u:
         return tag.adjoint ? "Ŧ" : "T";
       default:
