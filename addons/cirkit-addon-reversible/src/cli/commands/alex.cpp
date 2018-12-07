@@ -59,6 +59,7 @@ alex_command::alex_command( const environment::ptr& env )
 {
 	opts.add_options()
     ( "interchange,c",  "interchange controls" )
+    ( "clifford,t",  "transform to Clifford+T" )
 	;
 
 }
@@ -151,9 +152,38 @@ void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
 	}
 }
 
+void transform_to_v(circuit& circ_in, circuit& circ_out)
+{
+	copy_metadata(circ_in, circ_out);
+	for ( const auto& gate : circ_in )
+    {
+		if ( is_toffoli( gate ) )
+        {
+            if( gate.controls().size() == 2 )
+          	 	toffoli_to_v(circ_in, circ_out, gate);
+	        else 
+            	circ_out.append_gate() = gate;
+		}
+		else
+			circ_out.append_gate() = gate;
+	}
+}
+
+void transform_to_clifford(circuit& circ_in, circuit& circ_out)
+{
+	copy_metadata(circ_in, circ_out);
+	for ( const auto& gate : circ_in )
+    {
+		if( is_v( gate ) )
+	        v_to_clifford(circ_in, circ_out, gate);
+		else
+			circ_out.append_gate() = gate;
+	}
+}
+
 bool alex_command::execute()
 {
-	if (is_set("interchange"))
+	if ( is_set("interchange") )
 		interchange = true;
 	else
 		interchange = false;
@@ -165,139 +195,18 @@ bool alex_command::execute()
  	unsigned target, control;
     std::vector<unsigned int> controls_a, controls_b;
 
-    circuit outputCircuit;
-    copy_metadata(circ, outputCircuit);
-
-	for ( const auto& gate : circ )
-    {
-		if ( is_toffoli( gate ) )
-        {
-        	controls_a.clear();
-        	controls_b.clear();
-        	if (interchange)
-        	{
-	        	controls_a.push_back(gate.controls()[1].line());
-	        	controls_b.push_back(gate.controls()[0].line());
-        	}
-        	else
-        	{
-        		controls_a.push_back(gate.controls()[0].line());
-	        	controls_b.push_back(gate.controls()[1].line());	
-        	}
-            if( gate.controls().size() == 2 )
-            {
-            	
-            	toffoli_to_v(circ, outputCircuit, gate);
-            	// only positive control
-    			// append_hadamard( outputCircuit, gate.targets().front() );
-    			// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, false );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-	   			// append_hadamard( outputCircuit, gate.targets().front() );
-
-    			// append_toffoli( outputCircuit, controls_a, controls_b.front() );
-
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, true );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				
-				// append_toffoli( outputCircuit, controls_a, controls_b.front() );
-				
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				// append_hadamard( outputCircuit, gate.targets().front() );
-            	
-            	// one negative control
-    			// append_hadamard( outputCircuit, gate.targets().front() );
-    			// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, true );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-	   			// append_hadamard( outputCircuit, gate.targets().front() );
-
-    			// append_toffoli( outputCircuit, controls_a, controls_b.front() );
-
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, true );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				
-				// append_toffoli( outputCircuit, controls_a, controls_b.front() );
-				
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				// append_hadamard( outputCircuit, gate.targets().front() );
-            
-				// only positive control
-    // 			append_hadamard( outputCircuit, gate.targets().front() );
-    // 			append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, false );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-	   // 			append_hadamard( outputCircuit, gate.targets().front() );
-
-    // 			append_toffoli( outputCircuit, controls_a, controls_b.front() );
-
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				
-				// append_toffoli( outputCircuit, controls_a, controls_b.front() );
-				
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
-				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				// append_hadamard( outputCircuit, gate.targets().front() );
-				
-				// append_not( outputCircuit, gate.targets().front() );
-
-            }
-            else 
-            {
-            	std::cout << "not change it!" << std::endl;
-				outputCircuit.append_gate() = gate;
-
-			}
-		}
-		else if( is_v( gate ) )
-		{
-            v_to_clifford(circ, outputCircuit, gate);
-		}
-		else
-		{
-            std::cout << "not change it!" << std::endl;
-			outputCircuit.append_gate() = gate;
-		}
-	}
+    circuit vCircuit;
+   	circuit cliffordCircuit;
+    
+    transform_to_v(circ, vCircuit);
+	if ( is_set( "clifford" ) )
+    	transform_to_clifford(vCircuit, cliffordCircuit);
+	
 	circuits.extend();
-	circuits.current() = outputCircuit;
-
+	if ( is_set( "clifford" ) )
+		circuits.current() = cliffordCircuit;
+	else
+		circuits.current() = vCircuit;
 	
 	return true;
 }
