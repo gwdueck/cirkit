@@ -63,16 +63,101 @@ alex_command::alex_command( const environment::ptr& env )
 
 }
 
+bool interchange = false;
+
 command::rules_t alex_command::validity_rules() const
 {
   return {has_store_element<circuit>( env )};
 }
 
+void toffoli_to_v(circuit& circ_in, circuit& circ_out, gate g)
+{
+    std::vector<unsigned int> controls_a, controls_b;
+    std::vector<unsigned int> polarities;
+    polarities.clear();
+    controls_a.clear();
+	controls_b.clear();
+	polarities.push_back(g.controls().front().polarity());
+    polarities.push_back(g.controls().back().polarity());
 
+  	if ( interchange && polarities.front() == polarities.back() )
+	{
+    	controls_a.push_back(g.controls().back().line());
+    	controls_b.push_back(g.controls().front().line());
+	}
+	else
+	{
+		controls_a.push_back(g.controls().front().line());
+    	controls_b.push_back(g.controls().back().line());	
+	}
+	
+	if( polarities.front() == 1 && polarities.back() == 1 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), false );
+	}
+	else if( polarities.front() == 0 && polarities.back() == 0 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), false );
+		append_not( circ_out, g.targets().front() );
+	}
+	else if( polarities.front() == 1 && polarities.back() == 0 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), false );
+	}
+	else if( polarities.front() == 0 && polarities.back() == 1 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), true );
+	}
+}
 
+void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
+{
+    const auto& tag = boost::any_cast<v_tag>( g.type() );
+	if ( tag.adjoint )
+	{
+		append_hadamard( circ_out, g.targets().front() );
+		append_toffoli( circ_out, g.controls(), g.targets().front() );
+		append_pauli( circ_out,  g.targets().front(), pauli_axis::Z, 4u, false );
+		append_toffoli( circ_out, g.controls(), g.targets().front() );
+		append_pauli( circ_out,  g.controls()[0].line(), pauli_axis::Z, 4u, true );
+		append_pauli( circ_out,  g.targets().front(), pauli_axis::Z, 4u, true );
+		append_hadamard( circ_out, g.targets().front() );
+	}
+	else
+	{
+		append_hadamard( circ_out, g.targets().front() );
+		append_toffoli( circ_out, g.controls(), g.targets().front() );
+		append_pauli( circ_out,  g.targets().front(), pauli_axis::Z, 4u, true );
+		append_toffoli( circ_out, g.controls(), g.targets().front() );
+		append_pauli( circ_out,  g.controls()[0].line(), pauli_axis::Z, 4u, false );
+		append_pauli( circ_out,  g.targets().front(), pauli_axis::Z, 4u, false );
+		append_hadamard( circ_out, g.targets().front() );
+	}
+}
 
 bool alex_command::execute()
 {
+	if (is_set("interchange"))
+		interchange = true;
+	else
+		interchange = false;
+
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
 	// std::cout << "	" << circ.num_gates() << std::endl;
@@ -89,7 +174,7 @@ bool alex_command::execute()
         {
         	controls_a.clear();
         	controls_b.clear();
-        	if (is_set("interchange"))
+        	if (interchange)
         	{
 	        	controls_a.push_back(gate.controls()[1].line());
 	        	controls_b.push_back(gate.controls()[0].line());
@@ -101,7 +186,8 @@ bool alex_command::execute()
         	}
             if( gate.controls().size() == 2 )
             {
-            	std::cout << "change it!" << std::endl;
+            	
+            	toffoli_to_v(circ, outputCircuit, gate);
             	// only positive control
     			// append_hadamard( outputCircuit, gate.targets().front() );
     			// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
@@ -161,35 +247,35 @@ bool alex_command::execute()
 				// append_hadamard( outputCircuit, gate.targets().front() );
             
 				// only positive control
-    			append_hadamard( outputCircuit, gate.targets().front() );
-    			append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				append_toffoli( outputCircuit, controls_a, gate.targets().front() );
-				append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, false );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-	   			append_hadamard( outputCircuit, gate.targets().front() );
+    // 			append_hadamard( outputCircuit, gate.targets().front() );
+    // 			append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_toffoli( outputCircuit, controls_a, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_a.front(), pauli_axis::Z, 4u, false );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+	   // 			append_hadamard( outputCircuit, gate.targets().front() );
 
-    			append_toffoli( outputCircuit, controls_a, controls_b.front() );
+    // 			append_toffoli( outputCircuit, controls_a, controls_b.front() );
 
-				append_hadamard( outputCircuit, gate.targets().front() );
-				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				append_hadamard( outputCircuit, gate.targets().front() );
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				// append_hadamard( outputCircuit, gate.targets().front() );
 				
-				append_toffoli( outputCircuit, controls_a, controls_b.front() );
+				// append_toffoli( outputCircuit, controls_a, controls_b.front() );
 				
-				append_hadamard( outputCircuit, gate.targets().front() );
-				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
-				append_toffoli( outputCircuit, controls_b, gate.targets().front() );
-				append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
-				append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
-				append_hadamard( outputCircuit, gate.targets().front() );
+				// append_hadamard( outputCircuit, gate.targets().front() );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, true );
+				// append_toffoli( outputCircuit, controls_b, gate.targets().front() );
+				// append_pauli( outputCircuit,  controls_b.front(), pauli_axis::Z, 4u, false );
+				// append_pauli( outputCircuit,  gate.targets().front(), pauli_axis::Z, 4u, false );
+				// append_hadamard( outputCircuit, gate.targets().front() );
 				
-				append_not( outputCircuit, gate.targets().front() );
+				// append_not( outputCircuit, gate.targets().front() );
 
             }
             else 
@@ -198,6 +284,10 @@ bool alex_command::execute()
 				outputCircuit.append_gate() = gate;
 
 			}
+		}
+		else if( is_v( gate ) )
+		{
+            v_to_clifford(circ, outputCircuit, gate);
 		}
 		else
 		{
