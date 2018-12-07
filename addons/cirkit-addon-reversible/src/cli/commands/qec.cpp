@@ -121,9 +121,6 @@ bool qec_command::execute()
     }
   }
 
-  std::cout << matrices[0u].first << std::endl;
-  std::cout << "ofpdasofpdosapfodspafofpdsa" << std::endl;
-  std::cout << matrices[1u].first << std::endl;
   result = complex_allclose( matrices[0u].first, matrices[1u].first );
   if ( is_set( "quiet" ) ) return true;
 

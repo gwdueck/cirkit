@@ -64,20 +64,6 @@ xt::xarray<complex_t> get_2by2_matrix( complex_t a, complex_t b, complex_t c, co
   return matrix;
 }
 
-xt::xarray<complex_t> get_4by4_matrix(  complex_t a1, complex_t a2, complex_t a3, complex_t a4,
-                                        complex_t b1, complex_t b2, complex_t b3, complex_t b4,
-                                        complex_t c1, complex_t c2, complex_t c3, complex_t c4,
-                                        complex_t d1, complex_t d2, complex_t d3, complex_t d4)
-{
-  xt::xarray<complex_t> matrix(std::vector<size_t>{4, 4});
-  matrix[{0,0}] = a1; matrix[{0,1}] = a2; matrix[{0,2}] = a3; matrix[{0,3}] = a4;
-  matrix[{1,0}] = b1; matrix[{1,1}] = b2; matrix[{1,2}] = b3; matrix[{1,3}] = b4;
-  matrix[{2,0}] = c1; matrix[{2,1}] = c2; matrix[{2,2}] = c3; matrix[{2,3}] = c4;
-  matrix[{3,0}] = d1; matrix[{3,1}] = d2; matrix[{3,2}] = d3; matrix[{3,3}] = d4;
-  
-  return matrix;
-}
-
 xt::xarray<complex_t> kron( const std::vector<xt::xarray<complex_t>>& ms )
 {
   assert( !ms.empty() );
@@ -105,7 +91,7 @@ xt::xarray<complex_t> identity( unsigned dimension )
 xt::xarray<complex_t> identity_padding( const xt::xarray<complex_t>& matrix, unsigned from, unsigned to, unsigned lines )
 {
   std::vector<xt::xarray<complex_t>> ms;
-  std::cout << "from: " << from << " to: " << to << " lines: "<< lines << std::endl;
+
   if ( to + 1u < lines )
   {
     ms.push_back( identity( 1 << ( lines - to - 1u ) ) );
@@ -117,9 +103,7 @@ xt::xarray<complex_t> identity_padding( const xt::xarray<complex_t>& matrix, uns
   {
     ms.push_back( identity( 1 << from ) );
   }
-  std::cout << "========================================" << std::endl;
-  std::cout << kron( ms) << std::endl;
-  std::cout << "======XXXXXXXXXXXXXXXXXXXXXXXXXX========" << std::endl;
+
   return kron( ms );
 }
 
@@ -139,15 +123,9 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
   xt::xarray<complex_t> matrix_Tdag = get_2by2_matrix( 1.0, 0.0, 0.0, exp( -1i * M_PI / 4.0 ) );
   xt::xarray<complex_t> matrix_zc = get_2by2_matrix( 1.0, 0.0, 0.0, 0.0 );
   xt::xarray<complex_t> matrix_oc = get_2by2_matrix( 0.0, 0.0, 0.0, 1.0 );
+  xt::xarray<complex_t> matrix_V = get_2by2_matrix( (1.0 + 1i)/2.0, (1.0 - 1i)/2.0, (1.0 - 1i)/2.0, (1.0 + 1i)/2.0 );
+  xt::xarray<complex_t> matrix_Vdag = get_2by2_matrix( (1.0 - 1i)/2.0, (1.0 + 1i)/2.0, (1.0 + 1i)/2.0, (1.0 - 1i)/2.0 );
 
-  xt::xarray<complex_t> matrix_V = get_4by4_matrix( 1.0, 0.0, 0.0, 0.0, 
-                                                    0.0, 1.0, 0.0, 0.0,
-                                                    0.0, 0.0, (1.0 + 1i)/2.0, (1.0 - 1i)/2.0,
-                                                    0.0, 0.0, (1.0 - 1i)/2.0, (1.0 + 1i)/2.0);
-  xt::xarray<complex_t> matrix_Vdag = get_4by4_matrix(  1.0, 0.0, 0.0, 0.0, 
-                                                        0.0, 1.0, 0.0, 0.0,
-                                                        0.0, 0.0, (1.0 - 1i)/2.0, (1.0 + 1i)/2.0,
-                                                        0.0, 0.0, (1.0 + 1i)/2.0, (1.0 - 1i)/2.0);
   const auto n = circ.lines();
 
   std::vector<xt::xarray<complex_t>> gates;
@@ -185,16 +163,17 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
     {
       const auto control = g.controls().front().line();
       const auto tag = boost::any_cast<v_tag>( g.type() );
-      if ( n > 2)
+     if ( control < target )
       {
-        if ( control < target )
-          gates.push_back( identity_padding( tag.adjoint ? matrix_Vdag : matrix_V, target, control, n ) );
-        else
-          gates.push_back( identity_padding( tag.adjoint ? matrix_Vdag : matrix_V, control, target, n ) );
+        const auto act = target - control;
+        const auto gate = xt::linalg::kron( identity( 1 << act ), matrix_zc ) + kron( {tag.adjoint ? matrix_Vdag : matrix_V, identity( 1 << ( act - 1 ) ), matrix_oc} );
+        gates.push_back( identity_padding( gate, control, target, n ) );
       }
       else
       {
-        gates.push_back(tag.adjoint ? matrix_Vdag : matrix_V);
+        const auto act = control - target;
+        const auto gate = xt::linalg::kron( matrix_zc, identity( 1 << act ) ) + kron( {matrix_oc, identity( 1 << ( act - 1 ) ), tag.adjoint ? matrix_Vdag : matrix_V} );
+        gates.push_back( identity_padding( gate, target, control, n ) );
       }
     }
     else if ( is_pauli( g ) )
@@ -255,7 +234,7 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
       pline( i + 1u );
       r = xt::linalg::dot( r, gates[i] );
     }
-    std::cout << r << std::endl;
+
     return r;
   }
 }
