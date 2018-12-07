@@ -121,9 +121,9 @@ circuit read_qc( const std::string& filename )
           append_toffoli( circ, controls, var2line[lines.back()] );
         }},
     // Alexandre testing
-      {std::regex( "^V *(.*)$" ), [&circ, &var2line]( const std::smatch& m ) {
+      {std::regex( "^V(\\*?) *(.*)$" ), [&circ, &var2line]( const std::smatch& m ) {
           std::vector<std::string> lines;
-          split_string( lines, m[1u], " " );
+          split_string( lines, m[2u], " " );
 
           assert( lines.size() == 2u );
           // assert( boost::lexical_cast<unsigned>( std::string( m[1u] ) ) == lines.size() );
@@ -133,7 +133,7 @@ circuit read_qc( const std::string& filename )
           {
             controls.push_back( make_var( var2line[lines[i]], lines[i].back() != '\'' ) );
           }
-          append_toffoli( circ, controls, var2line[lines.back()] );
+          append_v( circ, controls, var2line[lines.back()], !std::string( m[1u] ).empty() );
         }},
       //end testing
       {std::regex( "^H *(.*)$" ), [&circ, &var2line]( const std::smatch& m ) {
@@ -175,7 +175,6 @@ circuit read_qc( const std::string& filename )
           split_string( lines, m[3u], " " );
 
           assert( lines.size() == 1u );
-
           append_pauli( circ, var2line[lines.back()], pauli_axis::Z, 2u, !std::string( m[2u] ).empty() );
         }},
       {std::regex( "^T(\\*?) *(.*)$" ), [&circ, &var2line]( const std::smatch& m ) {

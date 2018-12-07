@@ -80,6 +80,13 @@ gate& append_pauli( circuit& circ, unsigned target, pauli_axis axis, unsigned ro
 gate& prepend_pauli( circuit& circ, unsigned target, pauli_axis axis, unsigned root = 1u, bool adjoint = false );
 gate& insert_pauli( circuit& circ, unsigned n, unsigned target, pauli_axis axis, unsigned root = 1u, bool adjoint = false );
 
+gate& append_v( circuit& circ, const gate::control_container& controls, unsigned target, bool adjoint );
+gate& append_v( circuit& circ, const std::vector<unsigned>& controls, unsigned target, bool adjoint );
+gate& prepend_v( circuit& circ, const gate::control_container& controls, unsigned target, bool adjoint = false );
+gate& prepend_v( circuit& circ, const std::vector<unsigned>& controls, unsigned target, bool adjoint = false );
+gate& insert_v( circuit& circ, unsigned n, const gate::control_container& controls, unsigned target, bool adjoint = false );
+bool is_v( const gate& g );
+
 struct hadamard_tag {};
 
 bool is_hadamard( const gate& g );

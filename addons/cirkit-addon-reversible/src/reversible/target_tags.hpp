@@ -46,6 +46,16 @@
 
 namespace cirkit
 {
+struct v_tag
+{
+  v_tag() {}
+
+  v_tag( bool adjoint = false )
+    : adjoint( adjoint )
+  {
+  }
+  bool adjoint = false;
+};
 
 /**
  * @brief Target Tag for Toffoli gates.

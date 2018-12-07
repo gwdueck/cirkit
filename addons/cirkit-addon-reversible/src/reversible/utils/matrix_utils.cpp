@@ -64,6 +64,20 @@ xt::xarray<complex_t> get_2by2_matrix( complex_t a, complex_t b, complex_t c, co
   return matrix;
 }
 
+xt::xarray<complex_t> get_4by4_matrix(  complex_t a1, complex_t a2, complex_t a3, complex_t a4,
+                                        complex_t b1, complex_t b2, complex_t b3, complex_t b4,
+                                        complex_t c1, complex_t c2, complex_t c3, complex_t c4,
+                                        complex_t d1, complex_t d2, complex_t d3, complex_t d4)
+{
+  xt::xarray<complex_t> matrix(std::vector<size_t>{4, 4});
+  matrix[{0,0}] = a1; matrix[{0,1}] = a2; matrix[{0,2}] = a3; matrix[{0,3}] = a4;
+  matrix[{1,0}] = b1; matrix[{1,1}] = b2; matrix[{1,2}] = b3; matrix[{1,3}] = b4;
+  matrix[{2,0}] = c1; matrix[{2,1}] = c2; matrix[{2,2}] = c3; matrix[{2,3}] = c4;
+  matrix[{3,0}] = d1; matrix[{3,1}] = d2; matrix[{3,2}] = d3; matrix[{3,3}] = d4;
+  
+  return matrix;
+}
+
 xt::xarray<complex_t> kron( const std::vector<xt::xarray<complex_t>>& ms )
 {
   assert( !ms.empty() );
@@ -124,6 +138,14 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
   xt::xarray<complex_t> matrix_zc = get_2by2_matrix( 1.0, 0.0, 0.0, 0.0 );
   xt::xarray<complex_t> matrix_oc = get_2by2_matrix( 0.0, 0.0, 0.0, 1.0 );
 
+  xt::xarray<complex_t> matrix_V = get_4by4_matrix( 1.0, 0.0, 0.0, 0.0, 
+                                                    0.0, 1.0, 0.0, 0.0,
+                                                    0.0, 0.0, (1.0 + 1i)/2.0, (1.0 - 1i)/2.0,
+                                                    0.0, 0.0, (1.0 - 1i)/2.0, (1.0 + 1i)/2.0);
+  xt::xarray<complex_t> matrix_Vdag = get_4by4_matrix(  1.0, 0.0, 0.0, 0.0, 
+                                                        0.0, 1.0, 0.0, 0.0,
+                                                        0.0, 0.0, (1.0 - 1i)/2.0, (1.0 + 1i)/2.0,
+                                                        0.0, 0.0, (1.0 + 1i)/2.0, (1.0 - 1i)/2.0);
   const auto n = circ.lines();
 
   std::vector<xt::xarray<complex_t>> gates;
@@ -156,6 +178,15 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
     else if ( is_hadamard( g ) )
     {
       gates.push_back( identity_padding( matrix_H, target, target, n ) );
+    }
+    else if ( is_v( g ) )
+    {
+      const auto control = g.controls().front().line();
+      const auto tag = boost::any_cast<v_tag>( g.type() );
+      if ( control < target )
+        gates.push_back( identity_padding( tag.adjoint ? matrix_Vdag : matrix_V, target, control, n ) );
+      else
+        gates.push_back( identity_padding( tag.adjoint ? matrix_Vdag : matrix_V, control, target, n ) );
     }
     else if ( is_pauli( g ) )
     {
