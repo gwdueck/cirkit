@@ -152,6 +152,30 @@ void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
 	}
 }
 
+void multiControlToffoli()
+{
+	
+}
+
+void multiControlToffoli_to_toffoli(circuit& circ_in, circuit& circ_out)
+{
+	copy_metadata(circ_in, circ_out);
+	for ( const auto& gate : circ_in )
+    {
+		if ( is_toffoli( gate ) )
+        {
+            if( gate.controls().size() == 2 )
+          	 	toffoli_to_v(circ_in, circ_out, gate);
+	        else if ( gate.controls().size() > 2 ) 
+            	std::cout << "mais que dois controles" << std::endl;
+            else
+            	circ_out.append_gate() = gate;
+		}
+		else
+			circ_out.append_gate() = gate;
+	}
+}
+
 void transform_to_v(circuit& circ_in, circuit& circ_out)
 {
 	copy_metadata(circ_in, circ_out);
@@ -161,7 +185,7 @@ void transform_to_v(circuit& circ_in, circuit& circ_out)
         {
             if( gate.controls().size() == 2 )
           	 	toffoli_to_v(circ_in, circ_out, gate);
-	        else 
+            else
             	circ_out.append_gate() = gate;
 		}
 		else

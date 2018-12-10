@@ -125,7 +125,7 @@ circuit read_qc( const std::string& filename )
           std::vector<std::string> lines;
           split_string( lines, m[2u], " " );
 
-          assert( lines.size() == 2u );
+          assert( lines.size() > 0u );
           // assert( boost::lexical_cast<unsigned>( std::string( m[1u] ) ) == lines.size() );
 
           gate::control_container controls;

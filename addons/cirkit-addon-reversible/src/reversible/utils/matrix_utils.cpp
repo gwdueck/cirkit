@@ -159,6 +159,14 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
     {
       gates.push_back( identity_padding( matrix_H, target, target, n ) );
     }
+    else if ( is_v( g ) && g.controls().size() == 0u )
+    {
+      const auto tag = boost::any_cast<v_tag>( g.type() );
+      if(tag.adjoint)
+        gates.push_back( identity_padding( matrix_Vdag, target, target, n ) );
+      else
+        gates.push_back( identity_padding( matrix_V, target, target, n ) );
+    }
     else if ( is_v( g ) )
     {
       const auto control = g.controls().front().line();
