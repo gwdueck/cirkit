@@ -30,13 +30,13 @@
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 #include <iostream>
-
+#include <core/utils/program_options.hpp>
 #include <boost/program_options.hpp>
 
 #include <xtensor/xio.hpp>
 #include <xtensor/xmath.hpp>
 #include <xtensor-blas/xlinalg.hpp>
-
+#include <reversible/functions/add_circuit.hpp>
 #include <cli/reversible_stores.hpp>
 #include <reversible/utils/matrix_utils.hpp>
 #include <alice/rules.hpp>
@@ -48,6 +48,10 @@
 #include <reversible/pauli_tags.hpp>
 #include <reversible/rotation_tags.hpp>
 #include <reversible/target_tags.hpp>
+#include <reversible/io/print_circuit.hpp>
+#include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/find_lines.hpp>
+#include <reversible/mapping/nct_mapping.hpp>
 
 namespace cirkit
 {
@@ -75,9 +79,7 @@ void toffoli_to_v(circuit& circ_in, circuit& circ_out, gate g)
 {
     std::vector<unsigned int> controls_a, controls_b;
     std::vector<unsigned int> polarities;
-    polarities.clear();
-    controls_a.clear();
-	controls_b.clear();
+    polarities.clear(); controls_a.clear(); controls_b.clear();
 	polarities.push_back(g.controls().front().polarity());
     polarities.push_back(g.controls().back().polarity());
 
@@ -152,36 +154,6 @@ void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
 	}
 }
 
-void multiControlToffoli( circuit& circ_in, gate g )
-{
-	circuit c;
-	copy_metadata(circ_in, c);
-	// append_toffoli( circ_out, g.controls(), g.targets().front() );
-
-}
-
-void transform_to_toffoli(circuit& circ_in, circuit& circ_out)
-{
-	copy_metadata(circ_in, circ_out);
-	for (int i = circ_in.lines() - 1; i > 3; --i)
-	{
-		for ( const auto& gate : circ_in )
-    	{
-			if ( is_toffoli( gate ) )
-	        {
-	            if( gate.controls().size() == circ_in.lines() - 1 )
-					add_line_to_circuit( circ_out, "i" + boost::lexical_cast<std::string>(circ_in.lines()) , "o" + boost::lexical_cast<std::string>(circ_in.lines()));
-	            else if( gate.controls().size() > 2 )
-	          	 	append_circuit( multiControlToffoli(), circ_out );
-	            else
-	            	circ_out.append_gate() = gate;
-			}
-			else
-				circ_out.append_gate() = gate;
-		}
-	}
-}
-
 void transform_to_v(circuit& circ_in, circuit& circ_out)
 {
 	copy_metadata(circ_in, circ_out);
@@ -192,10 +164,7 @@ void transform_to_v(circuit& circ_in, circuit& circ_out)
             if( gate.controls().size() == 2 )
           	 	toffoli_to_v(circ_in, circ_out, gate);
             else
-            {
-            	multiControlToffoli(gate, circ_in.lines());
             	circ_out.append_gate() = gate;
-            }
 		}
 		else
 			circ_out.append_gate() = gate;
@@ -230,10 +199,12 @@ bool alex_command::execute()
 
     circuit vCircuit;
    	circuit cliffordCircuit;
-    
-    transform_to_v(circ, vCircuit);
-    transform_to_toffoli(circ, vCircuit);
 
+   	auto settings = make_settings();
+ 	settings->set( "controls_threshold", 2u );
+ 	circ = nct_mapping( circ, settings, statistics );
+
+    transform_to_v(circ, vCircuit);
 	if ( is_set( "clifford" ) )
     	transform_to_clifford(vCircuit, cliffordCircuit);
 	
