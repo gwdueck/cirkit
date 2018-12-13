@@ -92,8 +92,7 @@ circuit remove_dup_gates( const circuit& circ )
     return result;
 }
 
-// check if two gates are inverse of each other
-// only consderred a few self-inverse gates
+// check if two gates can be removed
 bool can_be_removed(const gate& g1, const gate& g2 )
 {
     if( (g1.targets().front() == g2.targets().front()) && (g1.controls() == g2.controls()) )
@@ -226,34 +225,40 @@ bool gates_do_not_intersect( const gate& g1, const gate& g2 )
     return target_g1 != target_g2;
 }
 
-/* Check if both are T gates or S. Merge them if possible
- */
+/* Check if gates can be merged  */
 bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
 {
+    res = g1;
     if ( g1.targets().front() == g2.targets().front() )
     {
-        if ( is_T_gate( g1 ) && ( is_T_gate( g2 ) ) )
+        if ( is_S_gate( g1 ) && ( is_S_gate( g2 ) ) )
         {
-            res = g1;
+            res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+            return true;
+        }
+        else if ( is_S_star_gate( g1 ) && ( is_S_star_gate( g2 ) ) )
+        {
+            res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+            return true;
+        }
+        else if ( ( is_T_gate( g1 ) && is_T_gate( g2 ) ) )
+        {
             res.set_type( pauli_tag( pauli_axis::Z, 2u, false ) );
             return true;
         }
-       if ( is_T_star_gate( g1 ) && ( is_T_star_gate( g2 ) ) )
-            {
-                res = g1;
-                res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
-                return true;
-            }
-        if ( is_S_gate( g1 ) && ( is_S_gate( g2 ) ) )
+        else if ( is_T_star_gate( g1 ) && ( is_T_star_gate( g2 ) ) )
         {
-            res = g1;
-            res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+            res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
             return true;
         }
-        if ( is_S_star_gate( g1 ) && ( is_S_star_gate( g2 ) ) )
+        else if ( is_T_star_gate( g1 ) && ( is_S_gate( g2 ) ) )
         {
-            res = g1;
-            res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+            res.set_type( pauli_tag( pauli_axis::Z, 4u, false ) );
+            return true;
+        }
+        else if ( is_S_gate( g1 ) && ( is_T_star_gate( g2 ) ) )
+        {
+            res.set_type( pauli_tag( pauli_axis::Z, 4u, false ) );
             return true;
         }
 
