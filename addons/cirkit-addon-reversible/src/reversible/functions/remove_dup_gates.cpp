@@ -42,40 +42,42 @@ circuit remove_dup_gates( const circuit& circ )
     circuit result = circ;
     gate g;
     unsigned i = 0, j;
-    while(i < result.num_gates() - 1 )
+    while(i < result.num_gates() - 1 && result.num_gates() != 0)
     {
         j = i + 1;
         bool done = false;
         bool incr_i = true;
         while( ( !done ) && ( j < result.num_gates() ) )
         {
-            if( is_inverse( result[i], result[j] ) )
+            if( can_be_removed( result[i], result[j] ) )
             {
-//                std::cout << "is_inverse " << i << " " << j << "\n";
+                std::cout << "can be removed " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
-                if(i>10)
-                    i = i - 10;
+                if(i>3)
+                    i = i - 3;
                 else
-                    i = 0; 
+                    i = 0;
+                j = i + 1; 
                 incr_i = false;
             }
             if ( !done && gates_can_merge( result[i], result[j], g) )
             {
- //               std::cout << "gates_can_merge " << i << " " << j << "\n";
+                std::cout << "gates_can_merge " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result[i] = g;
                 done = true;
-                if(i>10)
-                    i = i - 10;
+                if(i>3)
+                    i = i - 3;
                 else
-                    i = 0; 
+                    i = 0;
+                j = i + 1;  
                 incr_i = false;
             }
             if(!done && gates_can_move( result[i], result[j]) )
             {
-//                std::cout << "gates_can_move " << i << " " << j << "\n";
+                std::cout << "gates_can_move " << i << " " << j << "\n";
                 j++;
             }
             else{
@@ -92,42 +94,29 @@ circuit remove_dup_gates( const circuit& circ )
 
 // check if two gates are inverse of each other
 // only consderred a few self-inverse gates
-bool is_inverse(const gate& g1, const gate& g2 )
+bool can_be_removed(const gate& g1, const gate& g2 )
 {
-    if( (is_S_gate( g1 ) && is_S_star_gate( g2 )) ||
-       (is_S_gate( g2 ) && is_S_star_gate( g1 )) ||
-       (is_T_gate( g1 ) && is_T_star_gate( g2 )) ||
-       (is_T_gate( g2 ) && is_T_star_gate( g1 )))
+    if( (g1.targets().front() == g2.targets().front()) && (g1.controls() == g2.controls()) )
     {
-        if( g1.targets().front() == g2.targets().front())
-        {
+        if( is_S_gate( g1 ) && is_S_star_gate( g2 ) ) 
             return true;
-        }
+        if( is_S_gate( g2 ) && is_S_star_gate( g1 ) )
+            return true;
+        if( is_T_gate( g1 ) && is_T_star_gate( g2 ) )
+            return true;
+        if( is_T_gate( g2 ) && is_T_star_gate( g1 ) )
+            return true; 
+        if( is_v( g1 ) && is_v( g2 ) )
+            return true;
+        if( is_hadamard( g1 ) && is_hadamard( g2 ) )
+            return true;
+        if( is_toffoli( g1 ) && is_toffoli( g2 ) )
+            return true;
+        if( is_Z_gate( g1 ) && is_Z_gate( g2 ) )
+            return true;
+
     }
-    if( !same_type( g1, g2 )){
-        return false;
-    }
-    if( !(is_toffoli( g1 ) || is_hadamard( g1 ) ) )
-    {
-        return false;
-    }
-    if(( g1.targets().size() != g2.targets().size() ) ||
-       ( g1.controls().size() != g2.controls().size() ))
-    {
-        return false;
-    }
-    if( ( g1.targets().size() != 1 ) ||
-       ( g1.targets().front() != g2.targets().front()) )
-    {
-        return false;
-    }
-    if( ( g1.controls().size() == 1 ) &&
-       ( g1.controls().front().line() != g2.controls().front().line() ) )
-    {
-        return false;
-    }
-    
-    return true;
+    return false;
 }
  
 // check if the two gates may be inter changed
@@ -271,7 +260,7 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
     }
     return false;
 }
-   
+
 bool is_T_gate( const gate& g )
 {
     if ( is_pauli( g ) )
