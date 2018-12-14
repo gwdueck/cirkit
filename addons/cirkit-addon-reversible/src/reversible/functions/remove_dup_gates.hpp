@@ -46,13 +46,17 @@ bool can_be_removed(const gate& g1, const gate& g2 );
 bool gates_can_move( const gate& g1, const gate& g2 );
 bool gates_do_not_intersect( const gate& g1, const gate& g2 );
 bool gates_can_merge( const gate& g1, const gate& g2, gate& res);
+bool gates_can_merge( const gate& g1, const gate& g2, const gate& g3, gate& res);
 bool is_T_gate( const gate& g );
 bool is_T_star_gate( const gate& g );
 bool is_S_gate( const gate& g );
 bool is_S_star_gate( const gate& g );
 bool is_Z_gate( const gate& g );
 bool is_RZ_gate( const gate& g );
-    
+bool is_V_gate( const gate& g );
+bool is_V_star_gate( const gate& g );
+bool is_X_gate( const gate& g );
+
 }
 
 #endif

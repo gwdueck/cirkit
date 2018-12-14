@@ -62,11 +62,29 @@ circuit remove_dup_gates( const circuit& circ )
                 j = i + 1; 
                 incr_i = false;
             }
+            if ( j+1 < result.num_gates() && !done && gates_can_merge( result[i], result[j], result[j+1],  g) )
+            {
+                std::cout << "gates_can_merge " << i << " " << j << "\n";
+                result.remove_gate_at(j+1);
+                result.remove_gate_at(j);
+                result.remove_gate_at(i);
+                // result[i] = g;
+                result.insert_gate( i ) = g;
+                done = true;
+                if(i>4)
+                    i = i - 4;
+                else
+                    i = 0;
+                j = i + 1;  
+                incr_i = false;
+            }
             if ( !done && gates_can_merge( result[i], result[j], g) )
             {
                 std::cout << "gates_can_merge " << i << " " << j << "\n";
                 result.remove_gate_at(j);
-                result[i] = g;
+                result.remove_gate_at(i);
+                // result[i] = g;
+                result.insert_gate( i ) = g;
                 done = true;
                 if(i>3)
                     i = i - 3;
@@ -105,7 +123,9 @@ bool can_be_removed(const gate& g1, const gate& g2 )
             return true;
         if( is_T_gate( g2 ) && is_T_star_gate( g1 ) )
             return true; 
-        if( is_v( g1 ) && is_v( g2 ) )
+        if( is_V_gate( g1 ) && is_V_star_gate( g2 ) )
+            return true;
+        if( is_V_gate( g2 ) && is_V_star_gate( g1 ) )
             return true;
         if( is_hadamard( g1 ) && is_hadamard( g2 ) )
             return true;
@@ -231,37 +251,138 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
     res = g1;
     if ( g1.targets().front() == g2.targets().front() )
     {
-        if ( is_S_gate( g1 ) && ( is_S_gate( g2 ) ) )
+        if ( ( is_S_gate( g1 )      && is_S_gate( g2 )      ) || 
+             ( is_S_star_gate( g1 ) && is_S_star_gate( g2 ) ) ) 
         {
             res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
             return true;
         }
-        else if ( is_S_star_gate( g1 ) && ( is_S_star_gate( g2 ) ) )
-        {
-            res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
-            return true;
-        }
-        else if ( ( is_T_gate( g1 ) && is_T_gate( g2 ) ) )
+        else if ( ( is_T_gate( g1 )      && is_T_gate( g2 )      ) ||
+                  ( is_S_star_gate( g1 ) && is_Z_gate( g2 )      ) ||
+                  ( is_Z_gate( g1 )      && is_S_star_gate( g2 ) ) )
         {
             res.set_type( pauli_tag( pauli_axis::Z, 2u, false ) );
             return true;
         }
-        else if ( is_T_star_gate( g1 ) && ( is_T_star_gate( g2 ) ) )
+        else if ( ( is_T_star_gate( g1 ) && is_T_star_gate( g2 ) ) ||
+                  ( is_S_gate( g1 )      && is_Z_gate( g2 ) )      ||
+                  ( is_Z_gate( g1 )      && is_S_gate( g2 ) )      )
         {
             res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
             return true;
         }
-        else if ( is_T_star_gate( g1 ) && ( is_S_gate( g2 ) ) )
+        else if ( ( is_T_star_gate( g1 ) && is_S_gate( g2 ) )      ||
+                  ( is_S_gate( g1 )      && is_T_star_gate( g2 ) ) )
         {
             res.set_type( pauli_tag( pauli_axis::Z, 4u, false ) );
             return true;
         }
-        else if ( is_S_gate( g1 ) && ( is_T_star_gate( g2 ) ) )
+        else if ( ( is_T_gate( g1 )      && is_S_star_gate( g2 ) ) ||
+                  ( is_S_star_gate( g1 ) && is_T_gate( g2 )      ) )
         {
-            res.set_type( pauli_tag( pauli_axis::Z, 4u, false ) );
+            res.set_type( pauli_tag( pauli_axis::Z, 4u, true ) );
             return true;
         }
+        else if ( ( is_V_star_gate( g1 ) && is_X_gate( g2 ) )      ||
+                  ( is_X_gate( g1 )      && is_V_star_gate( g2 ) ) )
+        {
+            res.set_type( v_tag( false ) );
+            return true;
+        }
+        else if ( ( is_V_gate( g1 ) && is_X_gate( g2 ) ) ||
+                  ( is_X_gate( g1 ) && is_V_gate( g2 ) ) )
+        {
+            res.set_type( v_tag( true ) );
+            return true;
+        }
+        else if ( ( is_V_gate( g1 )      && is_V_gate( g2 ) )      ||
+                  ( is_V_star_gate( g1 ) && is_V_star_gate( g2 ) ) )
+        {
+            res.set_type( toffoli_tag() );
+            return true;
+        }
+    }
+    return false;
+}
 
+bool gates_can_merge( const gate& g1, const gate& g2, const gate& g3, gate& res)
+{
+    res = g1;
+    if ( g1.targets().front() == g2.targets().front() && g2.targets().front() == g3.targets().front() )
+    {
+        if ( is_hadamard( g1 ) && is_hadamard( g3 ) )
+        {
+            if( is_S_star_gate( g2 ) )
+            {
+                res.set_type( v_tag( true ) );
+                return true;    
+            }
+            else if( is_S_gate( g2 ) )
+            {
+                res.set_type( v_tag( false ) );
+                return true;    
+            }
+            else if( is_Z_gate( g2 ) )
+            {
+                res.set_type( toffoli_tag() );
+                return true;    
+            }
+            else if( is_X_gate( g2 ) )
+            {
+                res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+                return true;    
+            }
+            else if( is_V_gate( g2 ) )
+            {
+                res.set_type( pauli_tag( pauli_axis::Z, 2u, false ) );
+                return true;    
+            }
+            else if( is_V_star_gate( g2 ) )
+            {
+                res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
+                return true;    
+            }
+        }
+        else if( is_hadamard( g2 ) )
+        {
+            if( is_V_gate( g1 ) && is_S_star_gate( g3 ) || 
+                is_V_star_gate( g1 ) && is_S_gate( g3 ) ||
+                is_S_gate( g1 ) && is_V_star_gate( g3 ) ||
+                is_S_star_gate( g1 ) && is_V_gate( g3 ) ||
+                is_X_gate( g1 ) && is_Z_gate( g3 ) ||
+                is_Z_gate( g1 ) && is_X_gate( g3 ) )
+            {
+                res.set_type( hadamard_tag() );
+                return true; 
+            }
+        }
+    }
+    return false;
+}
+
+bool is_X_gate( const gate& g )
+{
+    if ( is_toffoli( g ) && g.controls().empty() )
+        return true;
+    return false;
+}
+
+bool is_V_gate( const gate& g )
+{
+    if ( is_v( g ) )
+    {
+        const auto& tag = boost::any_cast<v_tag>( g.type() );
+        return ( !tag.adjoint );
+    }
+    return false;
+}
+    
+bool is_V_star_gate( const gate& g )
+{
+    if ( is_v( g ) )
+    {
+        const auto& tag = boost::any_cast<v_tag>( g.type() );
+        return ( tag.adjoint );
     }
     return false;
 }
