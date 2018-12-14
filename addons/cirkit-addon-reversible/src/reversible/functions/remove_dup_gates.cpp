@@ -64,7 +64,7 @@ circuit remove_dup_gates( const circuit& circ )
             }
             if ( j+1 < result.num_gates() && !done && gates_can_merge( result[i], result[j], result[j+1],  g) )
             {
-                std::cout << "gates_can_merge " << i << " " << j << "\n";
+                std::cout << "gates_can_merge " << i << " " << j << " " << j+1 << "\n";
                 result.remove_gate_at(j+1);
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
@@ -308,6 +308,7 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
 bool gates_can_merge( const gate& g1, const gate& g2, const gate& g3, gate& res)
 {
     res = g1;
+    
     if ( g1.targets().front() == g2.targets().front() && g2.targets().front() == g3.targets().front() )
     {
         if ( is_hadamard( g1 ) && is_hadamard( g3 ) )
