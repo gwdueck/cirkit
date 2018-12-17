@@ -44,6 +44,7 @@ namespace cirkit
 circuit remove_dup_gates( const circuit& circ );
 bool can_be_removed(const gate& g1, const gate& g2 );
 bool gates_can_move( const gate& g1, const gate& g2 );
+bool gates_can_move( const gate& g1, const gate& g2, const gate& g3, const gate& g4 );
 bool gates_do_not_intersect( const gate& g1, const gate& g2 );
 bool gates_can_merge( const gate& g1, const gate& g2, gate& res);
 bool gates_can_merge( const gate& g1, const gate& g2, const gate& g3, gate& res);

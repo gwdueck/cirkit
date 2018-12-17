@@ -51,7 +51,7 @@ circuit remove_dup_gates( const circuit& circ )
         {
             if( can_be_removed( result[i], result[j] ) )
             {
-                std::cout << "can be removed " << i << " " << j << "\n";
+                // std::cout << "can be removed " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
@@ -64,7 +64,7 @@ circuit remove_dup_gates( const circuit& circ )
             }
             if ( j+1 < result.num_gates() && !done && gates_can_merge( result[i], result[j], result[j+1],  g) )
             {
-                std::cout << "gates_can_merge " << i << " " << j << " " << j+1 << "\n";
+                // std::cout << "gates_can_merge " << i << " " << j << " " << j+1 << "\n";
                 result.remove_gate_at(j+1);
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
@@ -80,7 +80,7 @@ circuit remove_dup_gates( const circuit& circ )
             }
             if ( !done && gates_can_merge( result[i], result[j], g) )
             {
-                std::cout << "gates_can_merge " << i << " " << j << "\n";
+                // std::cout << "gates_can_merge " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 // result[i] = g;
@@ -95,10 +95,16 @@ circuit remove_dup_gates( const circuit& circ )
             }
             if(!done && gates_can_move( result[i], result[j]) )
             {
-                std::cout << "gates_can_move " << i << " " << j << "\n";
+                // std::cout << "gates_can_move " << i << " " << j << "\n";
                 j++;
             }
-            else{
+            else if( j+2 < result.num_gates() && !done && gates_can_move( result[i], result[j], result[j+1], result[j+2] ) ) 
+            {
+                // std::cout << "gates_can_move " << i << " " << j << " " << j+1 << " " << j+2 <<"\n";
+                j = j + 3;
+            }
+            else
+            {
                 done = true;
             }
         }
@@ -147,14 +153,16 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     // only move hadamard if it does not intersect with control nor target
     if ( is_hadamard( g1 ) )
     {
-        if ( target_g2 == target_g1 ){
+        if ( target_g2 == target_g1 )
+        {
             return false;
         }
         if ( g2.controls().empty() )
         {
             return true;
         }
-        else{
+        else
+        {
             unsigned control_g2 = g2.controls().front().line();
             if ( g1.targets().front() == control_g2 )
             {
@@ -181,6 +189,11 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     // g1 is CNOT gate
     else if ( is_toffoli( g1 ) )
     {
+        if(is_S_gate(g2)||is_S_star_gate(g2)||is_T_gate(g2)||is_T_star_gate(g2)||is_Z_gate(g2))
+            if(g1.controls().front().line() == g2.targets().front())
+                return true;
+            else
+                return false;
         if ( !is_toffoli( g2 ) )
         {
             return ( g1.controls().front().line() != target_g2 ) && (target_g1 != target_g2 );
@@ -198,6 +211,11 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     // g2 CNOT; g1 is not a Toffoli
     else if ( is_toffoli( g2 ) && !g2.controls().empty())
     {
+        if(is_S_gate(g1)||is_S_star_gate(g1)||is_T_gate(g1)||is_T_star_gate(g1)||is_Z_gate(g1))
+            if(g2.controls().front().line() == g1.targets().front())
+                return true;
+            else
+                return false;
         return ( target_g1 != g2.controls().front().line() ) && (target_g1 != target_g2 );
     }
     if( target_g1 != target_g2 )
@@ -206,24 +224,38 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     }
     // they have the same target
     // both gates must be one of S, S*, T, T*, or Z
-    if( ( is_S_gate( g1 ) ||
-         is_S_star_gate( g1 ) ||
-         is_T_gate( g1 ) ||
-         is_T_star_gate( g1 ) ||
-         is_Z_gate( g1 )
-       ) && (
-             is_S_gate( g2 ) ||
-             is_S_star_gate( g2 ) ||
-             is_T_gate( g2 ) ||
-             is_T_star_gate( g2 ) ||
-             is_Z_gate( g2 )
-       ))
+    if( ( is_S_gate( g1 )  || is_S_star_gate( g1 ) ||
+          is_T_gate( g1 )  || is_T_star_gate( g1 ) ||
+          is_Z_gate( g1 )) && 
+        ( is_S_gate( g2 )  || is_S_star_gate( g2 ) ||
+          is_T_gate( g2 )  || is_T_star_gate( g2 ) ||
+          is_Z_gate( g2 )) )
     {
         return true;
     }
     return false;
 }
 
+bool gates_can_move( const gate& g1, const gate& g2, const gate& g3, const gate& g4 )
+{
+    if( is_toffoli( g2 ) && is_toffoli(g4) && !g2.controls().empty() ) 
+        if( g2.controls().front().line() == g4.controls().front().line() )
+            if( is_T_gate( g3 ) || is_T_star_gate( g3 ) )
+                if( g2.targets().front() == g3.targets().front() )
+                    if( g1.targets().front() == g2.targets().front() )
+                    {
+                        if( is_S_gate(g1)||is_S_star_gate(g1)||
+                            is_T_gate(g1)||is_T_star_gate(g1)||
+                            is_Z_gate( g1 ) )
+                                return true;
+                    }
+                    if( g1.controls().front().line() == g2.targets().front() &&
+                        g1.targets().front() != g2.controls().front().line())
+                    {
+                        return true;
+                    }
+    return false;
+}
 // no controls or targets intersect
 bool gates_do_not_intersect( const gate& g1, const gate& g2 )
 {
