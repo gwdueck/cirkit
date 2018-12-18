@@ -71,7 +71,7 @@ circuit remove_dup_gates( const circuit& circ )
                 // result[i] = g;
                 result.insert_gate( i ) = g;
                 done = true;
-                if(i>4)
+                if(i > 4)
                     i = i - 4;
                 else
                     i = 0;
@@ -209,13 +209,12 @@ bool gates_can_move( const gate& g1, const gate& g2 )
         }
     }
     // g2 CNOT; g1 is not a Toffoli
-    else if ( is_toffoli( g2 ) && !g2.controls().empty())
+    else if ( is_toffoli( g2 ) && !g2.controls().empty() )
     {
         if(is_S_gate(g1)||is_S_star_gate(g1)||is_T_gate(g1)||is_T_star_gate(g1)||is_Z_gate(g1))
             if(g2.controls().front().line() == g1.targets().front())
                 return true;
-            else
-                return false;
+
         return ( target_g1 != g2.controls().front().line() ) && (target_g1 != target_g2 );
     }
     if( target_g1 != target_g2 )
@@ -238,22 +237,34 @@ bool gates_can_move( const gate& g1, const gate& g2 )
 
 bool gates_can_move( const gate& g1, const gate& g2, const gate& g3, const gate& g4 )
 {
-    if( is_toffoli( g2 ) && is_toffoli(g4) && !g2.controls().empty() ) 
+
+    if( is_toffoli( g2 ) && is_toffoli(g4) && !g2.controls().empty() )
+    {
         if( g2.controls().front().line() == g4.controls().front().line() )
+        {
             if( is_T_gate( g3 ) || is_T_star_gate( g3 ) )
+            {
                 if( g2.targets().front() == g3.targets().front() )
+                {
                     if( g1.targets().front() == g2.targets().front() )
                     {
                         if( is_S_gate(g1)||is_S_star_gate(g1)||
                             is_T_gate(g1)||is_T_star_gate(g1)||
                             is_Z_gate( g1 ) )
-                                return true;
+                        {
+                            return true;
+                        }
                     }
-                    if( g1.controls().front().line() == g2.targets().front() &&
+                    if( !g1.controls().empty() && 
+                        g1.controls().front().line() == g2.targets().front() &&
                         g1.targets().front() != g2.controls().front().line())
                     {
                         return true;
                     }
+                }
+            }
+        }
+    }
     return false;
 }
 // no controls or targets intersect

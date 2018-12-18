@@ -62,8 +62,8 @@ alex_command::alex_command( const environment::ptr& env )
 	: cirkit_command( env, "Random projects" )
 {
 	opts.add_options()
-    ( "interchange,c",  "interchange controls" )
-    ( "clifford,t",  "transform to Clifford+T" )
+    ( "interchange,i",  "interchange controls" )
+    ( "clifford,c",  "transform to Clifford+T" )
 	;
 
 }
