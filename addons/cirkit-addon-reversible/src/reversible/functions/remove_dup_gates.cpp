@@ -58,8 +58,8 @@ circuit remove_dup_gates( const circuit& circ )
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
-                if(i>3)
-                    i = i - 3;
+                if( i > 10 )
+                    i = i - 10;
                 else
                     i = 0;
                 j = i + 1; 
@@ -75,8 +75,8 @@ circuit remove_dup_gates( const circuit& circ )
                 // result[i] = g;
                 result.insert_gate( i ) = g;
                 done = true;
-                if(i > 4)
-                    i = i - 4;
+                if( i > 10 )
+                    i = i - 10;
                 else
                     i = 0;
                 j = i + 1;  
@@ -215,7 +215,11 @@ bool gates_can_move( const gate& g1, const gate& g2 )
         if ( !is_toffoli( g2 ) )
         {
             if ( !g2.controls().empty() )
-                return ( target_g1 != g2.controls().front().line() );
+                if( is_V_gate( g2) || is_V_star_gate( g2 ) )
+                    if( g1.controls().front().line() == g2.targets().front() )
+                        return false;
+                else
+                    return ( target_g1 != g2.controls().front().line() );
             return ( g1.controls().front().line() != target_g2 ) && (target_g1 != target_g2 );
         }
         else if ( g2.controls().empty() )

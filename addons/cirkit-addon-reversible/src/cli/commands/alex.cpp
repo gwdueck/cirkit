@@ -221,8 +221,8 @@ bool alex_command::execute()
    	auto settings = make_settings();
  	settings->set( "controls_threshold", 2u );
  	circ = nct_mapping( circ, settings, statistics );
-
     transform_to_v(circ, vCircuit);
+
 	if ( is_set( "clifford" ) )
     	transform_to_clifford(vCircuit, cliffordCircuit);
 	
