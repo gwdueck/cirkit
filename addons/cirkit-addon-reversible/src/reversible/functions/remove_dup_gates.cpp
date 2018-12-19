@@ -119,7 +119,7 @@ circuit remove_dup_gates( const circuit& circ )
 // check if two gates can be removed
 bool can_be_removed(const gate& g1, const gate& g2 )
 {
-    if( (g1.targets().front() == g2.targets().front()) && (g1.controls() == g2.controls()) )
+    if( (g1.targets().front() == g2.targets().front()) && (g1.controls() == g2.controls()))
     {
         if( is_S_gate( g1 ) && is_S_star_gate( g2 ) ) 
             return true;
@@ -163,13 +163,24 @@ bool gates_can_move( const gate& g1, const gate& g2 )
         }
         else
         {
-            unsigned control_g2 = g2.controls().front().line();
-            if ( g1.targets().front() == control_g2 )
+            if ( g1.targets().front() == g2.controls().front().line() )
             {
                 return false;
             }
         }
         return true;
+    }
+    // g1 is V gate
+    else if ( is_V_gate( g1 ) || is_V_star_gate( g1 ) )
+    {
+        if( g2.controls().empty() )
+            return ( target_g1 != target_g2 );
+        else
+            return  ( g1.controls().front().line() != g2.controls().front().line() ) && 
+                    ( target_g1  != target_g2 ) && 
+                    ( g1.controls().front().line() != target_g2) &&
+                    ( target_g1 != g1.controls().front().line());
+
     }
     // g1 is a NOT gate
     else if ( is_toffoli( g1 ) && g1.controls().empty() )
@@ -190,12 +201,14 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     else if ( is_toffoli( g1 ) )
     {
         if(is_S_gate(g2)||is_S_star_gate(g2)||is_T_gate(g2)||is_T_star_gate(g2)||is_Z_gate(g2))
-            if(g1.controls().front().line() == g2.targets().front())
+            if(g1.controls().front().line() == target_g2)
                 return true;
             else
                 return false;
         if ( !is_toffoli( g2 ) )
         {
+            if ( !g2.controls().empty() )
+                return ( target_g1 != g2.controls().front().line() );
             return ( g1.controls().front().line() != target_g2 ) && (target_g1 != target_g2 );
         }
         else if ( g2.controls().empty() )
@@ -204,8 +217,7 @@ bool gates_can_move( const gate& g1, const gate& g2 )
         }
         else
         {
-            return (g2.controls().front().line() != target_g1) &&
-            (g1.controls().front().line() != target_g2);
+            return (g2.controls().front().line() != target_g1) && (g1.controls().front().line() != target_g2);
         }
     }
     // g2 CNOT; g1 is not a Toffoli
