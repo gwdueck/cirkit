@@ -49,6 +49,9 @@ circuit remove_dup_gates( const circuit& circ )
         bool incr_i = true;
         while( ( !done ) && ( j < result.num_gates() ) )
         {
+            // std::cout << "gates: " << i << " " << j << std::endl;
+
+            // std::cout << "removed?" << std::endl;
             if( can_be_removed( result[i], result[j] ) )
             {
                 // std::cout << "can be removed " << i << " " << j << "\n";
@@ -62,6 +65,7 @@ circuit remove_dup_gates( const circuit& circ )
                 j = i + 1; 
                 incr_i = false;
             }
+            // std::cout << "merge????" << std::endl;
             if ( j+1 < result.num_gates() && !done && gates_can_merge( result[i], result[j], result[j+1],  g) )
             {
                 // std::cout << "gates_can_merge " << i << " " << j << " " << j+1 << "\n";
@@ -78,6 +82,7 @@ circuit remove_dup_gates( const circuit& circ )
                 j = i + 1;  
                 incr_i = false;
             }
+            // std::cout << "merge?" << std::endl;
             if ( !done && gates_can_merge( result[i], result[j], g) )
             {
                 // std::cout << "gates_can_merge " << i << " " << j << "\n";
@@ -93,6 +98,7 @@ circuit remove_dup_gates( const circuit& circ )
                 j = i + 1;  
                 incr_i = false;
             }
+            // std::cout << "move?" << std::endl;
             if(!done && gates_can_move( result[i], result[j]) )
             {
                 // std::cout << "gates_can_move " << i << " " << j << "\n";
@@ -148,6 +154,7 @@ bool can_be_removed(const gate& g1, const gate& g2 )
 // WARNING: only written for Clifford+T gates
 bool gates_can_move( const gate& g1, const gate& g2 )
 {
+    // std::cout << "inside move?" << std::endl;
     unsigned target_g2 = g2.targets().front();
     unsigned target_g1 = g1.targets().front();
     // only move hadamard if it does not intersect with control nor target
@@ -173,9 +180,9 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     // g1 is V gate
     else if ( is_V_gate( g1 ) || is_V_star_gate( g1 ) )
     {
-        if( g2.controls().empty() )
+        if( g2.controls().empty() || g1.controls().empty() )
             return ( target_g1 != target_g2 );
-        else
+        else    
             return  ( g1.controls().front().line() != g2.controls().front().line() ) && 
                     ( target_g1  != target_g2 ) && 
                     ( g1.controls().front().line() != target_g2) &&
@@ -194,7 +201,7 @@ bool gates_can_move( const gate& g1, const gate& g2 )
             }
             return true;
         }
-        assert ( g2.controls().empty() ); // only controlled gates are CNOTs
+        // assert ( g2.controls().empty() ); // only controlled gates are CNOTs
         return ( target_g2 != target_g1 );
     }
     // g1 is CNOT gate
@@ -249,8 +256,9 @@ bool gates_can_move( const gate& g1, const gate& g2 )
 
 bool gates_can_move( const gate& g1, const gate& g2, const gate& g3, const gate& g4 )
 {
+    // std::cout << "inside move????" << std::endl;
 
-    if( is_toffoli( g2 ) && is_toffoli(g4) && !g2.controls().empty() )
+    if( is_toffoli( g2 ) && is_toffoli(g4) && !g2.controls().empty() && !g4.controls().empty())
     {
         if( ( g2.controls().front().line() == g4.controls().front().line() ) &&
             ( g2.targets().front() == g4.targets().front() ) )
@@ -305,7 +313,7 @@ bool gates_do_not_intersect( const gate& g1, const gate& g2 )
 bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
 {
     res = g1;
-    if ( g1.targets().front() == g2.targets().front() )
+    if ( ( g1.targets() == g2.targets() ) && ( g1.controls() == g2.controls() ) ) 
     {
         if ( ( is_S_gate( g1 )      && is_S_gate( g2 )      ) || 
              ( is_S_star_gate( g1 ) && is_S_star_gate( g2 ) ) ) 
@@ -339,20 +347,32 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
             res.set_type( pauli_tag( pauli_axis::Z, 4u, true ) );
             return true;
         }
-        else if ( ( is_V_star_gate( g1 ) && is_X_gate( g2 ) )      ||
-                  ( is_X_gate( g1 )      && is_V_star_gate( g2 ) ) )
+        else if ( is_V_star_gate( g1 ) && is_X_gate( g2 )) 
         {
             res.set_type( v_tag( false ) );
             return true;
         }
-        else if ( ( is_V_gate( g1 ) && is_X_gate( g2 ) ) ||
-                  ( is_X_gate( g1 ) && is_V_gate( g2 ) ) )
+        else if ( is_X_gate( g1 ) && is_V_star_gate( g2 ))
+        {
+            res.set_type( v_tag( false ) );
+            return true;
+        }
+        else if ( is_V_gate( g1 ) && is_X_gate( g2 ))
         {
             res.set_type( v_tag( true ) );
             return true;
         }
-        else if ( ( is_V_gate( g1 )      && is_V_gate( g2 ) )      ||
-                  ( is_V_star_gate( g1 ) && is_V_star_gate( g2 ) ) )
+        else if ( is_X_gate( g1 ) && is_V_gate( g2 ) )
+        {
+            res.set_type( v_tag( true ) );
+            return true;
+        }
+        else if ( is_V_gate( g1 ) && is_V_gate( g2 ) )
+        {
+            res.set_type( toffoli_tag() );
+            return true;
+        }
+        else if ( is_V_star_gate( g1 ) && is_V_star_gate( g2 ) )
         {
             res.set_type( toffoli_tag() );
             return true;

@@ -87,6 +87,19 @@ void write_qc( const circuit& circ, std::ostream& os, bool iqc_compliant )
       }
       os << " " << vars[gate.targets().front()] << std::endl;
     }
+    else if ( is_v( gate ) )
+    {
+      os << "V";
+      for ( const auto& c : gate.controls() )
+      {
+        os << " " << vars[c.line()];
+        if ( !c.polarity() )
+        {
+          os << "'";
+        }
+      }
+      os << " " << vars[gate.targets().front()] << std::endl;
+    }
     else if ( is_pauli( gate ) )
     {
       const auto& tag = boost::any_cast<pauli_tag>( gate.type() );
