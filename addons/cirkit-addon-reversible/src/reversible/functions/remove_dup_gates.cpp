@@ -252,7 +252,8 @@ bool gates_can_move( const gate& g1, const gate& g2, const gate& g3, const gate&
 
     if( is_toffoli( g2 ) && is_toffoli(g4) && !g2.controls().empty() )
     {
-        if( g2.controls().front().line() == g4.controls().front().line() )
+        if( ( g2.controls().front().line() == g4.controls().front().line() ) &&
+            ( g2.targets().front() == g4.targets().front() ) )
         {
             if( is_T_gate( g3 ) || is_T_star_gate( g3 ) )
             {

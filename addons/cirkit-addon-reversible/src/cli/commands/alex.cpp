@@ -32,7 +32,7 @@
 #include <iostream>
 #include <core/utils/program_options.hpp>
 #include <boost/program_options.hpp>
-
+#include <reversible/functions/ibm_helper.hpp>
 #include <xtensor/xio.hpp>
 #include <xtensor/xmath.hpp>
 #include <xtensor-blas/xlinalg.hpp>
@@ -40,6 +40,7 @@
 #include <cli/reversible_stores.hpp>
 #include <reversible/utils/matrix_utils.hpp>
 #include <alice/rules.hpp>
+#include <reversible/functions/clear_circuit.hpp>
 #include <reversible/functions/copy_metadata.hpp>
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/add_line_to_circuit.hpp>
@@ -52,7 +53,7 @@
 #include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/find_lines.hpp>
 #include <reversible/mapping/nct_mapping.hpp>
-
+#include <reversible/functions/remove_dup_gates.hpp>
 namespace cirkit
 {
 
@@ -64,6 +65,7 @@ alex_command::alex_command( const environment::ptr& env )
 	opts.add_options()
     ( "interchange,i",  "interchange controls" )
     ( "clifford,c",  "transform to Clifford+T" )
+    ( "permutations,p",  "try_all_permutations permutations (only 5 qubits)" )
 	;
 
 }
@@ -183,6 +185,22 @@ void transform_to_clifford(circuit& circ_in, circuit& circ_out)
 	}
 }
 
+void try_all_permutations(circuit circ)
+{
+    int perm[5] = {0, 1, 2, 3, 4}, inv_perm[5], best_perm[5] = {0, 1, 2, 3, 4};
+    circuit circ_test;
+    do
+    {
+    	clear_circuit( circ_test );
+    	copy_circuit(circ, circ_test);
+	    permute_lines( circ_test , perm );
+        circ_test = remove_dup_gates( circ_test );
+        for( int i = 0; i < 5; i++ )
+            std::cout << perm[i] << " ";
+        std::cout << "gates = " << circ_test.num_gates() << std::endl;
+   	} while ( std::next_permutation(perm,perm+5) );
+}
+
 bool alex_command::execute()
 {
 	if ( is_set("interchange") )
@@ -210,9 +228,17 @@ bool alex_command::execute()
 	
 	circuits.extend();
 	if ( is_set( "clifford" ) )
+	{
+		if ( is_set( "permutations" ) )
+			try_all_permutations(cliffordCircuit);
 		circuits.current() = cliffordCircuit;
+	}
 	else
+	{
+		if ( is_set( "permutations" ) )
+			try_all_permutations(vCircuit);
 		circuits.current() = vCircuit;
+	}
 	
 	return true;
 }
