@@ -95,6 +95,7 @@ bool ibm_command::execute()
     auto& circuits = env->store<circuit>();
     circuit circ_working = circuits.current();
     circuit circ_IBM;
+    // std::cout << " igates: " << circ_working.num_gates();
     unsigned start = circ_working.lines()+1;
     for(unsigned i = start ; i <= 5u; i++)
     {
@@ -181,10 +182,12 @@ bool ibm_command::execute()
         }
         circuits.current() = circ_best;
         std::cout << "best permutation = ";
+        // std::cout << " best permutation = ";
         for( int i = 0; i < 5; i++ )
         {
             std::cout << best_perm[i] << " ";
         }
+        // std::cout << "gates = " << best_cost;
         std::cout << "gates = " << best_cost << std::endl;
     }
     return true;
