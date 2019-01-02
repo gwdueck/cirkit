@@ -393,17 +393,17 @@ bool gates_can_merge( const gate& g1, const gate& g2, const gate& g3, gate& res)
     {
         if ( is_hadamard( g1 ) && is_hadamard( g3 ) )
         {
-            if( is_S_star_gate( g2 ) )
-            {
-                res.set_type( v_tag( true ) );
-                return true;    
-            }
-            else if( is_S_gate( g2 ) )
-            {
-                res.set_type( v_tag( false ) );
-                return true;    
-            }
-            else if( is_Z_gate( g2 ) )
+            // if( is_S_star_gate( g2 ) )
+            // {
+            //     res.set_type( v_tag( true ) );
+            //     return true;    
+            // }
+            // else if( is_S_gate( g2 ) )
+            // {
+            //     res.set_type( v_tag( false ) );
+            //     return true;    
+            // }
+            if( is_Z_gate( g2 ) )
             {
                 res.set_type( toffoli_tag() );
                 return true;    
