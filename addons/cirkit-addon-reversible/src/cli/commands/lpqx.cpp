@@ -91,12 +91,7 @@ void generateMatrixCnots( circuit& circ, matrix& m, matrix& v )
 		  if( is_toffoli( gate ) )
 		  	++m[control][target];
 		  else if ( is_v( gate ) )
-		  {
-		  	if( control < target )
-		  		++v[control][target];
-		  	else
-		  		++v[target][control];
-		  }
+		  	++v[control][target];
 		}
 	}
 }
@@ -143,12 +138,12 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, unsigned
 
 	for (int i = 0; i < qx.size(); ++i)
 	{
-		for (int j = i + 1; j < qx.size(); ++j)
+		for (int j = 0; j < qx.size(); ++j)
 		{
 			bool line = false;
 			for (int k = 0; k < qx.size(); ++k)
 			{
-				for (int m = k + 1; m < qx.size(); ++m)
+				for (int m = 0; m < qx.size(); ++m)
 				{
 					if( i != j && vgates[i][j] > 0 && k != m)
 					{
@@ -160,10 +155,11 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, unsigned
 					}
 				}
 			}
+			if(line)
+				outputFile << std::endl;
 		}
 	}
 
-	bool nocnot = true;
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
@@ -175,33 +171,20 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, unsigned
 				{
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
-						if(nocnot)
-							outputFile << std::endl;
-						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
-							outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << ";";
-						else if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && cplex)
-							outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
-						else
-							outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+						outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
 						line = true;
-						nocnot = false;
 					}
 				}
 			}
-			if(line && aux < difGates-1)
-			{
-				outputFile << std::endl;
-				++aux;
-			}
-			else if(line)
+			if(line)
 			{
 				outputFile << std::endl;
 			}
 		}
 	}
-	if( nocnot && !cplex)
+	if(!cplex)
 		outputFile << "0;" << std::endl;
-	else if( nocnot && cplex)
+	else if(cplex)
 		outputFile << "0" << std::endl;
 
 	if(cplex)
@@ -228,27 +211,29 @@ void printOneGateRestriction( matrix& cnots, matrix& vgates )
 
 	for (int i = 0; i < vgates.size(); ++i)
 	{
-		for (int j = i + 1; j < vgates.size(); ++j)
+		for (int j = 0; j < vgates.size(); ++j)
 		{
 			bool line = false;
+			unsigned end = 0;
 			for (int k = 0; k < vgates.size(); ++k)
 			{
-				for (int m = k + 1; m < vgates.size(); ++m)
+				for (int m = 0; m < vgates.size(); ++m)
 				{
 					if( i != j && vgates[i][j] > 0 && k != m)
 					{
-						if(m == vgates.size()-1 && k == vgates.size()-2 && !cplex)
-							outputFile << "V" << i << "_" << j << "c" << k << "_" << m << " = " << "1" << ";";
-						else if(m == vgates.size()-1 && k == vgates.size()-2 && cplex)
-							outputFile << "V" << i << "_" << j << "c" << k << "_" << m << " = " << "1";
-						else
+						++end;
+						if( end < (vgates.size()*vgates.size())-vgates.size() )
 							outputFile << "V" << i << "_" << j << "c" << k << "_" << m << " + ";
+						else
+							outputFile << "V" << i << "_" << j << "c" << k << "_" << m;
 						line = true;
 					}
 				}
 			}
-			if(line)
-				outputFile << std::endl;
+			if(line && cplex)
+				outputFile << " = 1" << std::endl;
+			else if(line && !cplex)
+				outputFile << " = 1;" << std::endl;
 		}
 	}
 
@@ -257,24 +242,26 @@ void printOneGateRestriction( matrix& cnots, matrix& vgates )
 		for (int j = 0; j < cnots.size(); ++j)
 		{
 			bool line = false;
+			unsigned end = 0;
 			for (int k = 0; k < cnots.size(); ++k)
 			{
 				for (int m = 0; m < cnots.size(); ++m)
 				{
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
-						if(k == cnots.size()-1 && m == cnots.size()-2 && !cplex)
-							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << "1" << ";";
-						else if(k == cnots.size()-1 && m == cnots.size()-2 && cplex)
-							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " = " << "1";
-						else
+						++end;
+						if( end < (cnots.size()*cnots.size())-cnots.size() )
 							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+						else
+							outputFile << "G" << i << "_" << j << "c" << k << "_" << m;
 						line = true;
 					}
 				}
 			}
-			if(line)
-				outputFile << std::endl;
+			if(line && cplex)
+				outputFile << " = 1" << std::endl;
+			else if(line && !cplex)
+				outputFile << " = 1;" << std::endl;
 		}
 	}
 	if(cplex)
@@ -363,7 +350,7 @@ void printLimitVariables( matrix& qx, matrix& cnots, unsigned difGates )
 }
 
 // Function to print the variables
-void printIntegerVariables( matrix& qx, matrix& cnots, matrix& vgates, unsigned difGates )
+void printIntegerVariables( matrix& cnots, matrix& vgates )
 {
 	unsigned aux = 0;
 	if(cplex)
@@ -379,57 +366,49 @@ void printIntegerVariables( matrix& qx, matrix& cnots, matrix& vgates, unsigned 
 
 	for (int i = 0; i < vgates.size(); ++i)
 	{
-		for (int j = i + 1; j < vgates.size(); ++j)
+		for (int j = 0; j < vgates.size(); ++j)
 		{
+			bool line = false;
 			for (int k = 0; k < vgates.size(); ++k)
 			{
-				for (int m = k + 1; m < vgates.size(); ++m)
+				for (int m = 0; m < vgates.size(); ++m)
 				{
 					if( i != j && vgates[i][j] > 0 && k != m)
 					{
 						outputFile << "V" << i << "_" << j << "c" << k << "_" << m << "  ";
+						line = true;
 					}
 				}
 			}
+			if(line)
+				outputFile << std::endl;
 		}
 	}
 
-	bool nocnot = true;
-	for (int i = 0; i < qx.size(); ++i)
+	for (int i = 0; i < cnots.size(); ++i)
 	{
-		for (int j = 0; j < qx.size(); ++j)
+		for (int j = 0; j < cnots.size(); ++j)
 		{
 			bool line = false;
-			for (int k = 0; k < qx.size(); ++k)
+			for (int k = 0; k < cnots.size(); ++k)
 			{
-				for (int m = 0; m < qx.size(); ++m)
+				for (int m = 0; m < cnots.size(); ++m)
 				{
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
-						if(nocnot)
-							outputFile << std::endl;
-						if(k == qx.size()-1 && m == qx.size()-2 && aux == difGates-1 && !cplex)
-							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << ";";
-						else
-							outputFile << "G" << i << "_" << j << "c" << k << "_" << m << "  ";
+						outputFile << "G" << i << "_" << j << "c" << k << "_" << m << "  ";
 						line = true;
-						nocnot = false;
 					}
 				}
 			}
-			if(line && aux < difGates-1)
-			{
+			if(line)
 				outputFile << std::endl;
-				++aux;
-			}
-			else if(line)
-			{
-				outputFile << std::endl;
-			}
 		}
 	}
-	if(nocnot)
-		outputFile << std::endl;
+	if(cplex)
+		outputFile << "" << std::endl;
+	else
+		outputFile << ";"<< std::endl;
 
 	if(cplex)
 		outputFile << "\\";
@@ -718,64 +697,69 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 		}
 
 		bool first = true;
+		unsigned signal = 0;
 		if(v.size() + q.size() > 1)
 		{
 			for (int m = 0; m < cnots.size(); ++m)
 			{
 				first = true;
+				signal = 0;
 				for (int j = 0; j < v.size(); ++j)
 				{
 					for (int n = 0; n < cnots.size(); ++n)
 					{
 						if(m != n)
 						{
+							++signal;
 							if(first)
 								outputFile << q.size()+v.size()-1;
 							outputFile << "V" << v[j].first << "_" << v[j].second; 
-							if(m < n)
+							if(v[j].first == i)
 								outputFile << "c" << m << "_" << n;
 							else
 								outputFile << "c" << n << "_" << m;
 							
-							if(first)
+							if( first && signal < cnots.size()-1 )
 								outputFile << " + ";
+							else if( q.size() == 0 && signal == (cnots.size()-1)*v.size() )
+								outputFile << " ";
 							else
 								outputFile << " - ";
 						}
 					}
 					if(v.size() > 0 && first)
-					{
-						outputFile << "0 - ";
 						first = false;
-					}
+				}
+				for (int j = 0; j < q.size(); ++j)
+				{
 					for (int n = 0; n < cnots.size(); ++n)
 					{
 						if(m != n)
 						{
+							++signal;
 							if(first)
-								outputFile << q.size()-1;
+								outputFile << q.size()+v.size()-1;
 							outputFile << "G" << q[j].first << "_" << q[j].second; 
-							if(q[j].first == i && m != n)
+							if(q[j].first == i)
 								outputFile << "c" << m << "_" << n;
-							else if(m != n)
+							else
 								outputFile << "c" << n << "_" << m;
 							
-							if(first)
+							if( first && signal < cnots.size()-1 )
 								outputFile << " + ";
+							else if( signal == (cnots.size()-1)*(v.size()+q.size()) )
+								outputFile << " ";
 							else
 								outputFile << " - ";
 						}
 					}
 					if(q.size() > 0 && first)
-					{
-						outputFile << "0 - ";	
 						first = false;
-					}
 				}
 				if(!first && cplex)
-					outputFile << "0 = 0" << std::endl;
+					outputFile << "= 0" << std::endl;
 				else if(!first && !cplex)
-					outputFile << "0 = 0;" << std::endl;
+					outputFile << "= 0;" << std::endl;
 			}
 		}		
 		if(!first)
@@ -787,39 +771,43 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 
 void writeBlockRestrictions(matrix& res, unsigned s)
 {
-	for (int i = 0; i < res.size(); ++i)
-	{
-		for (int j = 0; j < res[i].size(); ++j)
-		{
-			std::cout << " " << res[i][j];
-		}
-		std::cout << std::endl;
-	}
+	// for (int i = 0; i < res.size(); ++i)
+	// {
+	// 	for (int j = 0; j < res[i].size(); ++j)
+	// 	{
+	// 		std::cout << " " << res[i][j];
+	// 	}
+	// 	std::cout << std::endl;
+	// }
 
 	for (int i = 0; i < s; ++i)
 	{
+		unsigned end = 0;
 		for (int r = 0; r < res.size(); ++r)
 		{
 			for (int j = 0; j < s; ++j)
 			{
 				if(i != j)
 				{
+					++end;
 					if(res[r][2] == 0)
 						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
 					else if(res[r][2] == 1)
 						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
 					else if(res[r][2] == 10)
-						if( i < j )
-							outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
-						else
-							outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
+						outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
+					else if(res[r][2] == 11)
+						outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
 					
-					if(r == res.size()-1 && i == s-1 && j == s-2)	
-					{}
-					else if(r == res.size()-1 && i != s-1 && j == s-1)
-					{}
-					else	
+					if( end < (s-1)*res.size() )
 						outputFile << " + ";
+
+					// if(r == res.size()-1 && i == s-1 && j == s-2)	
+					// {}
+					// else if(r == res.size()-1 && i != s-1 && j == s-1)
+					// {}
+					// else	
+					// 	outputFile << " + ";
 
 				}
 			}	
@@ -870,7 +858,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates )
 			{
 				c.push_back(j);
 				c.push_back(i);
-				c.push_back(10);
+				c.push_back(11);
 				insert = true;
 				break;
 			}
@@ -977,9 +965,9 @@ bool lpqx_command::execute()
   	
   	//fullfill the matrix with the cnots and vgates of the circuit
   	generateMatrixCnots( circ, cnots, vgates );
-	printMatrixCnots( cnots );
-	std::cout << "v gates" << std::endl;
-	printMatrixCnots( vgates );
+	// printMatrixCnots( cnots );
+	// std::cout << "v gates" << std::endl;
+	// printMatrixCnots( vgates );
 
 	//print the objective function for the LP
 	printObjectiveFunction( arch, cnots, vgates, getNumberDifGates(cnots) );
@@ -1003,7 +991,7 @@ bool lpqx_command::execute()
 	// printBounds( arch, cnots );
 
 	//print the type of variables of the LP
-	printIntegerVariables( arch, cnots, vgates, getNumberDifGates( cnots ) );
+	printIntegerVariables( cnots, vgates );
 	
 	//clear the variables
   	outputFile.close();

@@ -89,7 +89,12 @@ void write_qc( const circuit& circ, std::ostream& os, bool iqc_compliant )
     }
     else if ( is_v( gate ) )
     {
+      const auto& tag = boost::any_cast<v_tag>( gate.type() );
       os << "V";
+      if ( tag.adjoint )
+      {
+        os << "*";
+      }
       for ( const auto& c : gate.controls() )
       {
         os << " " << vars[c.line()];
