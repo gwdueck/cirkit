@@ -713,13 +713,50 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 				q.push_back(std::make_pair(j,i));
 			if( vgates[i][j] > 0)
 				v.push_back(std::make_pair(i,j));
+			if( vgates[j][i] > 0 )
+				v.push_back(std::make_pair(j,i));
 		}
-		if(q.size() > 1)
+		bool first;
+
+		if(v.size() + q.size() > 1)
 		{
-			bool first;
+			if(v.size() > 0)
+			{
+				for (int m = 0; m < cnots.size(); ++m)
+				{
+					first = true;
+					for (int j = 0; j < v.size(); ++j)
+					{
+						for (int n = 0; n < cnots.size(); ++n)
+						{
+							if( m != n )
+							{
+								if(first)
+								{
+									outputFile << q.size()+v.size()-1;
+									first = false;
+								}
+								outputFile << "V" << v[j].first << "_" << v[j].second; 
+								if(v[j].first == i)
+									outputFile << "c" << m << "_" << n;
+								else
+									outputFile << "c" << n << "_" << m;
+								
+								if(first && n == cnots.size()-1 || first && n == cnots.size()-2  && m == cnots.size()-1)
+									outputFile << " - ";
+								else if(first)
+									outputFile << " + ";
+								else if(m!=cnots.size()-1 && n == cnots.size()-1 && j == v.size()-1 || m==cnots.size()-1 && n == cnots.size()-2 && j == v.size()-1)
+									outputFile << " ";
+								else
+									outputFile << " - ";
+							}
+						}
+					}
+				}
+			}
 			for (int m = 0; m < cnots.size(); ++m)
 			{
-				first = true;
 				for (int j = 0; j < q.size(); ++j)
 				{
 					for (int n = 0; n < cnots.size(); ++n)
@@ -727,7 +764,10 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 						if( m != n )
 						{
 							if(first)
+							{
 								outputFile << q.size()-1;
+								first = false;
+							}
 							outputFile << "G" << q[j].first << "_" << q[j].second; 
 							if(q[j].first == i)
 								outputFile << "c" << m << "_" << n;
@@ -744,17 +784,19 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 								outputFile << " - ";
 						}
 					}
-					first = false;
 				}
 				if(!first && cplex)
 					outputFile << "= 0" << std::endl;
 				else if(!first && !cplex)
 					outputFile << "= 0;" << std::endl;
 			}
-			if(!first)
-				outputFile << std::endl;	
 		}
-		q.clear(); 
+		
+		
+		if(!first)
+			outputFile << std::endl;	
+		q.clear();
+		v.clear();
 	}
 }
 
