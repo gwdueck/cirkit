@@ -121,9 +121,8 @@ int getNumberDifGates( matrix& c )
 }
 
 // Function to print the objective function
-void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, unsigned difGates )
+void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 {
-	unsigned aux = 0;
 	if(cplex)
 		outputFile << "\\";
 	else
@@ -136,50 +135,65 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, unsigned
 	else
 		outputFile << "min:\t" << std::endl;
 
+	unsigned vdifgates = getNumberDifGates(vgates);
+	unsigned cnotdifgates = getNumberDifGates(cnots);
+	unsigned tam = (qx.size()*qx.size())-qx.size();
+	unsigned aux = 0;
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
 		{
 			bool line = false;
+			unsigned end = 0;
 			for (int k = 0; k < qx.size(); ++k)
 			{
 				for (int m = 0; m < qx.size(); ++m)
 				{
 					if( i != j && vgates[i][j] > 0 && k != m)
 					{
+						++end;
 						if( qx[k][m] < qx[m][k])
-							outputFile << qx[k][m]*vgates[i][j] << "V" << i << "_" << j << "c" << k << "_" << m << " + ";
+							outputFile << qx[k][m]*vgates[i][j] << "V" << i << "_" << j << "c" << k << "_" << m;
 						else
-							outputFile << qx[m][k]*vgates[i][j] << "V" << i << "_" << j << "c" << k << "_" << m << " + ";
+							outputFile << qx[m][k]*vgates[i][j] << "V" << i << "_" << j << "c" << k << "_" << m;
+
+						if(end < tam)
+							outputFile << " + ";
+						else
+							++aux;
 						line = true;
 					}
 				}
 			}
-			if(line)
-				outputFile << std::endl;
+			if( (line && aux < vdifgates) || (line && cnotdifgates > 0) )
+				outputFile << " + " << std::endl;
 		}
 	}
-
+	aux = 0;
 	for (int i = 0; i < qx.size(); ++i)
 	{
 		for (int j = 0; j < qx.size(); ++j)
 		{
 			bool line = false;
+			unsigned end = 0;
 			for (int k = 0; k < qx.size(); ++k)
 			{
 				for (int m = 0; m < qx.size(); ++m)
 				{
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
-						outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m << " + ";
+						++end;
+						outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
+						if(end < tam)
+							outputFile << " + ";
+						else
+							++aux;
 						line = true;
 					}
 				}
 			}
-			if(line)
-			{
-				outputFile << std::endl;
-			}
+			if(line && aux < cnotdifgates)
+				outputFile << " + " << std::endl;
 		}
 	}
 	if(!cplex)
@@ -970,7 +984,7 @@ bool lpqx_command::execute()
 	// printMatrixCnots( vgates );
 
 	//print the objective function for the LP
-	printObjectiveFunction( arch, cnots, vgates, getNumberDifGates(cnots) );
+	printObjectiveFunction( arch, cnots, vgates );
 	
 	//if the circuit has only one gate, no need to get combinations
 	if( getNumberDifGates(cnots) + getNumberDifGates(vgates) > 1 )
