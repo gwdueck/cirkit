@@ -760,6 +760,15 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 
 void writeBlockRestrictions(matrix& res, unsigned s)
 {
+	for (int i = 0; i < res.size(); ++i)
+	{
+		for (int j = 0; j < res[i].size(); ++j)
+		{
+			std::cout << " " << res[i][j];
+		}
+		std::cout << std::endl;
+	}
+
 	for (int i = 0; i < s; ++i)
 	{
 		for (int r = 0; r < res.size(); ++r)
@@ -770,8 +779,13 @@ void writeBlockRestrictions(matrix& res, unsigned s)
 				{
 					if(res[r][2] == 0)
 						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
-					else
+					else if(res[r][2] == 1)
 						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
+					else if(res[r][2] == 10)
+						if( i < j )
+							outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
+						else
+							outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
 					
 					if(r == res.size()-1 && i == s-1 && j == s-2)	
 					{}
@@ -790,7 +804,7 @@ void writeBlockRestrictions(matrix& res, unsigned s)
 	}
 }
 
-void getBlockLessEqualRestrictions(matrix& cnots )
+void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates )
 {
 	matrix res;
 	std::vector<unsigned> c;
@@ -817,7 +831,26 @@ void getBlockLessEqualRestrictions(matrix& cnots )
 				insert = true;
 				break;
 			}
+			if( vgates[i][j] > 0 )
+			{
+				c.push_back(i);
+				c.push_back(j);
+				c.push_back(10);
+				insert = true;
+				break;
+			}
+			else if( vgates[j][i] > 0 )
+			{
+				c.push_back(j);
+				c.push_back(i);
+				c.push_back(10);
+				insert = true;
+				break;
+			}
 		}
+		for (int k = 0; k < res.size(); ++k)
+			if(c == res[k])
+				insert = false;
 		if(insert)
 			res.push_back(c);
 	}
@@ -925,7 +958,7 @@ bool lpqx_command::execute()
 	printObjectiveFunction( arch, cnots, vgates, getNumberDifGates(cnots) );
 	
 	//if the circuit has only one gate, no need to get combinations
-	if( getNumberDifGates(cnots) > 1 || getNumberDifGates(vgates) > 1 )
+	if( getNumberDifGates(cnots) + getNumberDifGates(vgates) > 1 )
 	{
 		if(artificial)
 			artificialGates(cnots);
@@ -934,7 +967,7 @@ bool lpqx_command::execute()
 		else if( version == 2 )
 			getCombinationAnotherApproach(cnots, vgates);
 		if(!artificial)
-			getBlockLessEqualRestrictions(cnots);
+			getBlockLessEqualRestrictions(cnots, vgates);
 	}
 	//print the restriction that limits to one gate
 	printOneGateRestriction( cnots, vgates );
