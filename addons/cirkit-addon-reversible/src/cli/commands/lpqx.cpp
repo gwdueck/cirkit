@@ -197,9 +197,9 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 		}
 	}
 	if(!cplex)
-		outputFile << "0;" << std::endl;
+		outputFile << ";" << std::endl;
 	else if(cplex)
-		outputFile << "0" << std::endl;
+		outputFile << "" << std::endl;
 
 	if(cplex)
 		outputFile << "\\";
@@ -366,7 +366,6 @@ void printLimitVariables( matrix& qx, matrix& cnots, unsigned difGates )
 // Function to print the variables
 void printIntegerVariables( matrix& cnots, matrix& vgates )
 {
-	unsigned aux = 0;
 	if(cplex)
 		outputFile << "\\";
 	else
@@ -378,51 +377,67 @@ void printIntegerVariables( matrix& cnots, matrix& vgates )
 	else
 		outputFile << "int" << std::endl;
 
+	unsigned vdifgates = getNumberDifGates(vgates);
+	unsigned cnotdifgates = getNumberDifGates(cnots);
+	unsigned tam = (cnots.size()*cnots.size())-cnots.size();
+	unsigned aux = 0;
 	for (int i = 0; i < vgates.size(); ++i)
 	{
 		for (int j = 0; j < vgates.size(); ++j)
 		{
 			bool line = false;
+			unsigned end = 0;
 			for (int k = 0; k < vgates.size(); ++k)
 			{
 				for (int m = 0; m < vgates.size(); ++m)
 				{
 					if( i != j && vgates[i][j] > 0 && k != m)
 					{
-						outputFile << "V" << i << "_" << j << "c" << k << "_" << m << "  ";
+						++end;
+						outputFile << "V" << i << "_" << j << "c" << k << "_" << m;
+						if(end < tam)
+							outputFile << " ";
+						else
+							++aux;
 						line = true;
 					}
 				}
 			}
-			if(line)
-				outputFile << std::endl;
+			if( (line && aux < vdifgates) || (line && cnotdifgates > 0) )
+				outputFile << " " << std::endl;
 		}
 	}
-
+	aux = 0;
 	for (int i = 0; i < cnots.size(); ++i)
 	{
 		for (int j = 0; j < cnots.size(); ++j)
 		{
 			bool line = false;
+			unsigned end = 0;
 			for (int k = 0; k < cnots.size(); ++k)
 			{
 				for (int m = 0; m < cnots.size(); ++m)
 				{
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
-						outputFile << "G" << i << "_" << j << "c" << k << "_" << m << "  ";
+						++end;
+						outputFile << "G" << i << "_" << j << "c" << k << "_" << m;
+						if(end < tam)
+							outputFile << " ";
+						else
+							++aux;
 						line = true;
 					}
 				}
 			}
-			if(line)
-				outputFile << std::endl;
+			if(line && aux < cnotdifgates)
+				outputFile << " " << std::endl;
 		}
 	}
-	if(cplex)
+	if(!cplex)
+		outputFile << ";" << std::endl;
+	else if(cplex)
 		outputFile << "" << std::endl;
-	else
-		outputFile << ";"<< std::endl;
 
 	if(cplex)
 		outputFile << "\\";
@@ -433,6 +448,68 @@ void printIntegerVariables( matrix& cnots, matrix& vgates )
 
 	if(cplex)
 		outputFile << "End" << std::endl;
+
+
+
+
+
+
+
+	// for (int i = 0; i < vgates.size(); ++i)
+	// {
+	// 	for (int j = 0; j < vgates.size(); ++j)
+	// 	{
+	// 		bool line = false;
+	// 		for (int k = 0; k < vgates.size(); ++k)
+	// 		{
+	// 			for (int m = 0; m < vgates.size(); ++m)
+	// 			{
+	// 				if( i != j && vgates[i][j] > 0 && k != m)
+	// 				{
+	// 					outputFile << "V" << i << "_" << j << "c" << k << "_" << m << "  ";
+	// 					line = true;
+	// 				}
+	// 			}
+	// 		}
+	// 		if(line)
+	// 			outputFile << std::endl;
+	// 	}
+	// }
+
+	// for (int i = 0; i < cnots.size(); ++i)
+	// {
+	// 	for (int j = 0; j < cnots.size(); ++j)
+	// 	{
+	// 		bool line = false;
+	// 		for (int k = 0; k < cnots.size(); ++k)
+	// 		{
+	// 			for (int m = 0; m < cnots.size(); ++m)
+	// 			{
+	// 				if( i != j && cnots[i][j] > 0 && k != m)
+	// 				{
+	// 					outputFile << "G" << i << "_" << j << "c" << k << "_" << m << "  ";
+	// 					line = true;
+	// 				}
+	// 			}
+	// 		}
+	// 		if(line)
+	// 			outputFile << std::endl;
+	// 	}
+	// }
+	// if(cplex)
+	// 	outputFile << "" << std::endl;
+	// else
+	// 	outputFile << ";"<< std::endl;
+
+	// if(cplex)
+	// 	outputFile << "\\";
+	// else
+	// 	outputFile << "//";
+
+	// outputFile << " End Integer Variables" << std::endl;
+
+	// if(cplex)
+	// 	outputFile << "End" << std::endl;
 }
 
 // Function to print the variables bounds
