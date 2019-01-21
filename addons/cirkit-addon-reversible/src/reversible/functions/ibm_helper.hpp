@@ -45,8 +45,8 @@
  2 - target and controls must be interchanged -- FLIP(c,t)
  3 - map target to qubit 2 given CNOT(c,2) and CNOT(t,2) -- TBA(t,2)
  4 - map control to qubit 2, given CNOT(2,c) and CNOT(2,t) -- CBA(c,2)
- 5 - map target to qubit 2 and interchange control and qubit 2, given CNOT(c,2) and CNOT(2,t)  -- TAB(t,2) FLIP(c,2)
- 6 - map control to qubit 2, given CNOT(c,2) and CNOT(2,t) -- CAB(c,2)
+ 5 - map control to qubit 2, given CNOT(c,2) and CNOT(2,t) -- CAB(c,2)
+ 6 - map target to qubit 2 and interchange control and qubit 2, given CNOT(c,2) and CNOT(2,t)  -- TAB(t,2) FLIP(c,2)
  */
 
 int static const map_method_qx2[5][5] ={{0,1,1,3,3},
@@ -54,11 +54,11 @@ int static const map_method_qx2[5][5] ={{0,1,1,3,3},
                                         {2,2,0,2,2},
                                         {3,3,1,0,1},
                                         {3,3,1,2,0}};
-int static const map_method_qx4[5][5] ={{0,2,2,5,4},
-                                        {1,0,2,5,4},
-                                        {1,1,0,2,1},
-                                        {6,6,1,0,1},
-                                        {4,4,2,2,0}};
+int static const map_method_qx4[5][5] ={{0,2,2,6,6},
+                                        {1,0,2,6,6},
+                                        {1,1,0,2,2},
+                                        {5,5,1,0,1},
+                                        {5,5,1,2,0}};
 
 namespace cirkit
 {
