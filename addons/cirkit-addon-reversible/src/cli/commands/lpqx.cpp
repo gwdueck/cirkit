@@ -216,7 +216,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, unsigned
 }
 
 // Function to print the one gate restriction
-void printOneGateRestriction( matrix& cnots )
+void printOneGateRestriction( matrix& cnots, matrix& vgates )
 {
 	unsigned aux = 0;
 	if(cplex)
@@ -225,6 +225,32 @@ void printOneGateRestriction( matrix& cnots )
 		outputFile << "//";
 
 	outputFile << " Begin One Gate Restriction" << std::endl;
+
+	for (int i = 0; i < vgates.size(); ++i)
+	{
+		for (int j = i + 1; j < vgates.size(); ++j)
+		{
+			bool line = false;
+			for (int k = 0; k < vgates.size(); ++k)
+			{
+				for (int m = k + 1; m < vgates.size(); ++m)
+				{
+					if( i != j && vgates[i][j] > 0 && k != m)
+					{
+						if(m == vgates.size()-1 && k == vgates.size()-2 && !cplex)
+							outputFile << "V" << i << "_" << j << "c" << k << "_" << m << " = " << "1" << ";";
+						else if(m == vgates.size()-1 && k == vgates.size()-2 && cplex)
+							outputFile << "V" << i << "_" << j << "c" << k << "_" << m << " = " << "1";
+						else
+							outputFile << "V" << i << "_" << j << "c" << k << "_" << m << " + ";
+						line = true;
+					}
+				}
+			}
+			if(line)
+				outputFile << std::endl;
+		}
+	}
 
 	for (int i = 0; i < cnots.size(); ++i)
 	{
@@ -911,7 +937,7 @@ bool lpqx_command::execute()
 			getBlockLessEqualRestrictions(cnots);
 	}
 	//print the restriction that limits to one gate
-	printOneGateRestriction( cnots );
+	printOneGateRestriction( cnots, vgates );
 
 	//print bounds
 	// printBounds( arch, cnots );
