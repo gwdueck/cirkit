@@ -231,6 +231,7 @@ void single_toffoli_different_v_gates(circuit circ_in)
 	          	 	if(remove)
 	          	 		aux = remove_dup_gates( aux );
 	          	 	std::cout << aux << std::endl;
+	          	 	std::cout << aux.num_gates() << std::endl;
 	          	 	std::cout << aux.num_gates() - 23 << std::endl;
 	          	 	
     				// std::cout << "\nNext" << std::endl;
@@ -254,6 +255,7 @@ void single_toffoli_different_v_gates(circuit circ_in)
 	          	 	if(remove)
 	          	 		aux = remove_dup_gates( aux );
 	          	 	std::cout << aux << std::endl;
+	          	 	std::cout << aux.num_gates() << std::endl;
 	          	 	std::cout << aux.num_gates() - 23 << std::endl;
 	          	 	
     				// std::cout << "\nNext" << std::endl;
@@ -292,6 +294,8 @@ bool alex_command::execute()
  	{
  		if( is_set("remove") )
  			remove = true;
+ 		else
+ 			remove = false;
 		single_toffoli_different_v_gates(circ);
 		return true;
  	}
