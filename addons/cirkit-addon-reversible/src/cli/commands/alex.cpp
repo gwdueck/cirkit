@@ -66,18 +66,21 @@ alex_command::alex_command( const environment::ptr& env )
     ( "interchange,i",  "interchange controls" )
     ( "clifford,c",  "transform to Clifford+T" )
     ( "permutations,p",  "try_all_permutations permutations (only 5 qubits)" )
+    ( "single_Toffoli,t",  "try different V gates for a single Toffoli" )
+    ( "remove,r",  "remove_dup_gates" )
 	;
 
 }
 
 bool interchange = false;
+bool remove = false;
 
 command::rules_t alex_command::validity_rules() const
 {
   return {has_store_element<circuit>( env )};
 }
 
-void toffoli_to_v(circuit& circ_in, circuit& circ_out, gate g)
+void toffoli_to_v(circuit& circ_out, gate g)
 {
     std::vector<unsigned int> controls_a, controls_b;
     std::vector<unsigned int> polarities;
@@ -164,7 +167,7 @@ void transform_to_v(circuit& circ_in, circuit& circ_out)
 		if ( is_toffoli( gate ) )
         {
             if( gate.controls().size() == 2 )
-          	 	toffoli_to_v(circ_in, circ_out, gate);
+          	 	toffoli_to_v(circ_out, gate);
             else
             	circ_out.append_gate() = gate;
 		}
@@ -201,6 +204,79 @@ void try_all_permutations(circuit circ)
    	} while ( std::next_permutation(perm,perm+5) );
 }
 
+void single_toffoli_different_v_gates(circuit circ_in)
+{
+	circuit aux;
+    std::cout << "Original" << std::endl;
+    std::cout << circ_in << std::endl;
+	if( circ_in.num_gates() == 1 )
+	{
+		for ( const auto& gate : circ_in )
+	    {
+			if ( is_toffoli( gate ) )
+	        {
+	            if( gate.controls().size() == 2 )
+	            {
+	            	// int perm[5] = {0,1,2,3,4};
+	            	// perm[gate.controls().front().line()] = gate.controls().back().line();
+	            	// perm[gate.controls().back().line()] = gate.controls().front().line();
+	            	// for (int i = 0; i < 5; ++i)
+	            	// 	std::cout << " " << perm[i];
+	            	// std::cout << std::endl;
+	            	clear_circuit(aux);
+	            	copy_metadata(circ_in, aux);
+	          	 	toffoli_to_v(aux, gate);
+	          	 	std::cout << aux << std::endl;
+	          	 	aux = transform_to_IBMQ( aux, map_method_qx4, true );
+	          	 	if(remove)
+	          	 		aux = remove_dup_gates( aux );
+	          	 	std::cout << aux << std::endl;
+	          	 	std::cout << aux.num_gates() - 23 << std::endl;
+	          	 	
+    				// std::cout << "\nNext" << std::endl;
+	       //    	 	clear_circuit(aux);
+	       //      	copy_metadata(circ_in, aux);
+	       //    	 	toffoli_to_v(aux, gate);
+	       //    	 	permute_lines( aux , perm );
+	       //    	 	std::cout << aux << std::endl;
+	       //    	 	aux = transform_to_IBMQ( aux, map_method_qx4, true );
+	       //    	 	aux = remove_dup_gates( aux );
+	       //    	 	std::cout << aux << std::endl;
+	       //    	 	std::cout << aux.num_gates() << std::endl;
+	          	 	
+    				std::cout << "\nNext" << std::endl;
+	          	 	clear_circuit(aux);
+	            	copy_metadata(circ_in, aux);
+	          	 	interchange = true;
+	          	 	toffoli_to_v(aux, gate);
+	          	 	std::cout << aux << std::endl;
+	          	 	aux = transform_to_IBMQ( aux, map_method_qx4, true );
+	          	 	if(remove)
+	          	 		aux = remove_dup_gates( aux );
+	          	 	std::cout << aux << std::endl;
+	          	 	std::cout << aux.num_gates() - 23 << std::endl;
+	          	 	
+    				// std::cout << "\nNext" << std::endl;
+	       //    	 	clear_circuit(aux);
+	       //      	copy_metadata(circ_in, aux);
+	       //    	 	toffoli_to_v(aux, gate);
+	       //    	 	permute_lines( aux , perm );
+	       //    	 	std::cout << aux << std::endl;
+	       //    	 	aux = transform_to_IBMQ( aux, map_method_qx4, true );
+	       //    	 	aux = remove_dup_gates( aux );
+	       //    	 	std::cout << aux << std::endl;
+	       //    	 	std::cout << aux.num_gates() << std::endl;
+	            }
+	            else
+	            	std::cout << "Not a toffoli" << std::endl;
+			}
+			else
+	           	std::cout << "Not a toffoli" << std::endl;
+		}	
+	}	
+	
+}
+
 bool alex_command::execute()
 {
 	if ( is_set("interchange") )
@@ -212,6 +288,14 @@ bool alex_command::execute()
 	circuit circ = circuits.current();
 	// std::cout << "	" << circ.num_gates() << std::endl;
  	
+ 	if( is_set("single_Toffoli") )
+ 	{
+ 		if( is_set("remove") )
+ 			remove = true;
+		single_toffoli_different_v_gates(circ);
+		return true;
+ 	}
+
  	unsigned target, control;
     std::vector<unsigned int> controls_a, controls_b;
 
