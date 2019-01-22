@@ -153,9 +153,9 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 					{
 						++end;
 						if( qx[k][m] < qx[m][k])
-							outputFile << qx[k][m]*vgates[i][j] << "V" << i << "_" << j << "c" << k << "_" << m;
+							outputFile << qx[k][m]*vgates[i][j]*2 << "V" << i << "_" << j << "c" << k << "_" << m;
 						else
-							outputFile << qx[m][k]*vgates[i][j] << "V" << i << "_" << j << "c" << k << "_" << m;
+							outputFile << qx[m][k]*vgates[i][j]*2 << "V" << i << "_" << j << "c" << k << "_" << m;
 
 						if(end < tam)
 							outputFile << " + ";
