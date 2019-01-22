@@ -207,8 +207,8 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     // g1 is CNOT gate
     else if ( is_toffoli( g1 ) )
     {
-        if(is_S_gate(g2)||is_S_star_gate(g2)||is_T_gate(g2)||is_T_star_gate(g2)||is_Z_gate(g2))
-            if(g1.controls().front().line() == target_g2)
+        if( is_S_gate(g2) || is_S_star_gate(g2) || is_T_gate(g2) || is_T_star_gate(g2) || is_Z_gate(g2) )
+            if( g1.targets().front() != target_g2 )
                 return true;
             else
                 return false;
@@ -235,7 +235,7 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     else if ( is_toffoli( g2 ) && !g2.controls().empty() )
     {
         if(is_S_gate(g1)||is_S_star_gate(g1)||is_T_gate(g1)||is_T_star_gate(g1)||is_Z_gate(g1))
-            if(g2.controls().front().line() == g1.targets().front())
+            if(g2.targets().front() != g1.targets().front())
                 return true;
 
         return ( target_g1 != g2.controls().front().line() ) && (target_g1 != target_g2 );
