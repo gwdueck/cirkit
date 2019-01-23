@@ -217,12 +217,6 @@ void single_toffoli_different_v_gates(circuit circ_in)
 	        {
 	            if( gate.controls().size() == 2 )
 	            {
-	            	// int perm[5] = {0,1,2,3,4};
-	            	// perm[gate.controls().front().line()] = gate.controls().back().line();
-	            	// perm[gate.controls().back().line()] = gate.controls().front().line();
-	            	// for (int i = 0; i < 5; ++i)
-	            	// 	std::cout << " " << perm[i];
-	            	// std::cout << std::endl;
 	            	clear_circuit(aux);
 	            	copy_metadata(circ_in, aux);
 	          	 	toffoli_to_v(aux, gate);
@@ -232,19 +226,8 @@ void single_toffoli_different_v_gates(circuit circ_in)
 	          	 		aux = remove_dup_gates( aux );
 	          	 	std::cout << aux << std::endl;
 	          	 	std::cout << aux.num_gates() << std::endl;
-	          	 	std::cout << aux.num_gates() - 23 << std::endl;
 	          	 	
-    				// std::cout << "\nNext" << std::endl;
-	       //    	 	clear_circuit(aux);
-	       //      	copy_metadata(circ_in, aux);
-	       //    	 	toffoli_to_v(aux, gate);
-	       //    	 	permute_lines( aux , perm );
-	       //    	 	std::cout << aux << std::endl;
-	       //    	 	aux = transform_to_IBMQ( aux, map_method_qx4, true );
-	       //    	 	aux = remove_dup_gates( aux );
-	       //    	 	std::cout << aux << std::endl;
-	       //    	 	std::cout << aux.num_gates() << std::endl;
-	          	 	
+    		         	 	
     				std::cout << "\nNext" << std::endl;
 	          	 	clear_circuit(aux);
 	            	copy_metadata(circ_in, aux);
@@ -256,18 +239,6 @@ void single_toffoli_different_v_gates(circuit circ_in)
 	          	 		aux = remove_dup_gates( aux );
 	          	 	std::cout << aux << std::endl;
 	          	 	std::cout << aux.num_gates() << std::endl;
-	          	 	std::cout << aux.num_gates() - 23 << std::endl;
-	          	 	
-    				// std::cout << "\nNext" << std::endl;
-	       //    	 	clear_circuit(aux);
-	       //      	copy_metadata(circ_in, aux);
-	       //    	 	toffoli_to_v(aux, gate);
-	       //    	 	permute_lines( aux , perm );
-	       //    	 	std::cout << aux << std::endl;
-	       //    	 	aux = transform_to_IBMQ( aux, map_method_qx4, true );
-	       //    	 	aux = remove_dup_gates( aux );
-	       //    	 	std::cout << aux << std::endl;
-	       //    	 	std::cout << aux.num_gates() << std::endl;
 	            }
 	            else
 	            	std::cout << "Not a toffoli" << std::endl;
