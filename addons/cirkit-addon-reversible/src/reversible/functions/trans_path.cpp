@@ -65,6 +65,15 @@ namespace cirkit
                     tpath.pop_back();                               // the nop movements
                     tpath.push_back( MoveQubit( cnot3, a, b, c ) ); // append the cnot3
                 }
+                else if(tpath[0].getType() == cba && tpath[1].getType() == flip) // two consecutive arrows backwards
+                {
+                    unsigned a = tpath[tpath.size()-2].getA();  // get the parameters for the cnot3
+                    unsigned b = tpath[tpath.size()-1].getA();  //
+                    unsigned c = tpath[tpath.size()-1].getB();  //
+                    tpath.pop_back();                               // remove the cba and 
+                    tpath.pop_back();                               // the flip movements
+                    tpath.push_back( MoveQubit( cnot3i, a, b, c ) ); // append the cnot3
+                }
             }
             else
             {
@@ -96,6 +105,34 @@ namespace cirkit
                             tpath.push_back( p );
                     }       
                 }
+                else if(tpath[tpath.size()-1].getType() == flip)  // cnot3i movement must end with flip
+                {
+                    unsigned movement = 0;  // count the number of cab (future cnot3)  
+                    for (int i = tpath.size()-2 ; i >= 0 ; --i)
+                    {
+                        if(tpath[i].getType() != cba ) // must be consecutive cba movement
+                            break;
+                        else
+                            ++movement;
+                    }
+                    if(movement >= 2)
+                    {
+                        std::vector<MoveQubit> cnot3_list; // vector to create the cnot3i
+                        unsigned a,b,c;
+                        for (int i = 0; i < movement; ++i)
+                        {
+                            a = tpath[tpath.size()-2].getA(); // 
+                            b = tpath[tpath.size()-1].getA(); // get the data for the cnot3i
+                            c = tpath[tpath.size()-1].getB(); //
+                            cnot3_list.insert( cnot3_list.begin(), MoveQubit( cnot3i, a, b, c ) );
+                            tpath.pop_back();
+                        }
+
+                        tpath.pop_back();
+                        for ( auto &p : cnot3_list ) // append the cnot3i in the transformation
+                            tpath.push_back( p );
+                    }       
+                }
                 
             }    
         }
@@ -123,13 +160,19 @@ namespace cirkit
 
     // Calculate the cost of the cnot3 movement
     int TransPath::cnot3Cost(){
-        int res = 0;
+        int res = 0, resi = 0;
         for ( auto &p : tpath ) {
             if(p.getType() == cnot3)
                 ++res;
+            if(p.getType() == cnot3i)
+                ++resi;
         }
-        if(res > 0) // Formula: 2^n + 2^(n+1) - 2
+        if(res > 0 && resi == 0) // Formula: 2^n + 2^(n+1) - 2
             return (pow(2,res)+pow(2,++res)-2);
+        else if(res > 0 && resi > 0)
+            return ((pow(2,res)+pow(2,++res)-2) + (pow(2,resi)+pow(2,++resi)+2));
+        else if(res == 0 && resi > 0)
+            return (pow(2,resi)+pow(2,++resi)+2);
         else
             return 1;
     }

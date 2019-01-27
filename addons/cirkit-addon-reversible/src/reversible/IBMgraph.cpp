@@ -500,6 +500,25 @@ namespace cirkit
                                     ++moreCnot3;
                                 }
                                 break;
+                            // case cnot3i :
+                            //     if(moreCnot3 == 0)  // if it is the first cnot3
+                            //     {                   // just append the four cnot gates
+                            //         append_cnot( circ_out, p.getA(), p.getB() );
+                            //         append_cnot( circ_out, p.getB(), p.getC() );
+                            //         append_cnot( circ_out, p.getA(), p.getB() );
+                            //         append_cnot( circ_out, p.getB(), p.getC() );
+                            //         ++moreCnot3;    // update the number of cnot3
+                            //     }
+                            //     else    // if it is more than "two arrows"
+                            //     {       // we have to calculate the number of cnots
+                            //         unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
+                            //         append_cnot( circ_out, p.getB(), p.getC() );                    // append the cnot   
+                            //         for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)// and copy all the cnots placed before
+                            //             circ_out.append_gate() = circ_out[j];
+                            //         append_cnot( circ_out, p.getB(), p.getC() );                    // append again the cnot
+                            //         ++moreCnot3;
+                            //     }
+                            //     break;
                             default : std::cout << "ERROR expand_cnots" << std::endl;
                         }
                     }
