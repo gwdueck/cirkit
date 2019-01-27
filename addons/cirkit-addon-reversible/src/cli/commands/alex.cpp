@@ -58,6 +58,7 @@ namespace cirkit
 {
 
 using boost::program_options::value;
+using matrix = std::vector<std::vector<unsigned>>;
 
 alex_command::alex_command( const environment::ptr& env )
 	: cirkit_command( env, "Random projects" )
@@ -78,6 +79,87 @@ bool remove = false;
 command::rules_t alex_command::validity_rules() const
 {
   return {has_store_element<circuit>( env )};
+}
+
+void toffoli_to_v_lower_cost(circuit& circ_out, gate g, matrix& cnot_costs)
+{
+    std::vector<unsigned int> controls_a, controls_b;
+    controls_a.clear(); controls_b.clear();
+	
+    unsigned a, b, c, cost_a = 0, cost_b = 0;
+    unsigned polarity_a, polarity_b;
+    polarity_a = g.controls().front().polarity();
+    polarity_b = g.controls().back().polarity();
+
+    a = g.controls().front().line();
+    b = g.controls().back().line();
+    c = g.targets().front();
+
+	cost_a += cnot_costs[a][b] * 2;
+   	if( cnot_costs[a][c] < cnot_costs[c][a] )
+		cost_a += cnot_costs[a][c];
+	else
+		cost_a += cnot_costs[c][a];
+	if( cnot_costs[b][c] < cnot_costs[c][b] )
+		cost_a += cnot_costs[b][c] * 4;
+	else
+		cost_a += cnot_costs[c][b] * 4;
+
+	cost_b += cnot_costs[b][a] * 2;
+   	if( cnot_costs[b][c] < cnot_costs[c][b] )
+		cost_b += cnot_costs[b][c];
+	else
+		cost_b += cnot_costs[c][b];
+	if( cnot_costs[a][c] < cnot_costs[c][a] )
+		cost_b += cnot_costs[a][c] * 4;
+	else
+		cost_b += cnot_costs[c][a] * 4;
+
+	std::cout << "cost_a: " << cost_a << " cost_b: " << cost_b << std::endl;
+  	if ( cost_b < cost_a )
+	{
+    	controls_a.push_back(g.controls().back().line());
+    	controls_b.push_back(g.controls().front().line());
+	}
+	else
+	{
+		controls_a.push_back(g.controls().front().line());
+    	controls_b.push_back(g.controls().back().line());	
+	}
+	
+	if( polarity_a == 1 && polarity_b == 1 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), false );
+	}
+	else if( polarity_a == 0 && polarity_b == 0 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), false );
+		append_not( circ_out, g.targets().front() );
+	}
+	else if( polarity_a == 1 && polarity_b == 0 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), cost_b < cost_a ? false : true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), cost_b < cost_a ? true : false );
+	}
+	else if( polarity_a == 0 && polarity_b == 1 )
+	{
+		append_v( circ_out,  controls_a, g.targets().front(), cost_b < cost_a ? true : false );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), true );
+		append_toffoli( circ_out, controls_a, controls_b.front() );
+		append_v( circ_out,  controls_b, g.targets().front(), cost_b < cost_a ? false : true );
+	}
 }
 
 void toffoli_to_v(circuit& circ_out, gate g)
@@ -159,7 +241,7 @@ void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
 	}
 }
 
-void transform_to_v(circuit& circ_in, circuit& circ_out)
+void transform_to_v(circuit& circ_in, circuit& circ_out, matrix& cnot_costs)
 {
 	copy_metadata(circ_in, circ_out);
 	for ( const auto& gate : circ_in )
@@ -167,7 +249,8 @@ void transform_to_v(circuit& circ_in, circuit& circ_out)
 		if ( is_toffoli( gate ) )
         {
             if( gate.controls().size() == 2 )
-          	 	toffoli_to_v(circ_out, gate);
+          	 	toffoli_to_v_lower_cost(circ_out, gate, cnot_costs);
+          	 	// toffoli_to_v(circ_out, gate, cnot_costs);
             else
             	circ_out.append_gate() = gate;
 		}
@@ -252,6 +335,7 @@ void single_toffoli_different_v_gates(circuit circ_in)
 
 bool alex_command::execute()
 {
+	matrix qx4 ={{0,4,4,7,7},{0,0,4,7,7},{0,0,0,4,4},{3,3,0,0,0},{3,3,0,4,0}};
 	if ( is_set("interchange") )
 		interchange = true;
 	else
@@ -280,7 +364,7 @@ bool alex_command::execute()
    	auto settings = make_settings();
  	settings->set( "controls_threshold", 2u );
  	circ = nct_mapping( circ, settings, statistics );
-    transform_to_v(circ, vCircuit);
+    transform_to_v(circ, vCircuit, qx4);
 
 	if ( is_set( "clifford" ) )
     	transform_to_clifford(vCircuit, cliffordCircuit);
