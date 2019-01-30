@@ -39,6 +39,7 @@
 #include <vector>
 
 #include <cli/cirkit_command.hpp>
+#include <reversible/circuit.hpp>
 
 namespace cirkit
 {
@@ -47,6 +48,7 @@ class alex_command : public cirkit_command
 {
     public:
         alex_command( const environment::ptr& env );
+
   		log_opt_t log() const;
 
 		

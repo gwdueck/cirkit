@@ -54,6 +54,7 @@
 #include <reversible/functions/find_lines.hpp>
 #include <reversible/mapping/nct_mapping.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
+
 namespace cirkit
 {
 
@@ -115,7 +116,7 @@ void toffoli_to_v_lower_cost(circuit& circ_out, gate g, matrix& cnot_costs)
 	else
 		cost_b += cnot_costs[c][a] * 4;
 
-	std::cout << "cost_a: " << cost_a << " cost_b: " << cost_b << std::endl;
+	// std::cout << "cost_a: " << cost_a << " cost_b: " << cost_b << std::endl;
   	if ( cost_b < cost_a )
 	{
     	controls_a.push_back(g.controls().back().line());

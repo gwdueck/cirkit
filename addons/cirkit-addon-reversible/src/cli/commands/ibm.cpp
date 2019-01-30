@@ -190,6 +190,8 @@ bool ibm_command::execute()
         // std::cout << "gates = " << best_cost;
         std::cout << "gates = " << best_cost << std::endl;
     }
+    std::cout << "gates = " << circ_IBM.num_gates() << std::endl;
+
     return true;
 }
 
