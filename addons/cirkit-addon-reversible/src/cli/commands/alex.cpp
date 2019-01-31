@@ -270,7 +270,6 @@ circuit Transform_to_v(circuit& circ_in, matrix& cnot_costs)
         {
             if( gate.controls().size() == 2 )
           	 	toffoli_to_v_lower_cost(circ_out, gate, cnot_costs);
-          	 	// toffoli_to_v(circ_out, gate, cnot_costs);
             else
             	circ_out.append_gate() = gate;
 		}
@@ -365,7 +364,7 @@ bool alex_command::execute()
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
 	// std::cout << "	" << circ.num_gates() << std::endl;
- 	
+
  	if( is_set("single_Toffoli") )
  	{
  		if( is_set("remove") )

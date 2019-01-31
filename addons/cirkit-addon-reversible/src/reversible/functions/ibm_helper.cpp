@@ -128,7 +128,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
             {
                 append_toffoli( circ_IBM, gate.controls(), target );
             }
-            else // CNOT gate
+            else if ( gate.controls().size() == 1 ) // CNOT gate
             {
                 //std::cout << "CNOT case " << map_method[control][target] << "\n";
                 
@@ -275,6 +275,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                         break;
                 }
             }
+            else
+                assert( false );
         }
         else if ( is_v( gate ) )
         {
