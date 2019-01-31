@@ -67,6 +67,7 @@ alex_command::alex_command( const environment::ptr& env )
 	opts.add_options()
     ( "interchange,i",  "interchange controls" )
     ( "clifford,c",  "transform to Clifford+T" )
+    ( "direct,d",  "transform using Toffoli with 17 Clifford+T gates" )
     ( "permutations,p",  "try_all_permutations permutations (only 5 qubits)" )
     ( "single_Toffoli,t",  "try different V gates for a single Toffoli" )
     ( "remove,r",  "remove_dup_gates" )
@@ -76,6 +77,7 @@ alex_command::alex_command( const environment::ptr& env )
 
 bool interchange = false;
 bool remove = false;
+bool direct = false;
 
 command::rules_t alex_command::validity_rules() const
 {
@@ -242,6 +244,39 @@ void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
 	}
 }
 
+void toffoli_to_clifford(circuit& circ, gate g)
+{
+	std::vector<unsigned> ga, gb;
+	if( g.controls().front().line() < g.controls().back().line() )
+	{
+		ga.push_back(g.controls().front().line());
+		gb.push_back(g.controls().back().line());
+	}
+	else
+	{
+		ga.push_back(g.controls().back().line());
+		gb.push_back(g.controls().front().line());
+	}
+
+	append_hadamard( circ, g.targets().front() );
+	append_toffoli( circ, gb, g.targets().front() );
+	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, true );
+	append_toffoli( circ, gb, g.targets().front() );
+	append_pauli( circ,  gb.front(), pauli_axis::Z, 4u, false );
+	append_toffoli( circ, ga, gb.front() );
+	append_toffoli( circ, gb, g.targets().front() );
+	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, false );
+	append_toffoli( circ, gb, g.targets().front() );
+	append_pauli( circ,  gb.front(), pauli_axis::Z, 4u, true );
+	append_toffoli( circ, ga, gb.front() );
+	append_toffoli( circ, ga, g.targets().front() );
+	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, true );
+	append_toffoli( circ, ga, g.targets().front() );
+	append_pauli( circ,  ga.front(), pauli_axis::Z, 4u, false );
+	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, false );
+	append_hadamard( circ, g.targets().front() );
+}
+
 void transform_to_v(circuit& circ_in, circuit& circ_out, matrix& cnot_costs)
 {
 	copy_metadata(circ_in, circ_out);
@@ -249,7 +284,9 @@ void transform_to_v(circuit& circ_in, circuit& circ_out, matrix& cnot_costs)
     {
 		if ( is_toffoli( gate ) )
         {
-            if( gate.controls().size() == 2 )
+            if(direct)
+            	toffoli_to_clifford(circ_out, gate);
+            else if( gate.controls().size() == 2 )
           	 	toffoli_to_v_lower_cost(circ_out, gate, cnot_costs);
           	 	// toffoli_to_v(circ_out, gate, cnot_costs);
             else
@@ -356,11 +393,8 @@ void single_toffoli_different_v_gates(circuit circ_in)
 bool alex_command::execute()
 {
 	matrix qx4 ={{0,4,4,7,7},{0,0,4,7,7},{0,0,0,4,4},{3,3,0,0,0},{3,3,0,4,0}};
-	if ( is_set("interchange") )
-		interchange = true;
-	else
-		interchange = false;
-
+	is_set("interchange") ? interchange = true : interchange = false;
+	is_set("direct") ? direct = true : direct = false;
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
 	// std::cout << "	" << circ.num_gates() << std::endl;
@@ -384,11 +418,11 @@ bool alex_command::execute()
    	auto settings = make_settings();
  	settings->set( "controls_threshold", 2u );
  	circ = nct_mapping( circ, settings, statistics );
-    transform_to_v(circ, vCircuit, qx4);
+   	transform_to_v(circ, vCircuit, qx4);
 
 	if ( is_set( "clifford" ) )
     	transform_to_clifford(vCircuit, cliffordCircuit);
-	
+
 	circuits.extend();
 	if ( is_set( "clifford" ) )
 	{
