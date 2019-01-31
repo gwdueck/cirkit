@@ -42,9 +42,31 @@ namespace cirkit
 {
 // permute the line in the circuit
 // assume it is a qc circuit
+// void permute_lines( circuit& circ , int perm[])
+// {
+//     unsigned target, control;
+//     for ( auto& gate : circ )
+//     {
+//         assert( gate.targets().size() == 1 );
+//         target = gate.targets().front();
+//         gate.remove_target(target);
+//         gate.add_target(perm[target]);
+//         if( !gate.controls().empty() )
+//         {
+//             assert( gate.controls().size() == 1 );
+//             control = gate.controls().front().line();
+//             gate.remove_control( make_var(control) );
+//             gate.add_control( make_var(perm[control]) );
+//         }
+//     }
+// }
+
 void permute_lines( circuit& circ , int perm[])
 {
-    unsigned target, control;
+    unsigned target;
+    std::vector<unsigned> control;
+    std::vector<bool> polarity;
+
     for ( auto& gate : circ )
     {
         assert( gate.targets().size() == 1 );
@@ -53,15 +75,20 @@ void permute_lines( circuit& circ , int perm[])
         gate.add_target(perm[target]);
         if( !gate.controls().empty() )
         {
-            assert( gate.controls().size() == 1 );
-            control = gate.controls().front().line();
-            gate.remove_control( make_var(control) );
-            gate.add_control( make_var(perm[control]) );
-            
+            // assert( gate.controls().size() == 1 );
+            control.clear();
+            polarity.clear();
+            for ( auto& c : gate.controls() )
+            {
+                control.push_back( c.line() );
+                polarity.push_back( c.polarity() );
+            }
+            for (int i = 0; i < control.size(); ++i)
+                gate.remove_control( make_var( control[i], polarity[i] ) );
+            for (int i = 0; i < control.size(); ++i)
+                gate.add_control( make_var( perm[control[i]],  polarity[i]) );
         }
-        
     }
-    
 }
 
 // transform a Clifford+T circuit to be IBM compliant
