@@ -43,12 +43,12 @@
 
 namespace cirkit
 {
-	
+		circuit Transform_to_v(circuit& , std::vector<std::vector<unsigned>>& );
+		
 class alex_command : public cirkit_command
 {
     public:
         alex_command( const environment::ptr& env );
-
   		log_opt_t log() const;
 
 		

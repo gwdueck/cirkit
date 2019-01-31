@@ -50,6 +50,7 @@
 #include <reversible/io/print_circuit.hpp>
 #include <reversible/variable.hpp>
 #include <cli/commands/ibm.hpp>
+#include <cli/commands/alex.hpp>
 #include <reversible/functions/ibm_helper.hpp>
 
 
@@ -91,6 +92,7 @@ command::rules_t ibm_command::validity_rules() const
     
 bool ibm_command::execute()
 {
+    std::vector<std::vector<unsigned>> qx4 ={{0,4,4,7,7},{0,0,4,7,7},{0,0,0,4,4},{3,3,0,0,0},{3,3,0,4,0}};
 
     auto& circuits = env->store<circuit>();
     circuit circ_working = circuits.current();
@@ -104,6 +106,7 @@ bool ibm_command::execute()
     
     if( !is_set( "all_perm" ) )
     {
+        circ_working = Transform_to_v(circ_working, qx4);
         if ( is_set( "ibm_qx4" ) )
         {
             circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, is_set( "template" ) );
@@ -130,6 +133,7 @@ bool ibm_command::execute()
         circuit circ_best;
         do
         {
+            circ_working = Transform_to_v(circ_working, qx4);
             permute_lines( circ_working , perm );
             if ( is_set( "ibm_qx4" ) )
             {
@@ -190,7 +194,7 @@ bool ibm_command::execute()
         // std::cout << "gates = " << best_cost;
         std::cout << "gates = " << best_cost << std::endl;
     }
-    std::cout << "gates = " << circ_IBM.num_gates() << std::endl;
+    // std::cout << "gates = " << circ_IBM.num_gates() << std::endl;
 
     return true;
 }

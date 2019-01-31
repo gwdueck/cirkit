@@ -260,6 +260,26 @@ void transform_to_v(circuit& circ_in, circuit& circ_out, matrix& cnot_costs)
 	}
 }
 
+circuit Transform_to_v(circuit& circ_in, matrix& cnot_costs)
+{
+	circuit circ_out;
+	copy_metadata(circ_in, circ_out);
+	for ( const auto& gate : circ_in )
+    {
+		if ( is_toffoli( gate ) )
+        {
+            if( gate.controls().size() == 2 )
+          	 	toffoli_to_v_lower_cost(circ_out, gate, cnot_costs);
+          	 	// toffoli_to_v(circ_out, gate, cnot_costs);
+            else
+            	circ_out.append_gate() = gate;
+		}
+		else
+			circ_out.append_gate() = gate;
+	}
+	return circ_out;
+}
+
 void transform_to_clifford(circuit& circ_in, circuit& circ_out)
 {
 	copy_metadata(circ_in, circ_out);
