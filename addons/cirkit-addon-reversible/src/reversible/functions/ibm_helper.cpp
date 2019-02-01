@@ -291,7 +291,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                 //std::cout << "CNOT case " << map_method[control][target] << "\n";
                 
                 unsigned method;
-                bool tag1, tag2;
+                bool tag1;
                 if (map_method[control][target] < map_method[target][control])
                 {
                     method = map_method[control][target];
@@ -314,9 +314,9 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                 }
                 // std::cout << method << std::endl;
                 if( tag.adjoint )
-                    { tag1 = false; tag2 = true; } 
+                    tag1 = false; 
                 else 
-                    { tag1 = true; tag2 = false; }
+                    tag1 = true;
                 switch ( method )
                 {
                     case 1:
@@ -324,8 +324,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                         append_toffoli( circ_IBM, old_controls, target );
                         append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
                         append_toffoli( circ_IBM, old_controls, target );
-                        append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                        append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                        append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                        append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                         append_hadamard( circ_IBM, gate.targets().front() );
                         break;
                         
@@ -342,8 +342,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                         append_toffoli( circ_IBM, new_controls, control );
                         append_hadamard( circ_IBM, control );
                         append_hadamard( circ_IBM, target );
-                        append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                        append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                        append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                        append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                         append_hadamard( circ_IBM, gate.targets().front() );
                         break;
                     case 3 : // swap target with 2
@@ -377,8 +377,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_hadamard( circ_IBM, 2u );
                             append_hadamard( circ_IBM, target );
                             append_toffoli( circ_IBM, new_controls, 2u );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                         }
                         else // use the "template" transformation
@@ -405,8 +405,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_toffoli( circ_IBM, new_controls, 2u );
                             append_hadamard( circ_IBM, target );
                             append_hadamard( circ_IBM, 2u );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                             
                         }
@@ -442,8 +442,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_hadamard( circ_IBM, control );
                             append_hadamard( circ_IBM, 2u );
                             append_toffoli( circ_IBM, control2, control );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                         }
                         else
@@ -474,8 +474,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_hadamard( circ_IBM, 2u );
                             append_hadamard( circ_IBM, control );
                             append_toffoli( circ_IBM, control2, target );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                         }
                         break;
@@ -514,8 +514,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_toffoli( circ_IBM, old_controls, 2u );
                             append_hadamard( circ_IBM, 2u );
                             append_hadamard( circ_IBM, control );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                         }
                         else
@@ -530,8 +530,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_toffoli( circ_IBM, control2, target );
                             append_toffoli( circ_IBM, old_controls, 2u );
                             append_toffoli( circ_IBM, control2, target );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                         }
                         break;
@@ -566,8 +566,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_hadamard( circ_IBM, 2u );
                             append_hadamard( circ_IBM, target );
                             append_toffoli( circ_IBM, new_controls, 2u );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                         }
                         else
@@ -598,8 +598,8 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                            // append_hadamard( circ_IBM, 2u );
                             append_hadamard( circ_IBM, target );
                             append_hadamard( circ_IBM, control );
-                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, tag2 );
-                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, tag2 );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
                             append_hadamard( circ_IBM, gate.targets().front() );
                         }
                         break;

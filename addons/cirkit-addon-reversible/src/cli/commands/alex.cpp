@@ -247,33 +247,57 @@ void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
 void toffoli_to_clifford(circuit& circ, gate g)
 {
 	std::vector<unsigned> ga, gb;
+	unsigned pa, pb;
+	bool t1, t2, t3;
 	if( g.controls().front().line() < g.controls().back().line() )
 	{
 		ga.push_back(g.controls().front().line());
 		gb.push_back(g.controls().back().line());
+		pa = g.controls().front().polarity();
+		pb = g.controls().back().polarity();
 	}
 	else
 	{
 		ga.push_back(g.controls().back().line());
 		gb.push_back(g.controls().front().line());
+		pa = g.controls().back().polarity();
+		pb = g.controls().front().polarity();
 	}
 
+	if(pa == 1 && pb == 1)
+		{ t1 = true; t2 = false; t3 = true;}
+	else if(pa == 1 && pb == 0) 
+		{ t1 = true; t2 = false; t3 = false;}
+	else if(pa == 0 && pb == 1) 
+		{ t1 = false; t2 = false; t3 = true;}
+	else if(pa == 0 && pb == 0) 
+		{ t1 = true; t2 = true; t3 = true;}
 	append_hadamard( circ, g.targets().front() );
+	
 	append_toffoli( circ, gb, g.targets().front() );
-	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, true );
+	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, t1 );
 	append_toffoli( circ, gb, g.targets().front() );
-	append_pauli( circ,  gb.front(), pauli_axis::Z, 4u, false );
+	append_pauli( circ,  gb.front(), pauli_axis::Z, 4u, !t1 );
+	
 	append_toffoli( circ, ga, gb.front() );
+	
 	append_toffoli( circ, gb, g.targets().front() );
-	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, false );
+	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, t2 );
 	append_toffoli( circ, gb, g.targets().front() );
-	append_pauli( circ,  gb.front(), pauli_axis::Z, 4u, true );
+	append_pauli( circ,  gb.front(), pauli_axis::Z, 4u, !t2 );
+	
 	append_toffoli( circ, ga, gb.front() );
+	
 	append_toffoli( circ, ga, g.targets().front() );
-	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, true );
+	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, t3 );
 	append_toffoli( circ, ga, g.targets().front() );
-	append_pauli( circ,  ga.front(), pauli_axis::Z, 4u, false );
-	append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, false );
+	append_pauli( circ,  ga.front(), pauli_axis::Z, 4u, !t3 );
+	
+	if(pa == 0 && pb == 1 || pa == 0 && pb == 0)
+		append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, t3 );
+	else
+		append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, !t3 );
+	
 	append_hadamard( circ, g.targets().front() );
 }
 
