@@ -58,7 +58,7 @@ permute_lines_command::permute_lines_command( const environment::ptr& env )
   : cirkit_command( env, "Permute the lines of a circuit" )
 {
   opts.add_options()
-    ( "permutation,p", value( &permutation ), "Create permute_lines from permutation (starts with 0, space separated)" )
+    ( "permutation,p", value( &permutation ), "Permute lines, e. g., \"4 2 0 1 3\"" )
     ( "new,n",                                "Add a new entry to the store; if not set, the current entry is overriden" )
     ;
 }

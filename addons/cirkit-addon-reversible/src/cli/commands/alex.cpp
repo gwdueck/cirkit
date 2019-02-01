@@ -308,7 +308,7 @@ void transform_to_v(circuit& circ_in, circuit& circ_out, matrix& cnot_costs)
     {
 		if ( is_toffoli( gate ) )
         {
-            if(direct)
+            if(direct && gate.controls().size() == 2)
             	toffoli_to_clifford(circ_out, gate);
             else if( gate.controls().size() == 2 )
           	 	toffoli_to_v_lower_cost(circ_out, gate, cnot_costs);
