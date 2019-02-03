@@ -176,6 +176,22 @@ void write_qpic( const circuit& circ, std::ostream& os, const properties::ptr& s
         assert( false );
       }
     }
+    else if( is_v(g) )
+    {
+      const auto& v = boost::any_cast<v_tag>( g.type() );  
+      items.push_back( format_target( g.targets().front(), "" ) );
+      std::string gate = "G {$V";
+      if ( v.adjoint )
+      {
+        gate += "^\\dagger";
+      }
+      gate += "$}";
+      items.push_back( gate );
+      for ( const auto& c : g.controls() )
+      {
+        items.push_back( format_control( c ) );
+      }
+    }
     else
     {
       assert( false );
