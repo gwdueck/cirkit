@@ -351,19 +351,20 @@ namespace cirkit
             {
                 for( int w = 0; w < graph_size; w++)
                 {
+                    trans_cost[v][w] = trans_cost[v][w]-trans_path[v][w].opt();
                     std::cout << trans_cost[v][w] << " ";
                 }
                 std::cout << std::endl;
             }
-            std::cout << "== Optimization ==" << std::endl;
-            for( int v = 0; v < graph_size; v++)
-            {
-                for( int w = 0; w < graph_size; w++)
-                {
-                    std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
-                }
-                std::cout << std::endl;
-            }
+            // std::cout << "== Optimization ==" << std::endl;
+            // for( int v = 0; v < graph_size; v++)
+            // {
+            //     for( int w = 0; w < graph_size; w++)
+            //     {
+            //         std::cout << trans_cost[v][w]-trans_path[v][w].opt() << " ";
+            //     }
+            //     std::cout << std::endl;
+            // }
             for( int v = 0; v < graph_size; v++)
             {
                 for( int w = 0; w < graph_size; w++)

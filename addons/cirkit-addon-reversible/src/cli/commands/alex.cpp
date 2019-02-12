@@ -421,7 +421,7 @@ bool alex_command::execute()
 	is_set("direct") ? direct = true : direct = false;
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
-	// std::cout << "	" << circ.num_gates() << std::endl;
+	std::cout << "	" << circ.num_gates() << std::endl;
 
  	if( is_set("single_Toffoli") )
  	{
