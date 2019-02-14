@@ -244,7 +244,6 @@ std::pair<int,int> get_cheaper_cnot(matrix& m)
     return std::make_pair(x,y);
 }
 
-
 void create_matrix(matrix& m, unsigned size)
 {
     std::vector <int> p;
@@ -254,32 +253,45 @@ void create_matrix(matrix& m, unsigned size)
         m.push_back(p);
 }
 
-void get_best_qubit( matrix& m)
+void get_best_qubit( matrix& cnots, matrix& path)
 {
-    unsigned control = 0, target = 0, qc, qt;
-    for (int i = 0; i < m.size(); ++i)
+    int h = 0, x, y;
+    for (int i = 0; i < cnots.size(); ++i)
+        for (int j = 0; j < cnots.size(); ++j)
+            if( cnots[i][j] > h ) { h = cnots[i][j]; x = i; y = j; }
+
+    unsigned control = 0, target = 0, qc, qt, c, t;
+    for (int i = 0; i < path.size(); ++i)
     {
-        unsigned c = 0, t= 0;
-        for (int j = 0; j < m.size(); ++j)
+        c = 0, t= 0;
+        for (int j = 0; j < path.size(); ++j)
         {
-            if (m[i][j] == -1)
+            if (path[i][j] == -1)
                 ++t;
-            if (m[i][j] == 1)
+            if (path[i][j] == 1)
                 ++c;
         }
-        if( c > control)
+        if( c > control )
         {
             qc = i;
             control = c;
         }
-        if( t > target)
+        if( t > target )
         {
             qt = i;
             target = t;
         }
     }
-    std::cout << "control: " << qc << " - " << control << std::endl;
-    std::cout << "target: " << qt << " - " << target << std::endl;
+    c = 0, t= 0;
+    for (int i = 0; i < cnots.size(); ++i)
+    {
+        if( cnots[x][i] != 0)
+            ++c;
+        if( cnots[i][y] != 0)
+            ++t;
+    }
+    std::cout << "control: " << qc << " - " << control << " -- " << c << std::endl;
+    std::cout << "target: " << qt << " - " << target << " -- " << t << std::endl;
 }
 
 
@@ -294,7 +306,7 @@ void qxg(circuit& circ, matrix& map, matrix& path )
     // print_matrix(cnots);
     cnot = get_most_used_cnot(cnots);
     std::cout << "most used: CNOT(" << cnot.first << "," << cnot.second << ")" << std::endl;
-    get_best_qubit(path);
+    get_best_qubit(cnots, path);
 }
 
 bool qxg_command::execute()
