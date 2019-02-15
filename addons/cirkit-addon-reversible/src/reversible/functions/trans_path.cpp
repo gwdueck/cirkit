@@ -151,7 +151,7 @@ namespace cirkit
         MoveQubit q;
         for(int i = tpath.size() - 2; i >= 0; i-- )
         {
-            if(tpath[i].getType() != cnot3 || tpath[i].getType() != cnot3i) // cnot3 has no inverse
+            if(tpath[i].getType() != cnot3 && tpath[i].getType() != cnot3i) // cnot3 has no inverse
             {
                 q = tpath[i];
                 q.invert();
