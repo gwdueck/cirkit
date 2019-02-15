@@ -299,7 +299,6 @@ namespace cirkit
                 best_tp = p;
             }
         }
-
         trans_cost[v][w] = best_cost;
         best_tp.addInverse();
         trans_path[v][w] = best_tp;
@@ -399,7 +398,6 @@ namespace cirkit
                 old_controls.clear();
                 old_controls.push_back( control );
             }
-            
             if ( is_toffoli( gate ) )
             {
                 if( gate.controls().empty() ) // a NOT gate

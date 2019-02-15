@@ -52,89 +52,42 @@ namespace cirkit
 
     // Check if the movement has a cnot3 and update it
     void TransPath::movCnot3(){
-        if(tpath.size() > 1)
+        for (int i = tpath.size()-1; i > 0; --i)
         {
-            if(tpath.size() == 2)
+            if( tpath[i].getType() == nop && tpath[i-1].getType() == cab ) // two consecutive arrows
             {
-                if(tpath[0].getType() == cab && tpath[1].getType() == nop) // two consecutive arrows
-                {
-                    unsigned a = tpath[tpath.size()-2].getA();  // get the parameters for the cnot3
-                    unsigned b = tpath[tpath.size()-1].getA();  //
-                    unsigned c = tpath[tpath.size()-1].getB();  //
-                    tpath.pop_back();                               // remove the cab and 
-                    tpath.pop_back();                               // the nop movements
-                    tpath.push_back( MoveQubit( cnot3, a, b, c ) ); // append the cnot3
-                }
-                else if(tpath[0].getType() == cba && tpath[1].getType() == flip) // two consecutive arrows backwards
-                {
-                    unsigned a = tpath[tpath.size()-2].getA();  // get the parameters for the cnot3
-                    unsigned b = tpath[tpath.size()-1].getA();  //
-                    unsigned c = tpath[tpath.size()-1].getB();  //
-                    tpath.pop_back();                               // remove the cba and 
-                    tpath.pop_back();                               // the flip movements
-                    tpath.push_back( MoveQubit( cnot3i, a, b, c ) ); // append the cnot3
-                }
+                unsigned a = tpath[i-1].getA();  
+                unsigned b = tpath[i-1].getB();  
+                unsigned c = tpath[i].getB();  
+                tpath.erase(tpath.begin()+i-1);                              
+                tpath.erase(tpath.begin()+i-1);                                                 
+                tpath.insert(tpath.begin()+i-1, MoveQubit( cnot3, a, b, c ) ); 
             }
-            else
+            else if( tpath[i].getType() == flip && tpath[i-1].getType() == cba ) // two consecutive arrows backwards
             {
-                if(tpath[tpath.size()-1].getType() == nop)  // cnot3 movement must end with nop
-                {
-                    unsigned movement = 0;  // count the number of cab (future cnot3)  
-                    for (int i = tpath.size()-2 ; i >= 0 ; --i)
-                    {
-                        if(tpath[i].getType() != cab ) // must be consecutive cab movement
-                            break;
-                        else
-                            ++movement;
-                    }
-                    if(movement >= 2)
-                    {
-                        std::vector<MoveQubit> cnot3_list; // vector to create the cnot3
-                        unsigned a,b,c;
-                        for (int i = 0; i < movement; ++i)
-                        {
-                            a = tpath[tpath.size()-2].getA(); // 
-                            b = tpath[tpath.size()-1].getA(); // get the data for the cnot3
-                            c = tpath[tpath.size()-1].getB(); //
-                            cnot3_list.insert( cnot3_list.begin(), MoveQubit( cnot3, a, b, c ) );
-                            tpath.pop_back();
-                        }
-
-                        tpath.pop_back();
-                        for ( auto &p : cnot3_list ) // append the cnot3 in the transformation
-                            tpath.push_back( p );
-                    }       
-                }
-                else if(tpath[tpath.size()-1].getType() == flip)  // cnot3i movement must end with flip
-                {
-                    unsigned movement = 0;  // count the number of cab (future cnot3)  
-                    for (int i = tpath.size()-2 ; i >= 0 ; --i)
-                    {
-                        if(tpath[i].getType() != cba ) // must be consecutive cba movement
-                            break;
-                        else
-                            ++movement;
-                    }
-                    if(movement >= 2)
-                    {
-                        std::vector<MoveQubit> cnot3_list; // vector to create the cnot3i
-                        unsigned a,b,c;
-                        for (int i = 0; i < movement; ++i)
-                        {
-                            a = tpath[tpath.size()-2].getA(); // 
-                            b = tpath[tpath.size()-1].getA(); // get the data for the cnot3i
-                            c = tpath[tpath.size()-1].getB(); //
-                            cnot3_list.insert( cnot3_list.begin(), MoveQubit( cnot3i, a, b, c ) );
-                            tpath.pop_back();
-                        }
-
-                        tpath.pop_back();
-                        for ( auto &p : cnot3_list ) // append the cnot3i in the transformation
-                            tpath.push_back( p );
-                    }       
-                }
-                
-            }    
+                unsigned a = tpath[i-1].getA();  
+                unsigned b = tpath[i-1].getB();  
+                unsigned c = tpath[i].getB();  
+                tpath.erase(tpath.begin()+i-1);                                                 
+                tpath.erase(tpath.begin()+i-1);                                                 
+                tpath.insert(tpath.begin()+i-1, MoveQubit( cnot3i, a, b, c ) ); 
+            }
+            else if( tpath[i].getType() == cnot3 && tpath[i-1].getType() == cab ) //cnot3 with more arrows
+            {
+                unsigned a = tpath[i-1].getA();  
+                unsigned b = tpath[i-1].getB(); 
+                unsigned c = tpath[i].getB();  
+                tpath.erase(tpath.begin()+i-1);                              
+                tpath.insert(tpath.begin()+i-1, MoveQubit( cnot3, a, b, c ) );
+            }
+            else if( tpath[i].getType() == cnot3i && tpath[i-1].getType() == cba ) //cnot3 with more arrows
+            {
+                unsigned a = tpath[i-1].getA();  
+                unsigned b = tpath[i-1].getB(); 
+                unsigned c = tpath[i].getB();  
+                tpath.erase(tpath.begin()+i-1);                              
+                tpath.insert(tpath.begin()+i-1, MoveQubit( cnot3i, a, b, c ) );
+            }
         }
     }
 
@@ -198,7 +151,7 @@ namespace cirkit
         MoveQubit q;
         for(int i = tpath.size() - 2; i >= 0; i-- )
         {
-            if(tpath[i].getType() != cnot3) // cnot3 has no inverse
+            if(tpath[i].getType() != cnot3 || tpath[i].getType() != cnot3i) // cnot3 has no inverse
             {
                 q = tpath[i];
                 q.invert();
