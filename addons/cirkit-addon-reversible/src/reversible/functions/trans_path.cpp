@@ -86,7 +86,7 @@ namespace cirkit
                 unsigned b = tpath[i-1].getB(); 
                 unsigned c = tpath[i].getB();  
                 tpath.erase(tpath.begin()+i-1);                              
-                tpath.insert(tpath.begin()+i-1, MoveQubit( cnot3i, a, b, c ) );
+                tpath.insert(tpath.begin()+i, MoveQubit( cnot3i, a, b, c ) );
             }
         }
     }

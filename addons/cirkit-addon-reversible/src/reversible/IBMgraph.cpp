@@ -383,7 +383,7 @@ namespace cirkit
     // assume that the corresponding matricies have been set up correctly
     void expand_cnots( circuit& circ_out, const circuit& circ_in ){
         
-        unsigned target, control, moreCnot3 = 0;
+        unsigned target, control, moreCnot3 = 0, aux = 0;
         std::vector<unsigned int> new_controls, control2, old_controls;
         
         copy_metadata( circ_in, circ_out );
@@ -407,6 +407,10 @@ namespace cirkit
                 else // CNOT gate
                 {
                     moreCnot3 = 0;
+                    aux = 0;
+                    for ( auto &p : trans_path[control][target].tpath )
+                        if (p.getType() == cnot3 || p.getType() == cnot3i)
+                            ++aux;
                     for ( auto &p : trans_path[control][target].tpath ) {
                         switch ( p.getType() )
                         {
@@ -491,7 +495,7 @@ namespace cirkit
                                 }
                                 else    // if it is more than "two arrows"
                                 {       // we have to calculate the number of cnots
-                                    unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
+                                    unsigned c = pow(2,moreCnot3) + pow(2,moreCnot3+1) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
                                     append_cnot( circ_out, p.getB(), p.getC() );                    // append the cnot   
                                     for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)// and copy all the cnots placed before
                                         circ_out.append_gate() = circ_out[j];
@@ -502,25 +506,51 @@ namespace cirkit
                             case cnot3i :
                                 if(moreCnot3 == 0)  // if it is the first cnot3
                                 {                   // just append the four cnot gates
-                                    append_hadamard( circ_out, p.getA() );
-                                    append_hadamard( circ_out, p.getC() );
-                                    append_cnot( circ_out, p.getB(), p.getA() );
+                                    append_hadamard( circ_out, control );
+                                    append_hadamard( circ_out, target );
                                     append_cnot( circ_out, p.getC(), p.getB() );
                                     append_cnot( circ_out, p.getB(), p.getA() );
                                     append_cnot( circ_out, p.getC(), p.getB() );
-                                    append_hadamard( circ_out, p.getA() );
-                                    append_hadamard( circ_out, p.getC() );
+                                    append_cnot( circ_out, p.getB(), p.getA() );
                                     ++moreCnot3;    // update the number of cnot3
                                 }
                                 else    // if it is more than "two arrows"
                                 {       // we have to calculate the number of cnots
-                                    unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
-                                    append_cnot( circ_out, p.getC(), p.getB() );                    // append the cnot   
+                                    unsigned c = pow(2,moreCnot3) + pow(2,moreCnot3+1) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
+                                    append_cnot( circ_out, p.getB(), p.getA() );                    // append the cnot   
                                     for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)// and copy all the cnots placed before
                                         circ_out.append_gate() = circ_out[j];
-                                    append_cnot( circ_out, p.getC(), p.getB() );                    // append again the cnot
+                                    append_cnot( circ_out, p.getB(), p.getA() );                    // append again the cnot
                                     ++moreCnot3;
                                 }
+                                if(moreCnot3 == aux)
+                                {
+                                    append_hadamard( circ_out, control );
+                                    append_hadamard( circ_out, target );   
+                                }
+                                break;                                
+
+                                // if(moreCnot3 == 0)  // if it is the first cnot3
+                                // {                   // just append the four cnot gates
+                                //     append_hadamard( circ_out, p.getA() );
+                                //     append_hadamard( circ_out, p.getC() );
+                                //     append_cnot( circ_out, p.getB(), p.getA() );
+                                //     append_cnot( circ_out, p.getC(), p.getB() );
+                                //     append_cnot( circ_out, p.getB(), p.getA() );
+                                //     append_cnot( circ_out, p.getC(), p.getB() );
+                                //     ++moreCnot3;    // update the number of cnot3
+                                // }
+                                // else    // if it is more than "two arrows"
+                                // {       // we have to calculate the number of cnots
+                                //     unsigned c = pow(2,moreCnot3) + pow(2,++moreCnot3) - 2; // the calculation: 2^n + 2^(n+1) - 2 -> n=number of "arrows" - 1
+                                //     append_cnot( circ_out, p.getC(), p.getB() );                    // append the cnot   
+                                //     for (int i = 0, j = circ_out.num_gates()-(c+1); i < c; ++i, ++j)// and copy all the cnots placed before
+                                //         circ_out.append_gate() = circ_out[j];
+                                //     append_cnot( circ_out, p.getC(), p.getB() );                    // append again the cnot
+                                //     ++moreCnot3;
+                                // }
+                                // append_hadamard( circ_out, p.getA() );
+                                // append_hadamard( circ_out, p.getC() );
                                 break;
                             default : std::cout << "ERROR expand_cnots" << std::endl;
                         }
