@@ -379,6 +379,63 @@ namespace cirkit
         }
     }
 
+    void print_movements( const circuit& circ_in )
+    {
+        unsigned target, control;
+        for ( const auto& gate : circ_in )
+        {
+            if ( is_toffoli( gate ) && !gate.controls().empty() )
+            {
+                target = gate.targets().front();
+                control = gate.controls().front().line();
+                for ( auto &p : trans_path[control][target].tpath )
+                {
+                    switch ( p.getType() )
+                    {
+                        case cab : 
+                            std::cout << " cab(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case cba : 
+                            std::cout << " cba(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case tab : 
+                            std::cout << " tab(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case tba : 
+                            std::cout << " tba(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case cabi : 
+                            std::cout << " cabi(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case cbai : 
+                            std::cout << " cbai(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case tabi : 
+                            std::cout << " tabi(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case tbai : 
+                            std::cout << " tbai(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case nop : 
+                            std::cout << " nop(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case flip : 
+                            std::cout << " flip(" << p.getA() << "," << p.getB() << ")"; //<< std::endl;
+                            break;
+                        case cnot3 :
+                            std::cout << " cnot3(" << p.getA() << "," << p.getB() << "," << p.getC() << ")"; //<< std::endl;
+                            break;
+                        case cnot3i :
+                            std::cout << " cnot3i(" << p.getA() << "," << p.getB() << "," << p.getC() << ")"; //<< std::endl;
+                            break;                                
+                        default : std::cout << "ERROR expand_cnots" << std::endl;
+                    }
+                }
+                std::cout << std::endl;
+            }
+        }
+    }
+
     // expand the cnot gates that are not supported by the architecture
     // assume that the corresponding matricies have been set up correctly
     void expand_cnots( circuit& circ_out, const circuit& circ_in ){

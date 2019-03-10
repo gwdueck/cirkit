@@ -60,14 +60,14 @@ graph_command::graph_command( const environment::ptr& env )
     ( "create,c",  "create the transformation matrix" )
     ( "verbose,v", "verbose mode")
     ( "print,p",  "print current graph" )
-    ( "matrix_cost,q",  "Print matrix cost and transformations" )
     ( "transform,t", "transform non supported cnot gates")
     ( "rm_dup,m",  "Remove duplicate gates" )
     ( "delete,d",  "delete current graph" )
-    ( "file,w", value( &filename ), "Write graph, matrix and transformations to a file" )
-    ( "from_file,f", value( &filename ), "Read matrix and transformations from a file" )
-    ( "mapping,x", "Realize the mapping for a current circuit")
-    ( "try_all", "Try all the permutations for the circuit")
+    ( "movements,o",  "print movements" )
+    // ( "file,w", value( &filename ), "Write graph, matrix and transformations to a file" )
+    // ( "from_file,f", value( &filename ), "Read matrix and transformations from a file" )
+    // ( "mapping,x", "Realize the mapping for a current circuit")
+    // ( "try_all", "Try all the permutations for the circuit")
     ;
     add_new_option();
 }
@@ -89,51 +89,53 @@ bool graph_command::execute()
     }
     if( is_set( "print" ) ){
         print_graph( );
-    }
-    if( is_set( "matrix_cost" ) )
-    {
         print_matrix( );
     }
-    if( is_set( "file" ) )
-    {
-        write_to_file( filename );
+    if( is_set( "movements" ) ){
+        auto& circuits = env->store<circuit>();
+        circuit circ_working = circuits.current();
+        print_movements( circ_working );
     }
-    if( is_set( "from_file" ) )
-    {
-        read_from_file( filename );
-    }
+    // if( is_set( "file" ) )
+    // {
+    //     write_to_file( filename );
+    // }
+    // if( is_set( "from_file" ) )
+    // {
+    //     read_from_file( filename );
+    // }
     if( is_set( "create" ) ){
         create_trans( verbose );
     }
     if( is_set( "delete" ) ){
         delete_graph( );
     }
-    if( is_set( "mapping" ) )
-    {
-        if( env->store<circuit>().current_index() < 0 ){
-            std::cout << "no current circuit available" << std::endl;
-            return true;
-        }
-        auto& circuits = env->store<circuit>();
-        circuit circ_in = circuits.current();
-        mapping( circ_in);
-    }
+    // if( is_set( "mapping" ) )
+    // {
+    //     if( env->store<circuit>().current_index() < 0 ){
+    //         std::cout << "no current circuit available" << std::endl;
+    //         return true;
+    //     }
+    //     auto& circuits = env->store<circuit>();
+    //     circuit circ_in = circuits.current();
+    //     mapping( circ_in);
+    // }
     
-    if( is_set( "try_all" ) )
-    {
-        if( env->store<circuit>().current_index() < 0 ){
-            std::cout << "no current circuit available" << std::endl;
-            return true;
-        }
-        auto& circuits = env->store<circuit>();
-        circuit circ_out, circ_in = circuits.current();
-        circ_out = try_all( circ_in, verbose, rm_dup);
-        if ( is_set( "new" ) )
-        {
-            circuits.extend();
-        }
-        circuits.current() = circ_out;
-    }
+    // if( is_set( "try_all" ) )
+    // {
+    //     if( env->store<circuit>().current_index() < 0 ){
+    //         std::cout << "no current circuit available" << std::endl;
+    //         return true;
+    //     }
+    //     auto& circuits = env->store<circuit>();
+    //     circuit circ_out, circ_in = circuits.current();
+    //     circ_out = try_all( circ_in, verbose, rm_dup);
+    //     if ( is_set( "new" ) )
+    //     {
+    //         circuits.extend();
+    //     }
+    //     circuits.current() = circ_out;
+    // }
 
     if( is_set( "transform" ) ){
         if( env->store<circuit>().current_index() < 0 ){

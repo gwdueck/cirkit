@@ -62,6 +62,7 @@ extern std::vector<TransPath> path_list; //-- it was giving memory error (now it
 	bool read_from_file( const std::string& filename );
 	void print_graph( );
 	void print_matrix( );
+	void print_movements( const circuit& circ_in );
 	void delete_graph( );
 	void create_trans( bool verbose );
     circuit try_all( const circuit& circ_in, bool verbose, bool rm_dup );
