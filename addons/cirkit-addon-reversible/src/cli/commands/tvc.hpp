@@ -25,7 +25,7 @@
  */
 
 /**
- * @file alex.hpp
+ * @file tvc.hpp
  *
  * @brief Test
  *
@@ -33,8 +33,8 @@
  * @2
  */
 
-#ifndef CLI_ALEX_COMMAND_HPP
-#define CLI_ALEX_COMMAND_HPP
+#ifndef CLI_TVC_COMMAND_HPP
+#define CLI_TVC_COMMAND_HPP
 
 #include <vector>
 
@@ -43,11 +43,12 @@
 
 namespace cirkit
 {
+	circuit Transform_to_v(circuit& , std::vector<std::vector<unsigned>>& );
 		
-class alex_command : public cirkit_command
+class tvc_command : public cirkit_command
 {
     public:
-        alex_command( const environment::ptr& env );
+        tvc_command( const environment::ptr& env );
   		log_opt_t log() const;
 
 		
@@ -56,6 +57,8 @@ class alex_command : public cirkit_command
   		bool execute();
 
 	private:
+		// std::string filename;
+		// unsigned architecture;
 };
 
 }

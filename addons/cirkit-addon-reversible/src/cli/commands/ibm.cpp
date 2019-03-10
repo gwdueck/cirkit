@@ -51,7 +51,7 @@
 #include <reversible/io/print_circuit.hpp>
 #include <reversible/variable.hpp>
 #include <cli/commands/ibm.hpp>
-#include <cli/commands/alex.hpp>
+#include <cli/commands/tvc.hpp>
 #include <reversible/functions/ibm_helper.hpp>
 
 

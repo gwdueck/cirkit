@@ -102,6 +102,7 @@
 #include<cli/commands/qxg.hpp>
 #include <cli/commands/ibm.hpp>
 #include <cli/commands/alex.hpp>
+#include <cli/commands/tvc.hpp>
 #include <cli/commands/permute_lines.hpp>
 #include <cli/commands/reduce.hpp>
 #include <cli/commands/graph.hpp>
@@ -227,6 +228,7 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( spectral );
   ADD_COMMAND( tt );
   ADD_COMMAND( alex );
+  ADD_COMMAND( tvc );
   ADD_COMMAND( invert );
   ADD_COMMAND( rm_dup );
   ADD_COMMAND( tabu );
