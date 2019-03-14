@@ -465,9 +465,21 @@ namespace cirkit
                 {
                     moreCnot3 = 0;
                     aux = 0;
+                    unsigned cnot3a, cnot3b;
                     for ( auto &p : trans_path[control][target].tpath )
                         if (p.getType() == cnot3 || p.getType() == cnot3i)
+                        {
+                            if(aux < 1)
+                            {
+                                cnot3a = p.getA();
+                                cnot3b = p.getC();
+                            }
+                            else
+                            {
+                                cnot3a = p.getA();
+                            }
                             ++aux;
+                        }
                     for ( auto &p : trans_path[control][target].tpath ) {
                         switch ( p.getType() )
                         {
@@ -561,10 +573,11 @@ namespace cirkit
                                 }
                                 break;
                             case cnot3i :
+
                                 if(moreCnot3 == 0)  // if it is the first cnot3
                                 {                   // just append the four cnot gates
-                                    append_hadamard( circ_out, control );
-                                    append_hadamard( circ_out, target );
+                                    append_hadamard( circ_out, cnot3a );
+                                    append_hadamard( circ_out, cnot3b );
                                     append_cnot( circ_out, p.getC(), p.getB() );
                                     append_cnot( circ_out, p.getB(), p.getA() );
                                     append_cnot( circ_out, p.getC(), p.getB() );
@@ -582,8 +595,8 @@ namespace cirkit
                                 }
                                 if(moreCnot3 == aux)
                                 {
-                                    append_hadamard( circ_out, control );
-                                    append_hadamard( circ_out, target );   
+                                    append_hadamard( circ_out, cnot3a );
+                                    append_hadamard( circ_out, cnot3b );  
                                 }
                                 break;                                
 
