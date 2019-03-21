@@ -53,19 +53,19 @@ using namespace boost::program_options;
 using matrix = std::vector<std::vector<int>>;
 
 //Matrix with the cost of each possible cnot (QX2)
-static const matrix map_qx2 = { {0,0,0,10,10},
+matrix map_qx2 = { {0,0,0,10,10},
                                 {4,0,0,10,10},
                                 {4,4,0,4,4},
                                 {10,10,0,0,0},
                                 {10,10,0,4,0}};
 //Matrix with the cost of each possible cnot (QX4)
-static const matrix map_qx4 = { {0,4,4,10,10},
+matrix map_qx4 = { {0,4,4,10,10},
                                 {0,0,4,10,10},
                                 {0,0,0,4,0},
                                 {12,12,0,0,0},
                                 {10,10,4,4,0}};
 //Matrix with the cost of each possible cnot (QX3)
-static const matrix map_qx3 = { {0, 0, 10, 24, 38, 52, 74, 80, 94, 88, 66, 52, 46, 32, 10, 4},
+matrix map_qx3 = { {0, 0, 10, 24, 38, 52, 74, 80, 94, 88, 66, 52, 46, 32, 10, 4},
                                 {4, 0, 0, 10, 24, 38, 80, 94, 108, 94, 80, 66, 52, 38, 24, 18},
                                 {18, 4, 0, 0, 10, 24, 66, 80, 94, 80, 66, 52, 38, 24, 10, 24},
                                 {24, 18, 4, 0, 4, 10, 52, 66, 80, 66, 52, 38, 24, 10, 0, 10},
@@ -82,7 +82,7 @@ static const matrix map_qx3 = { {0, 0, 10, 24, 38, 52, 74, 80, 94, 88, 66, 52, 4
                                 {10, 24, 18, 4, 10, 24, 46, 52, 66, 60, 38, 24, 18, 4, 0, 4},
                                 {0, 10, 24, 10, 24, 38, 52, 66, 80, 66, 52, 38, 24, 10, 0, 0}};
 
-static const matrix path_qx3={{0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
+matrix path_qx3={{0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {-1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
                             {0,-1,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
                             {0,0,-1,0,-1,0,0,0,0,0,0,0,0,0,1,0},
@@ -99,7 +99,7 @@ static const matrix path_qx3={{0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {0,0,0,-1,0,0,0,0,0,0,0,0,0,-1,0,-1},
                             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0}};
 
-static const matrix path_qx5={{0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
+matrix path_qx5={{0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0},
                             {0,-1,0,1,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {0,0,-1,0,1,0,0,0,0,0,0,0,0,0,1,0},
@@ -116,7 +116,7 @@ static const matrix path_qx5={{0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,-1},
                             {0,0,0,-1,0,0,0,0,0,0,0,0,0,-1,0,-1},
                             {1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0}};
 
-static const matrix map_qx5={{0,4,10,20,32,42,52,64,74,64,54,42,30,20,10,4},
+matrix map_qx5={{0,4,10,20,32,42,52,64,74,64,54,42,30,20,10,4},
                             {0,0,0,12,24,34,44,56,66,76,66,54,42,32,22,10},
                             {10,4,0,0,12,22,32,44,54,64,54,42,30,20,10,4},
                             {20,14,4,0,0,10,20,32,42,52,44,32,20,10,0,10},
@@ -133,7 +133,7 @@ static const matrix map_qx5={{0,4,10,20,32,42,52,64,74,64,54,42,30,20,10,4},
                             {10,20,10,4,10,20,30,42,52,42,32,20,14,4,0,4},
                             {0,10,0,10,22,32,42,54,64,54,44,32,20,10,0,0}};
 
-static const matrix map_qx20= {{0, 0, 10, 66, 52, 0, 10, 10, 38, 52, 10, 10, 24, 24, 38, 24, 24, 24, 38, 38},
+matrix map_qx20= {{0, 0, 10, 66, 52, 0, 10, 10, 38, 52, 10, 10, 24, 24, 38, 24, 24, 24, 38, 38},
                                 {0, 0, 0, 52, 38, 10, 0, 0, 24, 38, 10, 10, 10, 10, 24, 24, 24, 24, 24, 24},
                                 {10, 0, 0, 52, 38, 24, 10, 0, 24, 38, 24, 24, 10, 10, 24, 38, 24, 24, 24, 24},
                                 {66, 52, 52, 0, 0, 52, 52, 38, 10, 0, 52, 38, 24, 24, 10, 52, 38, 38, 24, 24},
@@ -154,7 +154,7 @@ static const matrix map_qx20= {{0, 0, 10, 66, 52, 0, 10, 10, 38, 52, 10, 10, 24,
                                 {38, 24, 24, 24, 24, 24, 24, 10, 10, 10, 24, 10, 10, 0, 0, 24, 10, 0, 0, 0},
                                 {38, 24, 24, 24, 24, 38, 24, 10, 10, 10, 38, 24, 10, 0, 0, 38, 24, 10, 0, 0}};
 
-static const matrix path_qx20 = {{0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+matrix path_qx20 = {{0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
                                     {1,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0},
                                     {0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0},
                                     {0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0},
@@ -208,15 +208,11 @@ command::rules_t qxg_command::validity_rules() const
   return {has_store_element<circuit>( env )};
 }
 
-
-// Create cnots matrix and cost matrix
-unsigned int initial_matrix(circuit circ, matrix& cnots, matrix& map_cost, const matrix& map)
+void get_cnots_matrix(circuit& circ, matrix& cnots)
 {
-    unsigned int target, control;
-    unsigned int cost = 0;
     for ( const auto& gate : circ )
-    {
         if ( is_toffoli( gate ) && !gate.controls().empty() )
+
         {   
             target = gate.targets().front();
             control = gate.controls().front().line();
@@ -229,246 +225,105 @@ unsigned int initial_matrix(circuit circ, matrix& cnots, matrix& map_cost, const
     return cost;
 }
 
-// Permute the matrix
-matrix permute_matrix(matrix& cnots, const std::map<int, int>& permutation, matrix& aux)
-{
-    for(auto it : permutation)
-        for (int j = 0; j < cnots.size(); ++j)
-            aux[it.second][j] = cnots[it.first][j];
-    for(auto it : permutation)
-        for (int i = 0; i < cnots.size(); ++i)
-            cnots[i][it.second] = aux[i][it.first];
-    return cnots;
-}
-
-// Get the permutation cost
-unsigned permute_cost(const matrix& cnots, const matrix& map)
-{
-	unsigned int cost = 0;
-	for (int i = 0; i < cnots.size(); ++i)
-		for (int j = 0; j < cnots.size(); ++j)
-			cost += cnots[i][j] * map[i][j];
-	return cost;
-}
-
-// Find the higher value in the matrix
-std::pair<int,int> get_position_higher_value_matrix(matrix& m)
-{
-    int h = 0, x, y;
-    for (int i = 0; i < m.size(); ++i)
-    {
-        for (int j = 0; j < m.size(); ++j)
-        {
-            if( m[i][j] >= h )
-            {
-                h = m[i][j];
-                x = i;
-                y = j;
-            }
-        }
-    }
-    return std::make_pair (x,y);
-}
-
-// Get a mapping from the matrix
-std::pair<int,int> get_mapping(const matrix& map, std::pair<int,int>& qubit, std::map<int, int>& permutation, std::vector<int> p)
-{
-    std::map<int, int>::iterator p1, p2;
-    p1 = permutation.find(qubit.first);
-    p2 = permutation.find(qubit.second);
-    if(p1 != permutation.end() && p2 != permutation.end())
-    {
-        //Do nothing
-        std::cout << "Do nothing" << std::endl;
-        return std::make_pair(p1->second,p2->second);
-    }
-    else if(p1 == permutation.end() && p2 == permutation.end())
-    {
-        unsigned int l = 1000, x, y;
-        for (int i = 0; i < map.size(); ++i)
-        {
-            for (int j = 0; j < map.size(); ++j)
-            {
-                if(i != j && map[i][j] < l && std::find(p.begin(), p.end(), i) == p.end() && std::find(p.begin(), p.end(), j) == p.end())
-                {
-                    l = map[i][j];
-                    x = i;
-                    y = j;
-                }
-            }
-        }
-        std::cout << "nenhum " << x << " " << y << std::endl;
-        return std::make_pair(x,y);
-    }
-    else if(p1 == permutation.end() && p2 != permutation.end())
-    {
-        unsigned int l = 1000, x, y;
-        y = p2->second;
-        for(int i = 0; i < map.size(); ++i)
-        {
-            if(map[i][y] < l && std::find(p.begin(), p.end(), i) == p.end())
-            {
-                l = map[i][y];
-                x = i;
-            }    
-        }
-        std::cout << "sem controle " << x << " " << y << std::endl;
-        return std::make_pair(x,y);
-    }
-    else if(p1 != permutation.end() && p2 == permutation.end())
-    {
-        unsigned int l = 1000, x, y;
-        x = p1->second;
-        for(int j = 0; j < map.size(); ++j)
-        {
-            if(map[x][j] < l && std::find(p.begin(), p.end(), j) == p.end())
-            {
-                l = map[x][j];
-                y = j;
-            }    
-        }
-        std::cout << "sem alvo " << x << " " << y << std::endl;
-        return std::make_pair(x,y);
-    }
-    std::cout << "====> should not happen" << std::endl;
-    return std::make_pair(0,0); // added -- not reachable???
-}
-
 void print_matrix(matrix& m)
 {
     std::cout << std::endl;
-    for (int i = 0; i < m.size(); ++i)
-    {
-        for (int j = 0; j < m.size(); ++j)
-        {
-            std::cout << " " << m[i][j];    
+    for (int i = 0; i < m.size(); ++i){
+        for (int j = 0; j < m.size(); ++j){
+            std::cout << " " << m[i][j];   
         }
         std::cout << std::endl;
     }
 }
 
-// Map the last qubit
-std::map<int, int> complete_permutation(std::map<int, int>& permutation, unsigned int s)
+std::pair<int,int> get_most_used_cnot(matrix& m)
 {
-    std::vector<int> x, y;
-    for (int i = 0; i < s; ++i)
-    {
-        x.push_back(i);
-        y.push_back(i);
-    }
-    for(auto it : permutation)
-    {
-        x.erase(std::remove(x.begin(), x.end(), it.first), x.end());
-        y.erase(std::remove(y.begin(), y.end(), it.second), y.end());
-    }
-    for (int i = 0; i < x.size(); ++i)
-        permutation.insert(std::pair<int, int>(x[i], y[i]));
-    return permutation;
-}
-
-// To duplicate a matrix
-matrix copy_matrix(matrix& aux, const matrix& m)
-{
-	for (int i = 0; i < m.size(); ++i)
+    int h = 0, x, y;
+    for (int i = 0; i < m.size(); ++i)
         for (int j = 0; j < m.size(); ++j)
-            aux[i][j] = m[i][j];
-    return aux;
+            if( m[i][j] > h ) { h = m[i][j]; x = i; y = j; }
+    return std::make_pair(x,y);
 }
 
-int myrandom (int i) 
-{ 
-    return std::rand()%i;
-}
-
-// Main function -- Find all the mappings
-circuit qxg(circuit& circ, const matrix& map, const matrix& path, properties::ptr& statistics )
+std::pair<int,int> get_cheaper_cnot(matrix& m)
 {
-    properties_timer t( statistics );
-    circuit circ_qx;
-    unsigned int cost;
+    int h = 0, x, y;
+    for (int i = 0; i < m.size(); ++i)
+        for (int j = 0; j < m.size(); ++j)
+            if( m[i][j] > h ) { h = m[i][j]; x = i; y = j; }
+    return std::make_pair(x,y);
+}
+
+void create_matrix(matrix& m, unsigned size)
+{
     std::vector <int> p;
-    std::pair<int,int> qubit1, qubit2;
-    std::map<int, int> permutation;
-    matrix cnots, map_cost, aux, original;
-
-    // Set the matrices
-    for (int i = 0; i < map.size(); ++i)
+    for (int i = 0; i < size; ++i)
         p.push_back(0);
-    
-    for (int i = 0; i < map.size(); ++i)
+    for (int i = 0; i < size; ++i)
+        m.push_back(p);
+}
+
+void get_best_qubit( matrix& cnots, matrix& path)
+{
+    int h = 0, x, y;
+    for (int i = 0; i < cnots.size(); ++i)
+        for (int j = 0; j < cnots.size(); ++j)
+            if( cnots[i][j] > h ) { h = cnots[i][j]; x = i; y = j; }
+
+    unsigned control = 0, target = 0, qc, qt, c, t;
+    for (int i = 0; i < path.size(); ++i)
     {
-        cnots.push_back(p);
-        map_cost.push_back(p);
-        aux.push_back(p);
-        original.push_back(p);
+        c = 0, t= 0;
+        for (int j = 0; j < path.size(); ++j)
+        {
+            if (path[i][j] == -1)
+                ++t;
+            if (path[i][j] == 1)
+                ++c;
+        }
+        if( c > control )
+        {
+            qc = i;
+            control = c;
+        }
+        if( t > target )
+        {
+            qt = i;
+            target = t;
+        }
     }
-    p.clear();
-
-    // Get the default permutation cost
-    cost = initial_matrix(circ, cnots, map_cost, map);
-    std::cout << "number of gates: " << circ.num_gates() << std::endl;
-    std::cout << "default permutation: " << cost << std::endl;
-    // Copy matrix to aux
-    aux = copy_matrix(aux, cnots);
-    original = copy_matrix(original, cnots);
-    print_matrix(cnots);
-    
-    // Map the qubits until 1 left    
-    while(permutation.size() < cnots.size() - 1)
-    {   
-        // Get higher CNOT count 
-        qubit1 = get_position_higher_value_matrix(aux);
-        
-        // If the higher qubit is zero... (maybe this can be changed)
-        if(aux[qubit1.first][qubit1.second] == 0) break;
-        
-        // TAKE A LOOK AT THIS
-        std::cout << "mapping, cost " << qubit1.first << " " << qubit1.second<< " " << aux[qubit1.first][qubit1.second] << std::endl;
-        
-        aux[qubit1.first][qubit1.second] = -1;
-        
-        // Get mapping for the second qubit
-        qubit2 = get_mapping(map, qubit1, permutation, p);
-        
-        std::cout << qubit1.first << "  " << qubit1.second << " map to " << qubit2.first << "  " << qubit2.second << std::endl;
-        
-        // Saving the mapping
-        permutation.insert(std::pair<int, int>(qubit1.first, qubit2.first));
-        permutation.insert(std::pair<int, int>(qubit1.second, qubit2.second));
-        
-        // Vector to save the qubits already mapped
-        p.push_back(qubit2.first);
-        p.push_back(qubit2.second);
+    c = 0, t= 0;
+    for (int i = 0; i < cnots.size(); ++i)
+    {
+        if( cnots[x][i] != 0)
+            ++c;
+        if( cnots[i][y] != 0)
+            ++t;
     }
+    std::cout << "control: " << qc << " - " << control << " -- " << c << std::endl;
+    std::cout << "target: " << qt << " - " << target << " -- " << t << std::endl;
+}
 
-    // Finish the mapping
-    permutation = complete_permutation(permutation, cnots.size());
-    
-    
-    // Permute the matrix with the CNOTs
-    cnots = permute_matrix(cnots, permutation, aux);
-    
-    // Get the cost of the permutation
-    cost = permute_cost(cnots, map);
-    
-    // Print permutation
-    std::cout << "final permutation: " << cost << std::endl;
-    std::cout << "total gates: " << cost + circ.num_gates() << std::endl;
-    for(auto it : permutation)
-    	std::cout << " " << it.second;
-    std::cout << std::endl;
 
-    return circ_qx;
+void qxg(circuit& circ, matrix& map, matrix& path )
+{
+    std::pair<int,int> cnot;
+    std::map<int, int> permutation;
+    matrix cnots;
+    
+    create_matrix(cnots, map.size());
+    get_cnots_matrix(circ, cnots);
+    // print_matrix(cnots);
+    cnot = get_most_used_cnot(cnots);
+    std::cout << "most used: CNOT(" << cnot.first << "," << cnot.second << ")" << std::endl;
+    get_best_qubit(cnots, path);
 }
 
 bool qxg_command::execute()
 {
     auto& circuits = env->store<circuit>();
-    circuit aux = circuits.current();
-    circuit circ_qx, circ;
-    copy_circuit(aux, circ);    
+    circuit circ = circuits.current();
     //auto settings = make_settings();
-    std::srand ( unsigned ( std::time(0) ) );
     
     if ( is_set( "QS1_1" ) )
     {
@@ -477,8 +332,7 @@ bool qxg_command::execute()
             std::cout << "Only up to 20 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx20, path_qx20, statistics);
-        // print_runtime();
+        qxg(circ, map_qx20, path_qx20);
     }
     else if ( is_set( "qx3" ) )
     {
@@ -487,9 +341,7 @@ bool qxg_command::execute()
             std::cout << "Only up to 16 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx3, map_qx3, statistics);
-        // print_runtime();
-
+        qxg(circ, map_qx3, map_qx3);
     }
     else if ( is_set( "qx5" ) )
     {
@@ -498,11 +350,7 @@ bool qxg_command::execute()
             std::cout << "Only up to 16 variables!" << std::endl;
             return true;
         }
-        circ_qx = qxg(circ, map_qx5, map_qx5, statistics);
-        print_runtime();
-        // std::cout.setf(std::ios_base::fixed, std::ios_base::floatfield);
-        // std::cout.precision(9);
-        // std::cout << "\t" << statistics->get<double>( "runtime" ) << std::endl;
+        qxg(circ, map_qx5, path_qx5);
     }
     else
     {
@@ -512,14 +360,10 @@ bool qxg_command::execute()
             return true;
         }
         if ( is_set( "qx4" ) )
-            circ_qx = qxg(circ, map_qx4, map_qx4, statistics);
+            qxg(circ, map_qx4, map_qx4);
         else
-            circ_qx = qxg(circ, map_qx2, map_qx2, statistics);
-        // print_runtime();
+            qxg(circ, map_qx2, map_qx2);
     }
-    if ( is_set( "new" ) )
-        circuits.extend();    
-    circuits.current() = circ_qx;
 
     return true;
 }

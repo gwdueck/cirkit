@@ -26,6 +26,8 @@
 
 #include "pauli_tags.hpp"
 
+#include <boost/assign/std/vector.hpp>
+#include <boost/range/algorithm.hpp>
 #include <reversible/target_tags.hpp>
 
 namespace cirkit
@@ -34,6 +36,61 @@ namespace cirkit
 bool is_pauli( const gate& g )
 {
   return is_type<pauli_tag>( g.type() );
+}
+
+bool is_v( const gate& g )
+{
+  return is_type<v_tag>( g.type() );
+}
+
+gate& create_v( gate& g, const gate::control_container& controls, unsigned target, bool adjoint )
+{
+  boost::for_each( controls, [&g](variable c) { g.add_control( c ); } );
+
+  g.add_target( target );
+  g.set_type( v_tag( adjoint) );
+
+  return g;
+}
+
+gate& create_v( gate& g, const std::vector<unsigned>& controls, unsigned target, bool adjoint )
+{
+  boost::for_each( controls, [&g](unsigned c) { g.add_control( make_var( c ) ); } );
+
+  g.add_target( target );
+  g.set_type( v_tag( adjoint) );
+
+  return g;
+}
+
+gate& append_v( circuit& circ, const gate::control_container& controls, unsigned target, bool adjoint )
+{
+  return create_v( circ.append_gate(), controls, target, adjoint );
+}
+
+gate& append_v( circuit& circ, const std::vector<unsigned>& controls, unsigned target, bool adjoint )
+{
+  return create_v( circ.append_gate(), controls, target, adjoint );
+}
+
+gate& prepend_v( circuit& circ, const gate::control_container& controls, unsigned target, bool adjoint )
+{
+  return create_v( circ.prepend_gate(), controls, target, adjoint );
+}
+
+gate& prepend_v( circuit& circ, const std::vector<unsigned>& controls, unsigned target, bool adjoint )
+{
+  return create_v( circ.prepend_gate(), controls, target, adjoint );
+} 
+
+gate& insert_v( circuit& circ, unsigned n, const gate::control_container& controls, unsigned target, bool adjoint )
+{
+  return create_v( circ.insert_gate( n ), controls, target, adjoint );
+}
+
+gate& insert_v( circuit& circ, unsigned n, const std::vector<unsigned>& controls, unsigned target, bool adjoint )
+{
+  return create_v( circ.insert_gate( n ), controls, target, adjoint );
 }
 
 gate& create_pauli( gate& g, unsigned target, pauli_axis axis, unsigned root, bool adjoint )

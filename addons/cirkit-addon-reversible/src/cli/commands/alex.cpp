@@ -27,29 +27,45 @@
 #include "alex.hpp"
 
 #include <cmath>
+#include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <iostream>
-
+#include <core/utils/program_options.hpp>
 #include <boost/program_options.hpp>
-
+#include <reversible/functions/ibm_helper.hpp>
 #include <xtensor/xio.hpp>
 #include <xtensor/xmath.hpp>
 #include <xtensor-blas/xlinalg.hpp>
-
+#include <reversible/functions/add_circuit.hpp>
 #include <cli/reversible_stores.hpp>
 #include <reversible/utils/matrix_utils.hpp>
 #include <alice/rules.hpp>
+#include <reversible/functions/clear_circuit.hpp>
+#include <reversible/functions/copy_metadata.hpp>
+#include <reversible/functions/add_gates.hpp>
+#include <reversible/functions/add_line_to_circuit.hpp>
+#include <reversible/circuit.hpp>
+#include <reversible/gate.hpp>
+#include <reversible/pauli_tags.hpp>
+#include <reversible/rotation_tags.hpp>
+#include <reversible/target_tags.hpp>
+#include <reversible/io/print_circuit.hpp>
+#include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/find_lines.hpp>
+#include <reversible/mapping/nct_mapping.hpp>
+#include <reversible/functions/remove_dup_gates.hpp>
 
 namespace cirkit
 {
 
 using boost::program_options::value;
+using matrix = std::vector<std::vector<unsigned>>;
 
 alex_command::alex_command( const environment::ptr& env )
-    : cirkit_command( env, "Alex test" )
+	: cirkit_command( env, "Random projects" )
 {
 	opts.add_options()
-	( "input,i",	value( &input ),	"print single input -- use it in binary" )
-    ;
+	;
 
 }
 
@@ -59,111 +75,20 @@ command::rules_t alex_command::validity_rules() const
 }
 
 
-void print_all_matrix(xt::xarray<complex_t>& t, unsigned int& q)
-{
-  	for (int i = 0; i < t.size(); ++i)
-  	{
-  		if(i % q == 0)
- 			std::cout << std::endl;
-  		std::cout << " " << t[i];
-  	}
- 	std::cout << std::endl;
-}
-
-void print_line(xt::xarray<complex_t>& t, unsigned int& q, std::string input)
-{
-	unsigned int j = 0;
-	bool first = true;
-	std::string p;
-	unsigned int k = log10(q)/log10(2);
-
-	unsigned int line;
-  	line = std::stoi(input, nullptr, 2);
-  	if(line >= q)
-  	{
-  		std::cout << "Out of range. The circuit has " << k << " qubits." << std::endl;
-  	}
-  	else
-  	{
-  		for (int i = line*q; i < (line+1)*q; ++i, ++j)
-	  	{
-			if(t[i] != 0.0)
-	  		{
-	  			if(first)
-	  			{
-	  				p = std::bitset<8>(j).to_string();
-	  				// std::cout << std::endl;
-					std::string pp = std::bitset<8>(line).to_string();
-					std::cout << "input: " << pp.substr(pp.length() - k) << " => " << t[i] << " " << p.substr(p.length() - k);
-	  				first = false;
-	  			}
-	  			else
-	  			{
-	  				p = std::bitset<8>(j).to_string();
-	  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
-	  			}
-	  		}
-	  	}
-	  	std::cout << std::endl;
-  	}
-}
-
-void print_solution(xt::xarray<complex_t>& t, const unsigned int& q)
-{
-	unsigned int j = 0;
-	bool first = true;
-	std::string p;
-	unsigned int k = log10(q)/log10(2);
-  	for (int i = 0; i < t.size(); ++i, ++j)
-  	{
-		if(i % q == 0)
-  		{
-  			p = std::bitset<8>(i/q).to_string();
- 			std::cout << std::endl;
- 			std::cout << "input: " <<  p.substr(p.length() - k) << " => ";
-  			j = 0;
-  			first = true;
-  		}
-  	  	if(t[i] != 0.0)
-  		{
-  			if(first)
-  			{
-  				p = std::bitset<8>(j).to_string();
-  				std::cout << " " << t[i] << " " << p.substr(p.length() - k);
-  				first = false;
-  			}
-  			else
-  			{
-  				p = std::bitset<8>(j).to_string();
-  				std::cout << " + " << t[i] << " " << p.substr(p.length() - k);
-  			}
-  		}
-  	}
- 	std::cout << std::endl;
-
-  // std::cout << t << std::endl;
-}
-
 bool alex_command::execute()
 {
-	const circuit circuits = env->store<circuit>().current();
-
-	xt::xarray<complex_t> table;
-
-  	table = matrix_from_clifford_t_circuit( circuits, is_set( "progress" ) );
-
-  	// Number of qubits
-  	unsigned int qubits = sqrt(table.size());
- 	// std::cout << "qubits: " << qubits << std::endl;
-
-	// print_all_matrix(table, qubits);
-	if(is_set("input"))
-		print_line(table, qubits, input);
-	else
-		print_solution(table, qubits);
-
-
+	auto& circuits = env->store<circuit>();
+	circuit circ = circuits.current();
+	std::cout << "	" << circ.num_gates() << std::endl;
+	
 	return true;
+}
+
+command::log_opt_t alex_command::log() const
+{
+  return log_opt_t({
+	  {"runtime",       statistics->get<double>( "runtime" )}
+	});
 }
 
 }

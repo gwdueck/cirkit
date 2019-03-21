@@ -69,6 +69,11 @@ std::string print_circuit_settings::target_type_char( const gate& g ) const
   {
     return "H";
   }
+  else if ( is_v( g ) )
+  {
+    const auto& tag = boost::any_cast<v_tag>( g.type() );
+    return tag.adjoint ? "ṽ" : "V";
+  }
   else if ( is_pauli( g ) )
   {
     const auto& tag = boost::any_cast<pauli_tag>( g.type() );
@@ -87,7 +92,7 @@ std::string print_circuit_settings::target_type_char( const gate& g ) const
       case 1u:
         return "Z";
       case 2u:
-        return "S";
+        return tag.adjoint ? "ṡ" : "S";
       case 4u:
         return tag.adjoint ? "Ŧ" : "T";
       default:

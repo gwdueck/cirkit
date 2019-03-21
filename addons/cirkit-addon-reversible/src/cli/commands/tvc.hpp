@@ -25,49 +25,48 @@
  */
 
 /**
- * @file IBMgraph.hpp
+ * @file tvc.hpp
  *
- * @brief Data structure to represent IBM quantum computer architecture
+ * @brief Test
  *
- * @author Gerhard Dueck
- * @since  2.3
+ * @author A.G.A.
+ * @2
  */
 
+#ifndef CLI_TVC_COMMAND_HPP
+#define CLI_TVC_COMMAND_HPP
 
-#ifndef IBMgraph_hpp
-#define IBMgraph_hpp
-
-#include <iostream>
-#include <fstream>
 #include <vector>
-#include <string>
-#include <reversible/functions/trans_path.hpp>
-#include <reversible/functions/remove_dup_gates.hpp>
+
+#include <cli/cirkit_command.hpp>
 #include <reversible/circuit.hpp>
 
 namespace cirkit
 {
+	circuit Transform_to_v(circuit& , std::vector<std::vector<unsigned>>& );
+		
+class tvc_command : public cirkit_command
+{
+    public:
+        tvc_command( const environment::ptr& env );
+  		log_opt_t log() const;
 
-	extern bool **graph_adjacency;  // graph structure
-	extern int **trans_cost;        // the cost of each cnot
-	extern TransPath **trans_path;  // the transformation path or a given cnot
+		
+	protected:
+  		rules_t validity_rules() const;
+  		bool execute();
 
-	int graph_size = 0;
-	
-extern std::vector<TransPath> path_list; //-- it was giving memory error (now it is in cpp file)
-
-	void allocate_data_stuctures();
-	bool read_graph( const std::string& filename );
-	bool write_to_file( const std::string& filename );
-	bool read_from_file( const std::string& filename );
-	void print_graph( );
-	void print_matrix( );
-	void print_movements( const circuit& circ_in );
-	void delete_graph( );
-	void create_trans( bool verbose );
-    circuit try_all( const circuit& circ_in, bool verbose, bool rm_dup );
-    void mapping( const circuit& circ_in );
-    void expand_cnots( circuit& circ_out, const circuit& circ_in );
+	private:
+		// std::string filename;
+		// unsigned architecture;
+};
 
 }
-#endif /* IBMgraph_hpp */
+
+#endif
+
+// Local Variables:
+// c-basic-offset: 2
+// eval: (c-set-offset 'substatement-open 0)
+// eval: (c-set-offset 'innamespace 0)
+// End:

@@ -102,10 +102,12 @@
 #include<cli/commands/qxg.hpp>
 #include <cli/commands/ibm.hpp>
 #include <cli/commands/alex.hpp>
+#include <cli/commands/tvc.hpp>
 #include <cli/commands/permute_lines.hpp>
 #include <cli/commands/reduce.hpp>
 #include <cli/commands/graph.hpp>
 #include <cli/commands/tabu.hpp>
+#include <cli/commands/lpqx.hpp>
 
 
 using namespace cirkit;
@@ -209,6 +211,7 @@ ALICE_BEGIN(revkit)
     ADD_COMMAND( reduce );
     ADD_COMMAND( qxg );
     ADD_COMMAND( graph );
+    ADD_COMMAND( lpqx );
 
   cli.set_category( "Various" );
 
@@ -225,6 +228,7 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( spectral );
   ADD_COMMAND( tt );
   ADD_COMMAND( alex );
+  ADD_COMMAND( tvc );
   ADD_COMMAND( invert );
   ADD_COMMAND( rm_dup );
   ADD_COMMAND( tabu );

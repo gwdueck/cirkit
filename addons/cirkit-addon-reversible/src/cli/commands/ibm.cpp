@@ -42,6 +42,7 @@
 #include <reversible/target_tags.hpp>
 #include <reversible/functions/copy_metadata.hpp>
 #include <reversible/functions/copy_circuit.hpp>
+#include <reversible/functions/clear_circuit.hpp>
 #include <reversible/functions/add_line_to_circuit.hpp>
 #include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
@@ -50,6 +51,7 @@
 #include <reversible/io/print_circuit.hpp>
 #include <reversible/variable.hpp>
 #include <cli/commands/ibm.hpp>
+#include <cli/commands/tvc.hpp>
 #include <reversible/functions/ibm_helper.hpp>
 
 
@@ -78,6 +80,7 @@ ibm_command::ibm_command( const environment::ptr& env )
     ( "ibm_qx4,4", "The IBM Qx4 is the target")
     ( "verbose,v",  "verbose" )
     ( "template,t", "use template transformations--instead of swap based")
+    ( "toffoli", "transform Toffoli")
     ;
   add_new_option();
 }
@@ -91,10 +94,12 @@ command::rules_t ibm_command::validity_rules() const
     
 bool ibm_command::execute()
 {
+    std::vector<std::vector<unsigned>> qx4 ={{0,4,4,7,7},{0,0,4,7,7},{0,0,0,4,4},{3,3,0,0,0},{3,3,0,4,0}};
 
     auto& circuits = env->store<circuit>();
     circuit circ_working = circuits.current();
     circuit circ_IBM;
+    // std::cout << " igates: " << circ_working.num_gates();
     unsigned start = circ_working.lines()+1;
     for(unsigned i = start ; i <= 5u; i++)
     {
@@ -103,6 +108,8 @@ bool ibm_command::execute()
     
     if( !is_set( "all_perm" ) )
     {
+        if ( is_set( "toffoli" ) )
+            circ_working = Transform_to_v(circ_working, qx4);
         if ( is_set( "ibm_qx4" ) )
         {
             circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, is_set( "template" ) );
@@ -126,17 +133,21 @@ bool ibm_command::execute()
     {
         int perm[5] = {0, 1, 2, 3, 4}, inv_perm[5], best_perm[5] = {0, 1, 2, 3, 4};
         unsigned best_cost = UINT_MAX;
-        circuit circ_best;
+        circuit circ_best, permuted;
         do
         {
-            permute_lines( circ_working , perm );
+            clear_circuit(permuted);
+            copy_circuit(circ_working, permuted);
+            permute_lines( permuted, perm );
+            if ( is_set( "toffoli" ) )
+                permuted = Transform_to_v(permuted, qx4);
             if ( is_set( "ibm_qx4" ) )
             {
-                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, is_set( "template" ) );
+                circ_IBM = transform_to_IBMQ( permuted, map_method_qx4, is_set( "template" ) );
             }
             else
             {
-                circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2, is_set( "template" ) );
+                circ_IBM = transform_to_IBMQ( permuted, map_method_qx2, is_set( "template" ) );
             }
             if ( is_set( "new" ) )
             {
@@ -168,12 +179,12 @@ bool ibm_command::execute()
                 }
             }
 
-            // undo the permutation
-            for( int i = 0; i < 5; i++ )
-            {
-                inv_perm[perm[i]] = i;
-            }
-            permute_lines( circ_working , inv_perm );
+            // // undo the permutation
+            // for( int i = 0; i < 5; i++ )
+            // {
+            //     inv_perm[perm[i]] = i;
+            // }
+            // permute_lines( circ_working , inv_perm );
         } while ( std::next_permutation(perm,perm+5) );
         if ( is_set( "new" ) )
         {
@@ -181,12 +192,16 @@ bool ibm_command::execute()
         }
         circuits.current() = circ_best;
         std::cout << "best permutation = ";
+        // std::cout << " best permutation = ";
         for( int i = 0; i < 5; i++ )
         {
             std::cout << best_perm[i] << " ";
         }
+        // std::cout << "gates = " << best_cost;
         std::cout << "gates = " << best_cost << std::endl;
     }
+    // std::cout << "gates = " << circ_IBM.num_gates() << std::endl;
+
     return true;
 }
 

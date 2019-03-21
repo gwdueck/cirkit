@@ -115,6 +115,7 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
 {
   xt::xarray<complex_t> matrix_X = get_2by2_matrix( 0.0, 1.0, 1.0, 0.0 );
   xt::xarray<complex_t> matrix_H = 1.0 / sqrt( 2.0 ) * get_2by2_matrix( 1.0, 1.0, 1.0, -1.0 );
+  xt::xarray<complex_t> matrix_Y = get_2by2_matrix( 0.0, -1i, 1i, 0.0 );
   xt::xarray<complex_t> matrix_Z = get_2by2_matrix( 1.0, 0.0, 0.0, -1.0 );
   xt::xarray<complex_t> matrix_S = get_2by2_matrix( 1.0, 0.0, 0.0, 1i );
   xt::xarray<complex_t> matrix_Sdag = get_2by2_matrix( 1.0, 0.0, 0.0, -1i );
@@ -122,6 +123,8 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
   xt::xarray<complex_t> matrix_Tdag = get_2by2_matrix( 1.0, 0.0, 0.0, exp( -1i * M_PI / 4.0 ) );
   xt::xarray<complex_t> matrix_zc = get_2by2_matrix( 1.0, 0.0, 0.0, 0.0 );
   xt::xarray<complex_t> matrix_oc = get_2by2_matrix( 0.0, 0.0, 0.0, 1.0 );
+  xt::xarray<complex_t> matrix_V = get_2by2_matrix( (1.0 + 1i)/2.0, (1.0 - 1i)/2.0, (1.0 - 1i)/2.0, (1.0 + 1i)/2.0 );
+  xt::xarray<complex_t> matrix_Vdag = get_2by2_matrix( (1.0 - 1i)/2.0, (1.0 + 1i)/2.0, (1.0 + 1i)/2.0, (1.0 - 1i)/2.0 );
 
   const auto n = circ.lines();
 
@@ -155,6 +158,31 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
     else if ( is_hadamard( g ) )
     {
       gates.push_back( identity_padding( matrix_H, target, target, n ) );
+    }
+    else if ( is_v( g ) && g.controls().size() == 0u )
+    {
+      const auto tag = boost::any_cast<v_tag>( g.type() );
+      if(tag.adjoint)
+        gates.push_back( identity_padding( matrix_Vdag, target, target, n ) );
+      else
+        gates.push_back( identity_padding( matrix_V, target, target, n ) );
+    }
+    else if ( is_v( g ) )
+    {
+      const auto control = g.controls().front().line();
+      const auto tag = boost::any_cast<v_tag>( g.type() );
+     if ( control < target )
+      {
+        const auto act = target - control;
+        const auto gate = xt::linalg::kron( identity( 1 << act ), matrix_zc ) + kron( {tag.adjoint ? matrix_Vdag : matrix_V, identity( 1 << ( act - 1 ) ), matrix_oc} );
+        gates.push_back( identity_padding( gate, control, target, n ) );
+      }
+      else
+      {
+        const auto act = control - target;
+        const auto gate = xt::linalg::kron( matrix_zc, identity( 1 << act ) ) + kron( {matrix_oc, identity( 1 << ( act - 1 ) ), tag.adjoint ? matrix_Vdag : matrix_V} );
+        gates.push_back( identity_padding( gate, target, control, n ) );
+      }
     }
     else if ( is_pauli( g ) )
     {

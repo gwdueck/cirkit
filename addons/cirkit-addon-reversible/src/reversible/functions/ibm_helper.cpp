@@ -42,9 +42,31 @@ namespace cirkit
 {
 // permute the line in the circuit
 // assume it is a qc circuit
+// void permute_lines( circuit& circ , int perm[])
+// {
+//     unsigned target, control;
+//     for ( auto& gate : circ )
+//     {
+//         assert( gate.targets().size() == 1 );
+//         target = gate.targets().front();
+//         gate.remove_target(target);
+//         gate.add_target(perm[target]);
+//         if( !gate.controls().empty() )
+//         {
+//             assert( gate.controls().size() == 1 );
+//             control = gate.controls().front().line();
+//             gate.remove_control( make_var(control) );
+//             gate.add_control( make_var(perm[control]) );
+//         }
+//     }
+// }
+
 void permute_lines( circuit& circ , int perm[])
 {
-    unsigned target, control;
+    unsigned target;
+    std::vector<unsigned> control;
+    std::vector<bool> polarity;
+
     for ( auto& gate : circ )
     {
         assert( gate.targets().size() == 1 );
@@ -53,15 +75,20 @@ void permute_lines( circuit& circ , int perm[])
         gate.add_target(perm[target]);
         if( !gate.controls().empty() )
         {
-            assert( gate.controls().size() == 1 );
-            control = gate.controls().front().line();
-            gate.remove_control( make_var(control) );
-            gate.add_control( make_var(perm[control]) );
-            
+            // assert( gate.controls().size() == 1 );
+            control.clear();
+            polarity.clear();
+            for ( auto& c : gate.controls() )
+            {
+                control.push_back( c.line() );
+                polarity.push_back( c.polarity() );
+            }
+            for (int i = 0; i < control.size(); ++i)
+                gate.remove_control( make_var( control[i], polarity[i] ) );
+            for (int i = 0; i < control.size(); ++i)
+                gate.add_control( make_var( perm[control[i]],  polarity[i]) );
         }
-        
     }
-    
 }
 
 // transform a Clifford+T circuit to be IBM compliant
@@ -101,7 +128,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
             {
                 append_toffoli( circ_IBM, gate.controls(), target );
             }
-            else // CNOT gate
+            else if ( gate.controls().size() == 1 ) // CNOT gate
             {
                 //std::cout << "CNOT case " << map_method[control][target] << "\n";
                 
@@ -185,7 +212,35 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             
                         }
                         break;
-                    case 5: // swap target with qubit 2 and interchange control and qubit 2
+                    case 5: // map control to qubit 2, given CNOT(c,2) -- CAB(c,2)
+                         if( !templ )
+                        {
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            
+                        }
+                        else
+                        {
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                        }
+                        break;
+                    case 6 : // swap target with qubit 2 and interchange control and qubit 2
                         if( !templ )
                         {
                             append_toffoli( circ_IBM, new_controls, 2u );
@@ -218,35 +273,336 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
                             append_hadamard( circ_IBM, control );
                         }
                         break;
-                    case 6 : // map control to qubit 2, given CNOT(c,2) -- CAB(c,2)
-                        if( !templ )
-                        {
-                            append_hadamard( circ_IBM, 2u );
-                            append_hadamard( circ_IBM, control );
-                            append_toffoli( circ_IBM, old_controls, 2u );
-                            append_hadamard( circ_IBM, 2u );
-                            append_hadamard( circ_IBM, control );
-                            append_toffoli( circ_IBM, old_controls, 2u );
-                            
-                            append_toffoli( circ_IBM, control2, target );
-                            
-                            append_toffoli( circ_IBM, old_controls, 2u );
-                            append_hadamard( circ_IBM, 2u );
-                            append_hadamard( circ_IBM, control );
-                            append_toffoli( circ_IBM, old_controls, 2u );
-                            append_hadamard( circ_IBM, 2u );
-                            append_hadamard( circ_IBM, control );
-                            
-                        }
-                        else
-                        {
-                            append_toffoli( circ_IBM, old_controls, 2u );
-                            append_toffoli( circ_IBM, control2, target );
-                            append_toffoli( circ_IBM, old_controls, 2u );
-                            append_toffoli( circ_IBM, control2, target );
-                        }
+                }
+            }
+            else
+                assert( false );
+        }
+        else if ( is_v( gate ) )
+        {
+            const auto& tag = boost::any_cast<v_tag>( gate.type() );
+
+            if( gate.controls().empty() ) // a V gate without controls
+            {
+                append_v( circ_IBM,  gate.controls(), target, tag.adjoint );
+            }
+            else // V gate with controls
+            {
+                //std::cout << "CNOT case " << map_method[control][target] << "\n";
+                
+                unsigned method;
+                bool tag1;
+                if (map_method[control][target] < map_method[target][control])
+                {
+                    method = map_method[control][target];
+                    control = gate.controls().front().line();
+                    target = gate.targets().front();
+                    new_controls.clear();
+                    new_controls.push_back( target );
+                    old_controls.clear();
+                    old_controls.push_back( control );
+                }
+                else
+                {
+                    method = map_method[target][control];
+                    target  = gate.controls().front().line();
+                    control = gate.targets().front();
+                    new_controls.clear();
+                    new_controls.push_back( target );
+                    old_controls.clear();
+                    old_controls.push_back( control );
+                }
+                // std::cout << method << std::endl;
+                if( tag.adjoint )
+                    tag1 = false; 
+                else 
+                    tag1 = true;
+                switch ( method )
+                {
+                    case 1:
+                        append_hadamard( circ_IBM, gate.targets().front() );
+                        append_toffoli( circ_IBM, old_controls, target );
+                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                        append_toffoli( circ_IBM, old_controls, target );
+                        append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                        append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                        append_hadamard( circ_IBM, gate.targets().front() );
                         break;
                         
+                    case 2 : // invert CNOT
+                        append_hadamard( circ_IBM, gate.targets().front() );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, control );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        append_toffoli( circ_IBM, new_controls, control );
+                        append_hadamard( circ_IBM, control );
+                        append_hadamard( circ_IBM, target );
+                        append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                        append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                        append_hadamard( circ_IBM, gate.targets().front() );
+                        break;
+                    case 3 : // swap target with 2
+                        if( !templ )
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            
+                            append_toffoli( circ_IBM, gate.controls(), 2u );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            
+                            append_toffoli( circ_IBM, gate.controls(), 2u );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                        }
+                        else // use the "template" transformation
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            
+                        }
+                        break;
+                    case 4 : // map control to qubit 2, given CNOT(2,c) -- CBA(c,2)
+                        if( !templ )
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                        }
+                        else
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_hadamard( circ_IBM, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                        }
+                        break;
+                    case 5 : // map control to qubit 2, given CNOT(c,2) -- CAB(c,2)
+                        if( !templ )
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            
+                            append_toffoli( circ_IBM, control2, target );
+                            
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, control );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                        }
+                        else
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_toffoli( circ_IBM, old_controls, 2u );
+                            append_toffoli( circ_IBM, control2, target );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                        }
+                        break;
+                    case 6: // swap target with qubit 2 and interchange control and qubit 2
+                        if( !templ )
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            
+                            append_hadamard( circ_IBM, control );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                        }
+                        else
+                        {
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                            // append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, control2, control );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            
+                           // append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, control );
+                            append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tag1 );
+                            // append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, control );
+                            
+                            append_toffoli( circ_IBM, control2, control );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            append_toffoli( circ_IBM, control2, control );
+                            append_toffoli( circ_IBM, new_controls, 2u );
+                            
+                           // append_hadamard( circ_IBM, 2u );
+                            append_hadamard( circ_IBM, target );
+                            append_hadamard( circ_IBM, control );
+                            append_pauli( circ_IBM,  gate.controls()[0].line(), pauli_axis::Z, 4u, !tag1 );
+                            append_pauli( circ_IBM,  gate.targets().front(), pauli_axis::Z, 4u, !tag1 );
+                            append_hadamard( circ_IBM, gate.targets().front() );
+                        }
+                        break;
                 }
             }
         }

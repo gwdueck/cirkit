@@ -53,7 +53,7 @@ namespace cirkit
  * Private functions                                                          *
  ******************************************************************************/
 
-void create_random_gate( gate& g, unsigned lines, bool negative, std::default_random_engine& generator )
+void create_random_gate( gate& g, unsigned lines, bool negative, std::default_random_engine& generator, bool cnot )
 {
   std::uniform_int_distribution<unsigned> dist( 0u, lines - 1u );
   std::uniform_int_distribution<unsigned> bdist( 0u, 1u );
@@ -69,6 +69,8 @@ void create_random_gate( gate& g, unsigned lines, bool negative, std::default_ra
     if ( pos != target )
     {
       g.add_control( make_var( pos, negative ? ( bdist( generator ) == 1u ) : true ) );
+      if( cnot )
+        break;
     }
     pos = controls.find_next( pos );
   }
@@ -88,6 +90,7 @@ random_circuit_command::random_circuit_command( const environment::ptr& env )
     ( "insert_gate,g",                               "Doesn't create a circuit, but inserts random gate into current circuit" )
     ( "seed",          value( &seed ),               "Random seed (if not given, current time is used)" )
     ( "new",                                         "Create a new store element" )
+    ( "cnot,c",                                        "Create a circuit with (only) CNOT" )
     ;
 }
 
@@ -100,6 +103,11 @@ command::rules_t random_circuit_command::validity_rules() const
 
 bool random_circuit_command::execute()
 {
+  bool cnot = false;
+  if ( is_set("cnot") )
+  {
+    cnot = true;
+  }
   if ( !is_set( "seed" ) )
   {
     seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -113,14 +121,14 @@ bool random_circuit_command::execute()
   if ( is_set( "insert_gate" ) )
   {
     std::uniform_int_distribution<unsigned> dist( 0u, gates - 1u );
-    create_random_gate( circuits.current().insert_gate( dist( generator ) ), lines, negative, generator );
+    create_random_gate( circuits.current().insert_gate( dist( generator ) ), lines, negative, generator, cnot );
   }
   else
   {
     circuit circ( lines );
     for ( auto i = 0u; i < gates; ++i )
     {
-      create_random_gate( circ.append_gate(), lines, negative, generator );
+      create_random_gate( circ.append_gate(), lines, negative, generator, cnot );
     }
 
     if ( circuits.empty() || is_set( "new" ) )
