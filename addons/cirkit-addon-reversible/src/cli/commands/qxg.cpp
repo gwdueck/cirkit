@@ -212,17 +212,7 @@ void get_cnots_matrix(circuit& circ, matrix& cnots)
 {
     for ( const auto& gate : circ )
         if ( is_toffoli( gate ) && !gate.controls().empty() )
-
-        {   
-            target = gate.targets().front();
-            control = gate.controls().front().line();
-            cost += map[control][target];
-            ++cnots[control][target];
-            map_cost[control][target] = cnots[control][target] * map[control][target];
-        }
-    }
-
-    return cost;
+            ++cnots[gate.controls().front().line()][gate.targets().front()];
 }
 
 void print_matrix(matrix& m)
