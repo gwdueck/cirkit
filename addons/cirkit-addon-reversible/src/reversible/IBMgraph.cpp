@@ -127,7 +127,7 @@ namespace cirkit
             }
             auto it = std::find(type_name.begin(), type_name.end(), tmp);   
             if(it != type_name.end()){                                  // check if it is a movement
-                unsigned pos = std::distance(type_name.begin(), it);    // get the type of movement
+                move_qubit_type pos = (move_qubit_type) std::distance(type_name.begin(), it);    // get the type of movement
                 if(tmp == "cnot3"){     // cnot3 needs three parameters
                     graphfile >> a >> b >> c;
                     tp.add( MoveQubit( pos, a, b, c ));
