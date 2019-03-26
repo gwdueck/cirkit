@@ -54,7 +54,9 @@ struct less<std::vector<boost::tribool>>
       {
         if ( boost::indeterminate( t1 ) ) { return true; }
         if ( boost::indeterminate( t2 ) ) { return false; }
-        return !t1 && t2;
+ //       return !t1 && t2;
+        if ( !t1 && t2) return true;
+        else return false;
       }
 
       ++i;
