@@ -55,15 +55,11 @@ lpqx_command::lpqx_command( const environment::ptr& env )
 	opts.add_options()
 	( "filename,f",    value( &filename ),  "name of the output file" )
 	( "lp_solve,l",  					    	"write in lp_solve format (cplex is default)" )
-	( "artificial,g",  					    	"use artificial gates" )
 	( "toffoli,t",  					    	"Toffoli circuit" )
 	( "architecture,a", value_with_default( &architecture ) ,"select architecture\n" 
 															"4: qx4 (5  qubits) -> default)\n"
 															"2: qx2 (5  qubits)\n"
 															"5: qx5 (16 qubits)" )
-	( "version,v",value_with_default( &version ), "write LP in different versions\n" 
-												  "1: write the gate version\n"
-												  "2: write the qubit version (default)")
 	;
 
 }
@@ -1095,12 +1091,6 @@ bool lpqx_command::execute()
 	if(filename.empty())
 	{
 		std::cout << "Missing output file. Use -f" << std::endl;
-		return true;
-	}
-	//check version
-	if(version != 1 && version != 2)
-	{
-		std::cout << "Wrong version" << std::endl;
 		return true;
 	}
 
