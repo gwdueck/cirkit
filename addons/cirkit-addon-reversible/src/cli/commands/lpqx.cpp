@@ -113,7 +113,7 @@ void generateMatrixCnots( circuit& circ, matrix& m, matrix& v, matrix &t )
 		  target = gate.targets().front();
 		  controla = gate.controls().front().line();
 		  controlb = gate.controls().back().line();
-		  ++t[controla+target][controlb];
+		  ++t[controla+(target*circ.lines())][controlb];
 		}
 	}
 }
@@ -125,7 +125,7 @@ void printMatrixCnots( matrix& m )
 	for (int i = 0; i < m.size(); ++i)
 	{
 		for (int j = 0; j < m[i].size(); ++j)
-			std::cout << "\t" << m[i][j];
+			std::cout << " " << m[i][j];
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
@@ -251,6 +251,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 
 	unsigned vdifgates = getNumberDifGates(vgates);
 	unsigned cnotdifgates = getNumberDifGates(cnots);
+	unsigned toffolidifgates = getNumberDifGates(tgates);
 	unsigned tam = (qx.size()*qx.size())-qx.size();
 	unsigned aux = 0;
 	for (int i = 0; i < qx.size(); ++i)
@@ -303,6 +304,36 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 						else
 							++aux;
 						line = true;
+					}
+				}
+			}
+			if(line && aux < cnotdifgates)
+				outputFile << " + " << std::endl;
+		}
+	}
+	aux = 0;
+	for (int i = 0; i < tgates.size(); ++i)
+	{
+		for (int j = 0; j < tgates[i].size(); ++j)
+		{
+			bool line = false;
+			unsigned end = 0;
+			for (int k = 0; k < qx.size(); ++k)
+			{
+				for (int m = 0; m < qx.size(); ++m)
+				{
+					for (int n = 0; n < qx.size(); ++n)
+					{		
+						if( i != j && tgates[i][j] > 0 && k != m)
+						{
+							++end;
+							outputFile << qx[k][m]*cnots[i][j] << "T" << int(i%qx.size()) << "_" << j << "_" << int(i/qx.size()) << "c" << k << "_" << m << "_" << m;
+							if(end < tam)
+								outputFile << " + ";
+							else
+								++aux;
+							line = true;
+						}
 					}
 				}
 			}
@@ -699,6 +730,17 @@ void createMatrix( matrix& m, unsigned size )
 	for (int i = 0; i < size; ++i)
 		v.push_back(0);
 	for (int i = 0; i < size; ++i)
+		m.push_back(v);
+}
+
+// Create a matrix with 0's
+void createMatrixToffoli( matrix& m, unsigned size )
+{
+	// std::cout << "Creating matrix..." << std::endl;
+  	std::vector<unsigned> v;
+	for (int i = 0; i < size; ++i)
+		v.push_back(0);
+	for (int i = 0; i < size*size; ++i)
 		m.push_back(v);
 }
 
@@ -1111,7 +1153,7 @@ bool lpqx_command::execute()
   	createMatrix( cnots, circ.lines() );
   	createMatrix( vgates, circ.lines() );
 	if( is_set("toffoli") )
-  		createMatrix( tgates, circ.lines() * circ.lines() );
+  		createMatrixToffoli( tgates, circ.lines() );
   	
   	//fullfill the matrix with the cnots and vgates of the circuit
 	if( is_set("toffoli") )
@@ -1119,7 +1161,7 @@ bool lpqx_command::execute()
   	else
   	  	generateMatrixCnots( circ, cnots, vgates );
 
-	// printMatrixCnots( cnots );
+	printMatrixCnots( tgates );
 	// std::cout << "v gates" << std::endl;
 	// printMatrixCnots( vgates );
 
