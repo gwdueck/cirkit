@@ -245,7 +245,7 @@ unsigned int toffoliCost(matrix& qx, unsigned a, unsigned b, unsigned t)
 		aux2 = qx[b][t];
 	else
 		aux2 = qx[t][b];
-	cost1 = aux1 + (2 * aux2) + (2 * qx[a][b]);
+	cost1 = 2*aux1 + (4 * aux2) + (2 * qx[a][b]);
 	if (qx[b][t] < qx[t][b])
 		aux1 = qx[b][t];
 	else
@@ -254,7 +254,7 @@ unsigned int toffoliCost(matrix& qx, unsigned a, unsigned b, unsigned t)
 		aux2 = qx[a][t];
 	else
 		aux2 = qx[t][a];
-	cost2 = aux1 + (2 * aux2) + (2 * qx[b][a]);
+	cost2 = 2*aux1 + (4 * aux2) + (2 * qx[b][a]);
 	if( cost1 < cost2 )
 		return cost1;
 	else
@@ -978,35 +978,57 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 			if( vgates[j][i] > 0 )
 				v.push_back(std::make_pair(j,i));
 		}
-		for (int j = 0; j < tgates.size(); j = j + tgates[i].size() )
+		for (int m = 0; m < tgates.size(); ++m)
 		{
 			std::vector< unsigned > a;
-			for (int k = 0; k < tgates[i].size(); ++k)
+			for (int n = 0; n < tgates[i].size(); ++n)
 			{
-				// std::cout << j << " " << k << " - "<< tgates[j+i][k] << " " << tgates[k+j][i] << std::endl; 
-				if (tgates[j+i][k] > 0 )
+				if( tgates[m][n] > 0 )
 				{
-					// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+i,k)));
-					a.clear();
-					a.push_back((j%tgates[i].size())+i);
-					a.push_back(k);
-					a.push_back(j/tgates[i].size());
-					if (!checkVector(t, a))
- 						t.push_back(a);
+					if( m%tgates[i].size() == i || n == i || int(m/tgates[i].size()) == i )
+					{
+						// std::cout << "XXX" << std::endl;
+						// std::cout << "[" << m%cnots.size() << "][" << n << "]" << "[" << int(m/tgates[i].size()) << "] " << i << std::endl;
+						a.clear();
+						a.push_back( m%tgates[i].size() );
+						a.push_back( n );
+						a.push_back( int(m/tgates[i].size()) );
+	 					t.push_back( a );
+					}
 				}
-				if (tgates[k+j][i] > 0 )
-				{
-					// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+k,i)));
-					a.clear();
-					a.push_back((j%tgates[i].size())+k);
-					a.push_back(i);
-					a.push_back(j/tgates[i].size());
-					if (!checkVector(t, a))
- 						t.push_back(a);
-				}
-				
 			}
 		}
+
+
+		// for (int j = 0; j < tgates.size(); j = j + tgates[i].size() )
+		// {
+		// 	std::vector< unsigned > a;
+		// 	for (int k = 0; k < tgates[i].size(); ++k)
+		// 	{
+		// 		// std::cout << j << " " << k << " - "<< tgates[j+i][k] << " " << tgates[k+j][i] << std::endl; 
+		// 		if (tgates[j+i][k] > 0 )
+		// 		{
+		// 			// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+i,k)));
+		// 			a.clear();
+		// 			a.push_back((j%tgates[i].size())+i);
+		// 			a.push_back(k);
+		// 			a.push_back(j/tgates[i].size());
+		// 			if (!checkVector(t, a))
+ 	// 					t.push_back(a);
+		// 		}
+		// 		if (tgates[k+j][i] > 0 )
+		// 		{
+		// 			// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+k,i)));
+		// 			a.clear();
+		// 			a.push_back((j%tgates[i].size())+k);
+		// 			a.push_back(i);
+		// 			a.push_back(j/tgates[i].size());
+		// 			if (!checkVector(t, a))
+ 	// 					t.push_back(a);
+		// 		}
+				
+		// 	}
+		// }
 		
 		bool first = true;
 		unsigned signal = 0;
@@ -1084,14 +1106,6 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 								if(t[j][0] == i)
 								{
 									outputFile << "c" << m << "_" << k << "_" << n;
-									// if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
-									// 	outputFile << " + ";
-									// else
-									// 	outputFile << " - ";
-									// if(first)
-									// 	outputFile << q.size()+v.size()+t.size()-1;
-									// outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2];
-									// outputFile << "c" << k << "_" << m << "_" << n;
 
 								}
 								else if(t[j][1] == i)
@@ -1100,15 +1114,15 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 								}
 								else
 								{
-									outputFile << "c" << n << "_" << k << "_" << m;
-									if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
-										outputFile << " + ";
-									else
-										outputFile << " - ";
-									if(first)
-										outputFile << q.size()+v.size()+t.size()-1;
-									outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2];
 									outputFile << "c" << k << "_" << n << "_" << m;
+									// if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
+									// 	outputFile << " + ";
+									// else
+									// 	outputFile << " - ";
+									// if(first)
+									// 	outputFile << q.size()+v.size()+t.size()-1;
+									// outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2];
+									// outputFile << "c" << k << "_" << n << "_" << m;
 
 								}
 								
@@ -1347,33 +1361,40 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates
 			{
 				if(std::find(lines.begin(), lines.end(), i%tgates[i].size()) == lines.end())
 				{
-					std::cout << "CA" << std::endl;
-					std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
+					c.clear();
+					// std::cout << "CA" << std::endl;
+					// std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
 					c.push_back(i%cnots.size());
 					c.push_back(j);
 					c.push_back(int(i/tgates[i].size()));
 					c.push_back(20);
 					res.push_back(c);
+					lines.push_back(i%cnots.size());
+
 				}
 				if(std::find(lines.begin(), lines.end(), j) == lines.end())
 				{
-					std::cout << "CB" << std::endl;
-					std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
+					c.clear();
+					// std::cout << "CB" << std::endl;
+					// std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
 					c.push_back(i%cnots.size());
 					c.push_back(j);
 					c.push_back(int(i/tgates[i].size()));
 					c.push_back(21);
 					res.push_back(c);
+					lines.push_back(j);
 				}
 				if(std::find(lines.begin(), lines.end(), int(i/tgates[i].size())) == lines.end())
 				{
-					std::cout << "T" << std::endl;
-					std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
+					c.clear();
+					// std::cout << "T" << std::endl;
+					// std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
 					c.push_back(i%cnots.size());
 					c.push_back(j);
 					c.push_back(int(i/tgates[i].size()));
 					c.push_back(22);
 					res.push_back(c);
+					lines.push_back(int(i/tgates[i].size()));
 				}
 			}
 		}
@@ -1520,6 +1541,7 @@ bool lpqx_command::execute()
 	
 	//clear the variables
   	outputFile.close();
+  	std::cout << "File " << filename << " generated!" << std::endl;
   	filename.clear();
 
 	return true;
