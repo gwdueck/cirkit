@@ -873,20 +873,13 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 	
 bool checkVector(matrix& t, std::vector< unsigned > a)
 {
-	std::cout << "aaa" << std::endl;
-	std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl;
-	
 	for (int i = 0; i < t.size(); ++i)
 	{
-		std::cout << "bbb" << std::endl;
-		std::cout << t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
-
 		if(t[i][0] == a[0] && t[i][1] == a[1] && t[i][2] == a[2])
 			return true;
 		if(t[i][0] == a[0] && t[i][2] == a[1] && t[i][1] == a[2])
 			return true;
 	}
-	std::cout << "false" << std::endl;
 	return false;
 }
 
@@ -919,9 +912,9 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 				{
 					// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+i,k)));
 					a.clear();
-					a.push_back(j/tgates[i].size());
 					a.push_back((j%tgates[i].size())+i);
 					a.push_back(k);
+					a.push_back(j/tgates[i].size());
 					if (!checkVector(t, a))
  						t.push_back(a);
 				}
@@ -929,9 +922,9 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 				{
 					// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+k,i)));
 					a.clear();
-					a.push_back(j/tgates[i].size());
 					a.push_back((j%tgates[i].size())+k);
 					a.push_back(i);
+					a.push_back(j/tgates[i].size());
 					if (!checkVector(t, a))
  						t.push_back(a);
 				}
@@ -999,28 +992,51 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 					if(q.size() > 0 && first)
 						first = false;
 				}
-				// stopped here
-				for (int j = 0; j < q.size(); ++j)
+				for (int j = 0; j < t.size(); ++j)
 				{
-					for (int n = 0; n < cnots.size(); ++n)
+					for (int k = 0; k < cnots.size(); ++k)
 					{
-						if(m != n)
+						for (int n = 0; n < cnots.size(); ++n)
 						{
-							++signal;
-							if(first)
-								outputFile << q.size()+v.size()+t.size()-1;
-							outputFile << "T" << q[j].first << "_" << q[j].second; 
-							if(q[j].first == i)
-								outputFile << "c" << m << "_" << n;
-							else
-								outputFile << "c" << n << "_" << m;
-							
-							if( first && signal < cnots.size()-1 )
-								outputFile << " + ";
-							else if( signal == (cnots.size()-1)*(v.size()+q.size()) )
-								outputFile << " ";
-							else
-								outputFile << " - ";
+							if(m != n && k != m && k != n)
+							{
+								if(first)
+									outputFile << q.size()+v.size()+t.size()-1;
+								outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2]; 
+								if(t[j][0] == i || t[j][1] == i)
+								{
+									outputFile << "c" << m << "_" << k << "_" << n;
+									if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
+										outputFile << " + ";
+									else
+										outputFile << " - ";
+									if(first)
+										outputFile << q.size()+v.size()+t.size()-1;
+									outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2];
+									outputFile << "c" << k << "_" << m << "_" << n;
+
+								}
+								else
+								{
+									outputFile << "c" << n << "_" << k << "_" << m;
+									if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
+										outputFile << " + ";
+									else
+										outputFile << " - ";
+									if(first)
+										outputFile << q.size()+v.size()+t.size()-1;
+									outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2];
+									outputFile << "c" << k << "_" << n << "_" << m;
+
+								}
+								++signal;
+								if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
+									outputFile << " + ";
+								else if( signal == ((cnots.size()-1)*(cnots.size()-2))*(v.size()+q.size()+t.size()) )
+									outputFile << " ";
+								else
+									outputFile << " - ";
+							}
 						}
 					}
 					if(t.size() > 0 && first)
