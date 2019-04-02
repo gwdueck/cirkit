@@ -234,6 +234,34 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 		outputFile << "st" << std::endl;
 }
 
+unsigned int toffoliCost(matrix& qx, unsigned a, unsigned b, unsigned t)
+{
+	unsigned cost1, cost2, aux1, aux2;
+	if (qx[a][t] < qx[t][a])
+		aux1 = qx[a][t];
+	else
+		aux1 = qx[t][a];
+	if (qx[b][t] < qx[t][b])
+		aux2 = qx[b][t];
+	else
+		aux2 = qx[t][b];
+	cost1 = aux1 + (2 * aux2) + (2 * qx[a][b]);
+	if (qx[b][t] < qx[t][b])
+		aux1 = qx[b][t];
+	else
+		aux1 = qx[t][b];
+	if (qx[a][t] < qx[t][a])
+		aux2 = qx[a][t];
+	else
+		aux2 = qx[t][a];
+	cost2 = aux1 + (2 * aux2) + (2 * qx[b][a]);
+	if( cost1 < cost2 )
+		return cost1;
+	else
+		return cost2;
+
+}
+
 // Function to print the objective function
 void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& tgates )
 {
@@ -242,7 +270,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 	else
 		outputFile << "//";
 
-	outputFile << " Begin Objective Function" << std::endl;
+	outputFile << " Begin Objective Function - Toffoli" << std::endl;
 
 	if(cplex)
 		outputFile << "Minimize" << std::endl;
@@ -312,22 +340,28 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 		}
 	}
 	aux = 0;
-	for (int i = 0; i < tgates.size(); ++i)
+	tam = (tgates[0].size())*(tgates[0].size()-1)*(tgates[0].size()-2);
+	for (int i = 0, l = 0, t = -1; i < tgates.size(); ++i, ++l)
 	{
+		if(i%qx.size() == 0)
+		{
+			l = 0;
+			++t;
+		}
 		for (int j = 0; j < tgates[i].size(); ++j)
 		{
 			bool line = false;
 			unsigned end = 0;
-			for (int k = 0; k < qx.size(); ++k)
+			for (int k = 0; k < tgates[i].size(); ++k)
 			{
-				for (int m = 0; m < qx.size(); ++m)
+				for (int m = 0; m < tgates[i].size(); ++m)
 				{
-					for (int n = 0; n < qx.size(); ++n)
+					for (int n = 0; n < tgates[i].size(); ++n)
 					{		
-						if( i != j && tgates[i][j] > 0 && k != m)
+						if( l != j && tgates[i][j] > 0 && k != m && m != n && k != n)
 						{
 							++end;
-							outputFile << qx[k][m]*cnots[i][j] << "T" << int(i%qx.size()) << "_" << j << "_" << int(i/qx.size()) << "c" << k << "_" << m << "_" << m;
+							outputFile << toffoliCost(qx, k, m, n) << "T" << l << "_" << j << "_" << t << "c" << k << "_" << m << "_" << n;
 							if(end < tam)
 								outputFile << " + ";
 							else
@@ -337,7 +371,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 					}
 				}
 			}
-			if(line && aux < cnotdifgates)
+			if(line && aux < toffolidifgates)
 				outputFile << " + " << std::endl;
 		}
 	}
@@ -836,11 +870,31 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 		v.clear();
 	}
 }
+	
+bool checkVector(matrix& t, std::vector< unsigned > a)
+{
+	std::cout << "aaa" << std::endl;
+	std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl;
+	
+	for (int i = 0; i < t.size(); ++i)
+	{
+		std::cout << "bbb" << std::endl;
+		std::cout << t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
+
+		if(t[i][0] == a[0] && t[i][1] == a[1] && t[i][2] == a[2])
+			return true;
+		if(t[i][0] == a[0] && t[i][2] == a[1] && t[i][1] == a[2])
+			return true;
+	}
+	std::cout << "false" << std::endl;
+	return false;
+}
 
 void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates)
 {
 	std::vector< std::pair< int,int > > q;
 	std::vector< std::pair< int,int > > v;
+	matrix t;
 
 	for (int i = 0; i < cnots.size(); ++i)
 	{
@@ -855,7 +909,36 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 			if( vgates[j][i] > 0 )
 				v.push_back(std::make_pair(j,i));
 		}
-
+		for (int j = 0; j < tgates.size(); j = j + tgates[i].size() )
+		{
+			std::vector< unsigned > a;
+			for (int k = 0; k < tgates[i].size(); ++k)
+			{
+				// std::cout << j << " " << k << " - "<< tgates[j+i][k] << " " << tgates[k+j][i] << std::endl; 
+				if (tgates[j+i][k] > 0 )
+				{
+					// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+i,k)));
+					a.clear();
+					a.push_back(j/tgates[i].size());
+					a.push_back((j%tgates[i].size())+i);
+					a.push_back(k);
+					if (!checkVector(t, a))
+ 						t.push_back(a);
+				}
+				if (tgates[k+j][i] > 0 )
+				{
+					// t.push_back(std::make_pair(j/tgates[i].size(), std::make_pair((j%tgates[i].size())+k,i)));
+					a.clear();
+					a.push_back(j/tgates[i].size());
+					a.push_back((j%tgates[i].size())+k);
+					a.push_back(i);
+					if (!checkVector(t, a))
+ 						t.push_back(a);
+				}
+				
+			}
+		}
+		
 		bool first = true;
 		unsigned signal = 0;
 		if(v.size() + q.size() > 1)
@@ -926,6 +1009,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 			outputFile << std::endl;	
 		q.clear();
 		v.clear();
+		t.clear();
 	}
 }
 
