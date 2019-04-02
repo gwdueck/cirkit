@@ -1168,7 +1168,34 @@ void writeBlockRestrictions(matrix& res, unsigned s)
 								if(aux)
 									outputFile << " + ";
 								outputFile << "T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << i << "_" << j << "_" << k;
-								outputFile << " + T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << j << "_" << i << "_" << k;
+								aux = true;
+							}
+						}
+					}
+					else if(res[r][3] == 21)
+					{
+						bool aux = false;
+						for (int k = 0; k < s; ++k)
+						{
+							if(k != i && k != j)
+							{
+								if(aux)
+									outputFile << " + ";
+								outputFile << "T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << j << "_" << i << "_" << k;
+								aux = true;
+							}
+						}
+					}
+					else if(res[r][3] == 22)
+					{
+						bool aux = false;
+						for (int k = 0; k < s; ++k)
+						{
+							if(k != i && k != j)
+							{
+								if(aux)
+									outputFile << " + ";
+								outputFile << "T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << j << "_" << k << "_" << i;
 								aux = true;
 							}
 						}
@@ -1256,7 +1283,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates )
 void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates )
 {
 	matrix res;
-	std::vector<unsigned> c;
+	std::vector<unsigned> c, lines;
 	bool insert;
 	for (int i = 0; i < cnots.size(); ++i)
 	{
@@ -1268,83 +1295,88 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates
 			{
 				c.push_back(i);
 				c.push_back(j);
-				c.push_back(0);
+				c.push_back(i);
 				c.push_back(0);
 				insert = true;
+				lines.push_back(i);
 				break;
 			}
 			else if( cnots[j][i] > 0 )
 			{
 				c.push_back(j);
 				c.push_back(i);
-				c.push_back(1);
+				c.push_back(i);
 				c.push_back(1);
 				insert = true;
+				lines.push_back(i);
 				break;
 			}
 			if( vgates[i][j] > 0 )
 			{
 				c.push_back(i);
 				c.push_back(j);
-				c.push_back(10);
+				c.push_back(i);
 				c.push_back(10);
 				insert = true;
+				lines.push_back(i);
 				break;
 			}
 			else if( vgates[j][i] > 0 )
 			{
 				c.push_back(j);
 				c.push_back(i);
-				c.push_back(11);
+				c.push_back(i);
 				c.push_back(11);
 				insert = true;
+				lines.push_back(i);
 				break;
 			}
 		}
-		if(!insert)
-		{
-			for(int j = i*cnots.size(); j < (i*cnots.size())+cnots.size(); ++j)
-			{
-				for (int k = 0; k < cnots.size(); ++k)
-				{
-					// std::cout << "j: " << j << " k: " << k << std::endl;	
-					if ( tgates[j][k] > 0 )
-					{
-						std::cout << "[" << j%cnots.size() << "][" << k << "]" << "[" << i << "] " << j << std::endl;
-						c.push_back(j%cnots.size());
-						c.push_back(k);
-						c.push_back(i);
-						c.push_back(20);
-						insert = true;
-						break;
-					}
-				}
-				if(insert)
-					break;
-			}
-			// for(int j = i; j < cnots.size()*cnots.size(); j = j + cnots.size())
-			// {
-			// 	for (int k = 0; k < cnots.size(); ++k)
-			// 	{
-			// 		std::cout << "[" << m << "][" << n << "]" << std::endl;
-			// 		if ( tgates[m][n] > 0 )
-			// 		{
-			// 			c.push_back(m);
-			// 			c.push_back(n);
-			// 			c.push_back( int(m/cnots.size()) );
-			// 			c.push_back(21);
-			// 			insert = true;
-			// 			break;
-			// 		}
-			// 	}
-			// }
-		}
-		
 		for (int k = 0; k < res.size(); ++k)
 			if(c == res[k])
 				insert = false;
 		if(insert)
 			res.push_back(c);
+	}
+
+	for (int i = 0; i < tgates.size(); ++i)
+	{
+		for (int j = 0; j < tgates[i].size(); ++j)
+		{
+			if ( tgates[i][j] > 0 )
+			{
+				if(std::find(lines.begin(), lines.end(), i%tgates[i].size()) == lines.end())
+				{
+					std::cout << "CA" << std::endl;
+					std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
+					c.push_back(i%cnots.size());
+					c.push_back(j);
+					c.push_back(int(i/tgates[i].size()));
+					c.push_back(20);
+					res.push_back(c);
+				}
+				if(std::find(lines.begin(), lines.end(), j) == lines.end())
+				{
+					std::cout << "CB" << std::endl;
+					std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
+					c.push_back(i%cnots.size());
+					c.push_back(j);
+					c.push_back(int(i/tgates[i].size()));
+					c.push_back(21);
+					res.push_back(c);
+				}
+				if(std::find(lines.begin(), lines.end(), int(i/tgates[i].size())) == lines.end())
+				{
+					std::cout << "T" << std::endl;
+					std::cout << "[" << i%cnots.size() << "][" << j << "]" << "[" << int(i/tgates[i].size()) << "]" << std::endl;
+					c.push_back(i%cnots.size());
+					c.push_back(j);
+					c.push_back(int(i/tgates[i].size()));
+					c.push_back(22);
+					res.push_back(c);
+				}
+			}
+		}
 	}
 
 	writeBlockRestrictions(res, cnots.size());
