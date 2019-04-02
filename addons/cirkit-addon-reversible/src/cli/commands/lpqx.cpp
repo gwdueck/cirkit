@@ -530,6 +530,45 @@ void printOneGateRestriction( matrix& cnots, matrix& vgates, matrix& tgates )
 				outputFile << " = 1;" << std::endl;
 		}
 	}
+	aux = 0;
+	unsigned tam = (tgates[0].size())*(tgates[0].size()-1)*(tgates[0].size()-2);
+	for (int i = 0, l = 0, t = -1; i < tgates.size(); ++i, ++l)
+	{
+		if(i%tgates[0].size() == 0)
+		{
+			l = 0;
+			++t;
+		}
+		for (int j = 0; j < tgates[i].size(); ++j)
+		{
+			bool line = false;
+			unsigned end = 0;
+			for (int k = 0; k < tgates[i].size(); ++k)
+			{
+				for (int m = 0; m < tgates[i].size(); ++m)
+				{
+					for (int n = 0; n < tgates[i].size(); ++n)
+					{		
+						if( l != j && tgates[i][j] > 0 && k != m && m != n && k != n)
+						{
+							++end;
+							outputFile << "T" << l << "_" << j << "_" << t << "c" << k << "_" << m << "_" << n;
+							if(end < tam)
+								outputFile << " + ";
+							else
+								++aux;
+							line = true;
+						}
+					}
+				}
+			}
+			if(line && cplex)
+				outputFile << " = 1" << std::endl;
+			else if(line && !cplex)
+				outputFile << " = 1;" << std::endl;
+		}
+	}
+
 	if(cplex)
 		outputFile << "\\";
 	else
@@ -685,6 +724,7 @@ void printIntegerVariables( matrix& cnots, matrix& vgates, matrix& tgates )
 
 	unsigned vdifgates = getNumberDifGates(vgates);
 	unsigned cnotdifgates = getNumberDifGates(cnots);
+	unsigned toffolidifgates = getNumberDifGates(tgates);
 	unsigned tam = (cnots.size()*cnots.size())-cnots.size();
 	unsigned aux = 0;
 	for (int i = 0; i < vgates.size(); ++i)
@@ -738,6 +778,42 @@ void printIntegerVariables( matrix& cnots, matrix& vgates, matrix& tgates )
 			}
 			if(line && aux < cnotdifgates)
 				outputFile << " " << std::endl;
+		}
+	}
+	aux = 0;
+	tam = (tgates[0].size())*(tgates[0].size()-1)*(tgates[0].size()-2);
+	for (int i = 0, l = 0, t = -1; i < tgates.size(); ++i, ++l)
+	{
+		if(i%tgates[0].size() == 0)
+		{
+			l = 0;
+			++t;
+		}
+		for (int j = 0; j < tgates[i].size(); ++j)
+		{
+			bool line = false;
+			unsigned end = 0;
+			for (int k = 0; k < tgates[i].size(); ++k)
+			{
+				for (int m = 0; m < tgates[i].size(); ++m)
+				{
+					for (int n = 0; n < tgates[i].size(); ++n)
+					{		
+						if( l != j && tgates[i][j] > 0 && k != m && m != n && k != n)
+						{
+							++end;
+							outputFile << "T" << l << "_" << j << "_" << t << "c" << k << "_" << m << "_" << n;
+							if(end < tam)
+								outputFile << " ";
+							else
+								++aux;
+							line = true;
+						}
+					}
+				}
+			}
+			if(line && aux < toffolidifgates)
+				outputFile << "  " << std::endl;
 		}
 	}
 	if(!cplex)
