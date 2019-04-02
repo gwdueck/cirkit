@@ -1144,14 +1144,38 @@ void writeBlockRestrictions(matrix& res, unsigned s)
 				if(i != j)
 				{
 					++end;
-					if(res[r][2] == 0)
+					if(res[r][3] == 0)
 						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
-					else if(res[r][2] == 1)
+					else if(res[r][3] == 1)
 						outputFile << "G" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
-					else if(res[r][2] == 10)
+					else if(res[r][3] == 10)
 						outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << i << "_" << j;
-					else if(res[r][2] == 11)
+					else if(res[r][3] == 11)
 						outputFile << "V" << res[r][0] << "_" << res[r][1] << "c" << j << "_" << i;
+					else if(res[r][3] == 20)
+					{
+						bool aux = false;
+						for (int k = 0; k < s; ++k)
+						{
+							if(k != i && k != j)
+							{
+								if(aux)
+									outputFile << " + ";
+								outputFile << "T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << i << "_" << j << "_" << k;
+								outputFile << " + T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << j << "_" << i << "_" << k;
+								aux = true;
+							}
+						}
+					}
+					// else if(res[r][3] == 21)
+					// {
+					// 	for (int k = 0; k < s; ++k)
+					// 		if(k != i && k != j)
+					// 		{
+					// 			outputFile << "T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << i << "_" << k << "_" << j;
+					// 			outputFile << " + T" << res[r][0] << "_" << res[r][1] << "_" << res[r][2] << "c" << k << "_" << i << "_" << j;
+					// 		}
+					// }
 					
 					if( end < (s-1)*res.size() )
 						outputFile << " + ";
@@ -1181,6 +1205,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates )
 				c.push_back(i);
 				c.push_back(j);
 				c.push_back(0);
+				c.push_back(0);
 				insert = true;
 				break;
 			}
@@ -1188,6 +1213,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates )
 			{
 				c.push_back(j);
 				c.push_back(i);
+				c.push_back(1);
 				c.push_back(1);
 				insert = true;
 				break;
@@ -1197,6 +1223,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates )
 				c.push_back(i);
 				c.push_back(j);
 				c.push_back(10);
+				c.push_back(10);
 				insert = true;
 				break;
 			}
@@ -1204,6 +1231,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates )
 			{
 				c.push_back(j);
 				c.push_back(i);
+				c.push_back(11);
 				c.push_back(11);
 				insert = true;
 				break;
@@ -1235,6 +1263,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates
 				c.push_back(i);
 				c.push_back(j);
 				c.push_back(0);
+				c.push_back(0);
 				insert = true;
 				break;
 			}
@@ -1242,6 +1271,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates
 			{
 				c.push_back(j);
 				c.push_back(i);
+				c.push_back(1);
 				c.push_back(1);
 				insert = true;
 				break;
@@ -1251,6 +1281,7 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates
 				c.push_back(i);
 				c.push_back(j);
 				c.push_back(10);
+				c.push_back(10);
 				insert = true;
 				break;
 			}
@@ -1259,10 +1290,50 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates
 				c.push_back(j);
 				c.push_back(i);
 				c.push_back(11);
+				c.push_back(11);
 				insert = true;
 				break;
 			}
 		}
+		if(!insert)
+		{
+			for(int j = i*cnots.size(); j < (i*cnots.size())+cnots.size(); ++j)
+			{
+				for (int k = 0; k < cnots.size(); ++k)
+				{
+					// std::cout << "j: " << j << " k: " << k << std::endl;	
+					if ( tgates[j][k] > 0 )
+					{
+						std::cout << "[" << j%cnots.size() << "][" << k << "]" << "[" << i << "] " << j << std::endl;
+						c.push_back(j%cnots.size());
+						c.push_back(k);
+						c.push_back(i);
+						c.push_back(20);
+						insert = true;
+						break;
+					}
+				}
+				if(insert)
+					break;
+			}
+			// for(int j = i; j < cnots.size()*cnots.size(); j = j + cnots.size())
+			// {
+			// 	for (int k = 0; k < cnots.size(); ++k)
+			// 	{
+			// 		std::cout << "[" << m << "][" << n << "]" << std::endl;
+			// 		if ( tgates[m][n] > 0 )
+			// 		{
+			// 			c.push_back(m);
+			// 			c.push_back(n);
+			// 			c.push_back( int(m/cnots.size()) );
+			// 			c.push_back(21);
+			// 			insert = true;
+			// 			break;
+			// 		}
+			// 	}
+			// }
+		}
+		
 		for (int k = 0; k < res.size(); ++k)
 			if(c == res[k])
 				insert = false;
