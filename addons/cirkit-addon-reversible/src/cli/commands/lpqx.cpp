@@ -335,7 +335,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 					}
 				}
 			}
-			if(line && aux < cnotdifgates)
+			if(line && aux < cnotdifgates || (line && toffolidifgates > 0))
 				outputFile << " + " << std::endl;
 		}
 	}
@@ -776,7 +776,7 @@ void printIntegerVariables( matrix& cnots, matrix& vgates, matrix& tgates )
 					}
 				}
 			}
-			if(line && aux < cnotdifgates)
+			if(line && aux < cnotdifgates || (line && toffolidifgates > 0) )
 				outputFile << " " << std::endl;
 		}
 	}
@@ -1059,7 +1059,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 							
 							if( first && signal < cnots.size()-1 )
 								outputFile << " + ";
-							else if( signal == (cnots.size()-1)*(v.size()+q.size()) )
+							else if( signal == (cnots.size()-1)*(v.size()+q.size()+t.size()) )
 								outputFile << " ";
 							else
 								outputFile << " - ";
@@ -1068,6 +1068,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 					if(q.size() > 0 && first)
 						first = false;
 				}
+				signal = 0;
 				for (int j = 0; j < t.size(); ++j)
 				{
 					for (int k = 0; k < cnots.size(); ++k)
@@ -1076,21 +1077,26 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 						{
 							if(m != n && k != m && k != n)
 							{
+								++signal;
 								if(first)
 									outputFile << q.size()+v.size()+t.size()-1;
 								outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2]; 
-								if(t[j][0] == i || t[j][1] == i)
+								if(t[j][0] == i)
 								{
 									outputFile << "c" << m << "_" << k << "_" << n;
-									if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
-										outputFile << " + ";
-									else
-										outputFile << " - ";
-									if(first)
-										outputFile << q.size()+v.size()+t.size()-1;
-									outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2];
-									outputFile << "c" << k << "_" << m << "_" << n;
+									// if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
+									// 	outputFile << " + ";
+									// else
+									// 	outputFile << " - ";
+									// if(first)
+									// 	outputFile << q.size()+v.size()+t.size()-1;
+									// outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2];
+									// outputFile << "c" << k << "_" << m << "_" << n;
 
+								}
+								else if(t[j][1] == i)
+								{
+									outputFile << "c" << k << "_" << m << "_" << n;
 								}
 								else
 								{
@@ -1105,10 +1111,10 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 									outputFile << "c" << k << "_" << n << "_" << m;
 
 								}
-								++signal;
+								
 								if( first && signal < ((cnots.size()-1)*(cnots.size()-2)) )
 									outputFile << " + ";
-								else if( signal == ((cnots.size()-1)*(cnots.size()-2))*(v.size()+q.size()+t.size()) )
+								else if( signal == ((cnots.size()-1)*(cnots.size()-2))*(t.size()) )
 									outputFile << " ";
 								else
 									outputFile << " - ";
@@ -1435,7 +1441,7 @@ bool lpqx_command::execute()
   	else
   	  	generateMatrixCnots( circ, cnots, vgates );
 
-	printMatrixCnots( tgates );
+	// printMatrixCnots( tgates );
 	// std::cout << "v gates" << std::endl;
 	// printMatrixCnots( vgates );
 
