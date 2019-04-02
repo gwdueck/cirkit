@@ -941,7 +941,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 		
 		bool first = true;
 		unsigned signal = 0;
-		if(v.size() + q.size() > 1)
+		if(v.size() + q.size() + t.size() > 1)
 		{
 			for (int m = 0; m < cnots.size(); ++m)
 			{
@@ -955,7 +955,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 						{
 							++signal;
 							if(first)
-								outputFile << q.size()+v.size()-1;
+								outputFile << q.size()+v.size()+t.size()-1;
 							outputFile << "V" << v[j].first << "_" << v[j].second; 
 							if(v[j].first == i)
 								outputFile << "c" << m << "_" << n;
@@ -981,7 +981,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 						{
 							++signal;
 							if(first)
-								outputFile << q.size()+v.size()-1;
+								outputFile << q.size()+v.size()+t.size()-1;
 							outputFile << "G" << q[j].first << "_" << q[j].second; 
 							if(q[j].first == i)
 								outputFile << "c" << m << "_" << n;
@@ -997,6 +997,33 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 						}
 					}
 					if(q.size() > 0 && first)
+						first = false;
+				}
+				// stopped here
+				for (int j = 0; j < q.size(); ++j)
+				{
+					for (int n = 0; n < cnots.size(); ++n)
+					{
+						if(m != n)
+						{
+							++signal;
+							if(first)
+								outputFile << q.size()+v.size()+t.size()-1;
+							outputFile << "T" << q[j].first << "_" << q[j].second; 
+							if(q[j].first == i)
+								outputFile << "c" << m << "_" << n;
+							else
+								outputFile << "c" << n << "_" << m;
+							
+							if( first && signal < cnots.size()-1 )
+								outputFile << " + ";
+							else if( signal == (cnots.size()-1)*(v.size()+q.size()) )
+								outputFile << " ";
+							else
+								outputFile << " - ";
+						}
+					}
+					if(t.size() > 0 && first)
 						first = false;
 				}
 				if(!first && cplex)
