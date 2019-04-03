@@ -175,9 +175,9 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 					{
 						++end;
 						if( qx[k][m] < qx[m][k])
-							outputFile << qx[k][m]*vgates[i][j]*2 << "V" << i << "_" << j << "c" << k << "_" << m;
+							outputFile << qx[k][m]*vgates[i][j]*2 << " V" << i << "_" << j << "c" << k << "_" << m;
 						else
-							outputFile << qx[m][k]*vgates[i][j]*2 << "V" << i << "_" << j << "c" << k << "_" << m;
+							outputFile << qx[m][k]*vgates[i][j]*2 << " V" << i << "_" << j << "c" << k << "_" << m;
 
 						if(end < tam)
 							outputFile << " + ";
@@ -205,7 +205,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
 						++end;
-						outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
+						outputFile << qx[k][m]*cnots[i][j] << " G" << i << "_" << j << "c" << k << "_" << m;
 						if(end < tam)
 							outputFile << " + ";
 						else
@@ -296,9 +296,9 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 					{
 						++end;
 						if( qx[k][m] < qx[m][k])
-							outputFile << qx[k][m]*vgates[i][j]*2 << "V" << i << "_" << j << "c" << k << "_" << m;
+							outputFile << qx[k][m]*vgates[i][j]*2 << " V" << i << "_" << j << "c" << k << "_" << m;
 						else
-							outputFile << qx[m][k]*vgates[i][j]*2 << "V" << i << "_" << j << "c" << k << "_" << m;
+							outputFile << qx[m][k]*vgates[i][j]*2 << " V" << i << "_" << j << "c" << k << "_" << m;
 
 						if(end < tam)
 							outputFile << " + ";
@@ -326,7 +326,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
 						++end;
-						outputFile << qx[k][m]*cnots[i][j] << "G" << i << "_" << j << "c" << k << "_" << m;
+						outputFile << qx[k][m]*cnots[i][j] << " G" << i << "_" << j << "c" << k << "_" << m;
 						if(end < tam)
 							outputFile << " + ";
 						else
@@ -356,7 +356,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 						if( i%qx.size() != j && tgates[i][j] > 0 && k != m && m != n && k != n)
 						{
 							++end;
-							outputFile << toffoliCost(qx, k, m, n) << "T" << i%qx.size() << "_" << j << "_" << int(i/qx.size()) << "c" << k << "_" << m << "_" << n;
+							outputFile << toffoliCost(qx, k, m, n) << " T" << i%qx.size() << "_" << j << "_" << int(i/qx.size()) << "c" << k << "_" << m << "_" << n;
 							if(end < tam)
 								outputFile << " + ";
 							else
@@ -886,7 +886,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 							++signal;
 							if(first)
 								outputFile << q.size()+v.size()-1;
-							outputFile << "V" << v[j].first << "_" << v[j].second; 
+							outputFile << " V" << v[j].first << "_" << v[j].second; 
 							if(v[j].first == i)
 								outputFile << "c" << m << "_" << n;
 							else
@@ -912,7 +912,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates)
 							++signal;
 							if(first)
 								outputFile << q.size()+v.size()-1;
-							outputFile << "G" << q[j].first << "_" << q[j].second; 
+							outputFile << " G" << q[j].first << "_" << q[j].second; 
 							if(q[j].first == i)
 								outputFile << "c" << m << "_" << n;
 							else
@@ -1042,7 +1042,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 							++signal;
 							if(first)
 								outputFile << q.size()+v.size()+t.size()-1;
-							outputFile << "V" << v[j].first << "_" << v[j].second; 
+							outputFile << " V" << v[j].first << "_" << v[j].second; 
 							if(v[j].first == i)
 								outputFile << "c" << m << "_" << n;
 							else
@@ -1068,7 +1068,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 							++signal;
 							if(first)
 								outputFile << q.size()+v.size()+t.size()-1;
-							outputFile << "G" << q[j].first << "_" << q[j].second; 
+							outputFile << " G" << q[j].first << "_" << q[j].second; 
 							if(q[j].first == i)
 								outputFile << "c" << m << "_" << n;
 							else
@@ -1097,7 +1097,7 @@ void getCombinationAnotherApproach(matrix& cnots, matrix& vgates, matrix& tgates
 								++signal;
 								if(first)
 									outputFile << q.size()+v.size()+t.size()-1;
-								outputFile << "T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2]; 
+								outputFile << " T" << t[j][0] << "_" << t[j][1] << "_" << t[j][2]; 
 								if(t[j][0] == i)
 								{
 									outputFile << "c" << m << "_" << k << "_" << n;
