@@ -341,13 +341,8 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 	}
 	aux = 0;
 	tam = (tgates[0].size())*(tgates[0].size()-1)*(tgates[0].size()-2);
-	for (int i = 0, l = 0, t = -1; i < tgates.size(); ++i, ++l)
+	for (int i = 0; i < tgates.size(); ++i)
 	{
-		if(i%qx.size() == 0)
-		{
-			l = 0;
-			++t;
-		}
 		for (int j = 0; j < tgates[i].size(); ++j)
 		{
 			bool line = false;
@@ -358,10 +353,10 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 				{
 					for (int n = 0; n < tgates[i].size(); ++n)
 					{		
-						if( l != j && tgates[i][j] > 0 && k != m && m != n && k != n)
+						if( i%qx.size() != j && tgates[i][j] > 0 && k != m && m != n && k != n)
 						{
 							++end;
-							outputFile << toffoliCost(qx, k, m, n) << "T" << l << "_" << j << "_" << t << "c" << k << "_" << m << "_" << n;
+							outputFile << toffoliCost(qx, k, m, n) << "T" << i%qx.size() << "_" << j << "_" << int(i/qx.size()) << "c" << k << "_" << m << "_" << n;
 							if(end < tam)
 								outputFile << " + ";
 							else
