@@ -51,7 +51,7 @@
 #include <reversible/io/print_circuit.hpp>
 #include <reversible/variable.hpp>
 #include <cli/commands/ibm.hpp>
-#include <cli/commands/tvc.hpp>
+// #include <cli/commands/tvc.hpp>
 #include <reversible/functions/ibm_helper.hpp>
 
 
@@ -80,7 +80,7 @@ ibm_command::ibm_command( const environment::ptr& env )
     ( "ibm_qx4,4", "The IBM Qx4 is the target")
     ( "verbose,v",  "verbose" )
     ( "template,t", "use template transformations--instead of swap based")
-    ( "toffoli", "transform Toffoli")
+    ( "toffoli", value_with_default(&type), "transform Toffoli")
     ;
   add_new_option();
 }
@@ -109,7 +109,7 @@ bool ibm_command::execute()
     if( !is_set( "all_perm" ) )
     {
         if ( is_set( "toffoli" ) )
-            circ_working = Transform_to_v(circ_working, qx4);
+            circ_working = transform_tof_clif(circ_working, qx4, type);
         if ( is_set( "ibm_qx4" ) )
         {
             circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, is_set( "template" ) );
@@ -140,7 +140,7 @@ bool ibm_command::execute()
             copy_circuit(circ_working, permuted);
             permute_lines( permuted, perm );
             if ( is_set( "toffoli" ) )
-                permuted = Transform_to_v(permuted, qx4);
+                permuted = transform_tof_clif(circ_working, qx4, type);
             if ( is_set( "ibm_qx4" ) )
             {
                 circ_IBM = transform_to_IBMQ( permuted, map_method_qx4, is_set( "template" ) );

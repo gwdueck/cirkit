@@ -54,6 +54,8 @@ protected:
 
 public:
   log_opt_t log() const;
+private:
+	unsigned int type = 1;
 
 };
 

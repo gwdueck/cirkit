@@ -91,6 +91,191 @@ void permute_lines( circuit& circ , int perm[])
     }
 }
 
+circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsigned>>& costs, unsigned type )
+{
+    circuit circ_IBM;
+    unsigned target;
+    copy_metadata(circ, circ_IBM);
+    for ( const auto& gate : circ )
+    {
+        if ( is_toffoli( gate ) )
+        {
+            if( gate.controls().size() == 2 )
+            {
+                unsigned ca, cb;
+                ca = gate.controls().front().line();
+                cb = gate.controls().back().line();
+                target = gate.targets().front();
+                
+                if(type == 1)
+                {
+                    unsigned tbc, tac;
+                    if(costs[cb][target] < costs[target][cb])
+                        tbc = costs[cb][target];
+                    else
+                        tbc = costs[target][cb];
+                    if(costs[ca][target] < costs[target][ca])
+                        tac = costs[ca][target];
+                    else
+                        tac = costs[target][ca];
+
+                    std::vector<unsigned> controla, controlb, controlt;
+                    if(2*costs[ca][cb] + 2*tac + 4*tbc < 2*costs[cb][ca] + 2*tbc + 4*tac)
+                    {
+                        ca = gate.controls().front().line();
+                        cb = gate.controls().back().line();
+                    }
+                    else
+                    {
+                        cb = gate.controls().front().line();
+                        ca = gate.controls().back().line();
+                    }
+                    controla.push_back(ca);
+                    controlb.push_back(cb);
+                    controlt.push_back(target);
+
+                    append_hadamard( circ_IBM, target );
+                    if(costs[ca][target] < costs[target][ca])
+                    {
+                        append_toffoli( circ_IBM, controla, target );
+                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controla, target );
+                    }
+                    else
+                    {
+                        append_toffoli( circ_IBM, controlt, ca );
+                        append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controlt, ca );
+                    }
+                    append_toffoli( circ_IBM, controla, cb );
+                    if(costs[cb][target] < costs[target][cb])
+                    {
+                        append_toffoli( circ_IBM, controlb, target );
+                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, false );
+                        append_toffoli( circ_IBM, controlb, target );
+                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controla, cb );
+                        append_toffoli( circ_IBM, controlb, target );
+                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controlb, target );
+                    }
+                    else
+                    {
+                        append_toffoli( circ_IBM, controlt, cb );
+                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, false );
+                        append_toffoli( circ_IBM, controlt, cb );
+                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controla, cb );
+                        append_toffoli( circ_IBM, controlt, cb );
+                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controlt, cb );
+                    }
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, false );
+                    append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, false );
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, false );
+                    append_hadamard( circ_IBM, target );
+                }
+                else if(type == 2)
+                {
+                    std::vector<unsigned> controla, controlb;
+                    controla.push_back(ca);
+                    controlb.push_back(cb);
+                    append_hadamard( circ_IBM, target );
+                    append_toffoli( circ_IBM, controla, target );
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, true );
+                    append_toffoli( circ_IBM, controlb, target );
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, false );
+                    append_toffoli( circ_IBM, controla, target );
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, true );
+                    append_toffoli( circ_IBM, controlb, target );
+                    if(costs[ca][cb] < costs[cb][ca])
+                    {
+                        append_toffoli( circ_IBM, controla, cb );
+                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controla, cb );
+                    }
+                    else
+                    {
+                        append_toffoli( circ_IBM, controlb, ca );
+                        append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controlb, ca );
+                    }
+
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, false );
+                    append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, false );
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, false );
+                    append_hadamard( circ_IBM, target );
+                }
+                else if(type == 3)
+                {
+                    unsigned tbc, tac;
+                    if(costs[cb][target] < costs[target][cb])
+                        tbc = 2*costs[cb][target];
+                    else
+                        tbc = 2*costs[target][cb];
+                    if(costs[ca][target] < costs[target][ca])
+                        tac = 2*costs[ca][target];
+                    else
+                        tac = 2*costs[target][ca];
+
+                    std::vector<unsigned> controla, controlb, controlt;
+                    if(2*costs[target][ca] + 2*costs[cb][ca] + tbc < 2*costs[target][cb] + 2*costs[ca][cb] + tac)
+                    {
+                        ca = gate.controls().front().line();
+                        cb = gate.controls().back().line();
+                    }
+                    else
+                    {
+                        cb = gate.controls().front().line();
+                        ca = gate.controls().back().line();
+                    }
+                    controla.push_back(ca);
+                    controlb.push_back(cb);
+                    controlt.push_back(target);
+
+                    append_hadamard( circ_IBM, target );
+                    append_toffoli( circ_IBM, controlt, ca );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                    append_toffoli( circ_IBM, controlb, ca );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, false );
+                    append_toffoli( circ_IBM, controlt, ca );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                    append_toffoli( circ_IBM, controlb, ca );
+                    if(costs[cb][target] < costs[target][cb])
+                    {
+                        append_toffoli( circ_IBM, controlb, target );
+                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controlb, target );
+                    }
+                    else
+                    {
+                        append_toffoli( circ_IBM, controlt, cb );
+                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, true );
+                        append_toffoli( circ_IBM, controlt, cb );
+                    }
+
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, false );
+                    append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, false );
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, false );
+                    append_hadamard( circ_IBM, target );
+                }
+                else
+                {
+
+                }
+
+            }
+            else
+            {
+
+            }
+        }
+        else
+            circ_IBM.append_gate() = gate;
+    }
+    return circ_IBM;
+}
+
 // transform a Clifford+T circuit to be IBM compliant
 circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool templ )
 {
@@ -115,6 +300,7 @@ circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool
         target = gate.targets().front();
         new_controls.clear();
         new_controls.push_back( target );
+
         if( !gate.controls().empty() )
         {
             control = gate.controls().front().line();
