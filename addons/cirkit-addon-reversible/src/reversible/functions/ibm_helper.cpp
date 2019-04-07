@@ -100,7 +100,11 @@ circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsign
     {
         if ( is_toffoli( gate ) )
         {
-            if( gate.controls().size() == 2 )
+            if( gate.controls().size() == 1 || gate.controls().empty() )
+            {
+                circ_IBM.append_gate() = gate;
+            }
+            else if( gate.controls().size() == 2 )
             {
                 unsigned ca, cb;
                 ca = gate.controls().front().line();
@@ -261,13 +265,13 @@ circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsign
                 }
                 else
                 {
-
+                    assert( false );
                 }
 
             }
             else
             {
-
+                assert( false );
             }
         }
         else

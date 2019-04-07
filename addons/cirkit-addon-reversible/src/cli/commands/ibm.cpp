@@ -140,7 +140,7 @@ bool ibm_command::execute()
             copy_circuit(circ_working, permuted);
             permute_lines( permuted, perm );
             if ( is_set( "toffoli" ) )
-                permuted = transform_tof_clif(circ_working, qx4, type);
+                permuted = transform_tof_clif(permuted, qx4, type);
             if ( is_set( "ibm_qx4" ) )
             {
                 circ_IBM = transform_to_IBMQ( permuted, map_method_qx4, is_set( "template" ) );
