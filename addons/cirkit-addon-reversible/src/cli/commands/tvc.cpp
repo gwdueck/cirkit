@@ -247,7 +247,7 @@ void v_to_clifford(circuit& circ_in, circuit& circ_out, gate g)
 void toffoli_to_clifford(circuit& circ, gate g)
 {
 	std::vector<unsigned> ga, gb;
-	unsigned pa, pb;
+	bool pa, pb;
 	bool t1, t2, t3;
 	if( g.controls().front().line() < g.controls().back().line() )
 	{
@@ -264,13 +264,13 @@ void toffoli_to_clifford(circuit& circ, gate g)
 		pb = g.controls().front().polarity();
 	}
 
-	if(pa == 1 && pb == 1)
+	if(pa == true && pb == true)
 		{ t1 = true; t2 = false; t3 = true;}
-	else if(pa == 1 && pb == 0) 
+	else if(pa == true && pb == false) 
 		{ t1 = true; t2 = false; t3 = false;}
-	else if(pa == 0 && pb == 1) 
+	else if(pa == false && pb == true) 
 		{ t1 = false; t2 = false; t3 = true;}
-	else if(pa == 0 && pb == 0) 
+	else if(pa == false && pb == false) 
 		{ t1 = true; t2 = true; t3 = true;}
 	append_hadamard( circ, g.targets().front() );
 	
@@ -293,7 +293,7 @@ void toffoli_to_clifford(circuit& circ, gate g)
 	append_toffoli( circ, ga, g.targets().front() );
 	append_pauli( circ,  ga.front(), pauli_axis::Z, 4u, !t3 );
 	
-	if(pa == 0 && pb == 1 || pa == 0 && pb == 0)
+	if(pa == false && pb == true || pa == false && pb == false)
 		append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, t3 );
 	else
 		append_pauli( circ,  g.targets().front(), pauli_axis::Z, 4u, !t3 );

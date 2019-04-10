@@ -94,7 +94,6 @@ void permute_lines( circuit& circ , int perm[])
 circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsigned>>& costs, unsigned type )
 {
     circuit circ_IBM;
-    unsigned target;
     copy_metadata(circ, circ_IBM);
     for ( const auto& gate : circ )
     {
@@ -106,9 +105,23 @@ circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsign
             }
             else if( gate.controls().size() == 2 )
             {
-                unsigned ca, cb;
-                ca = gate.controls().front().line();
-                cb = gate.controls().back().line();
+                unsigned ca, cb, target;
+                bool pa, pb;
+                if( gate.controls().front().line() < gate.controls().back().line())
+                {
+                    ca = gate.controls().front().line();
+                    cb = gate.controls().back().line();
+                    pa = gate.controls().front().polarity();
+                    pb = gate.controls().back().polarity();
+                }
+                else
+                {
+                    cb = gate.controls().front().line();
+                    ca = gate.controls().back().line();
+                    pb = gate.controls().front().polarity();
+                    pa = gate.controls().back().polarity();
+                }
+                
                 target = gate.targets().front();
                 
                 if(type == 1)
@@ -213,6 +226,29 @@ circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsign
                 else if(type == 3)
                 {
                     unsigned tbc, tac;
+                    bool ta1, ta2, ta3, ta4;
+                    bool tb, tc1, tc2;
+
+                    if(pa == true && pb == true)
+                    {
+                        ta1 = ta3 = tb = tc2 = true;
+                        ta2 = ta4 = tc1 = false;
+                    }
+                    else if(pa == false && pb == true)
+                    {
+                        ta2 = ta4 = tb = tc2 = true;
+                        ta1 = ta3 = tc1 = false;
+                    }
+                    else if(pa == true && pb == false)
+                    {
+                        ta1 = ta4 = tc1 = tc2 = true;
+                        ta2 = ta3 = tb = false;
+                    }
+                    else if(pa == false && pb == false)
+                    {
+                        ta2 = ta3 = tc1 = tc2 = true;
+                        ta1 = ta4 = tb = false;
+                    }
                     if(costs[cb][target] < costs[target][cb])
                         tbc = 2*costs[cb][target];
                     else
@@ -238,29 +274,55 @@ circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsign
                     controlt.push_back(target);
 
                     append_hadamard( circ_IBM, target );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta1 );
+                    append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, tb );
                     append_toffoli( circ_IBM, controlt, ca );
-                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta2 );
                     append_toffoli( circ_IBM, controlb, ca );
-                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, false );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta3 );
                     append_toffoli( circ_IBM, controlt, ca );
-                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta4 );
                     append_toffoli( circ_IBM, controlb, ca );
+
                     if(costs[cb][target] < costs[target][cb])
                     {
                         append_toffoli( circ_IBM, controlb, target );
-                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, true );
+                        append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tc1 );
                         append_toffoli( circ_IBM, controlb, target );
                     }
                     else
                     {
                         append_toffoli( circ_IBM, controlt, cb );
-                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, true );
+                        append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, tc1 );
                         append_toffoli( circ_IBM, controlt, cb );
                     }
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tc2 );
+                    append_hadamard( circ_IBM, target );
+                }
+                else if(type == 4)
+                {
+                    ca = gate.controls().front().line();
+                    cb = gate.controls().back().line();
+                    std::vector<unsigned> controla, controlb, controlt;
+                  
+                    controla.push_back(ca);
+                    controlb.push_back(cb);
+                    controlt.push_back(target);
 
+                    append_hadamard( circ_IBM, target );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                    append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, true );
+                    append_toffoli( circ_IBM, controlt, ca );
                     append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, false );
-                    append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, false );
+                    append_toffoli( circ_IBM, controlb, ca );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, true );
+                    append_toffoli( circ_IBM, controlt, ca );
+                    append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, false );
+                    append_toffoli( circ_IBM, controlb, ca );
+                    append_toffoli( circ_IBM, controlb, target );
                     append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, false );
+                    append_toffoli( circ_IBM, controlb, target );
+                    append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, true );
                     append_hadamard( circ_IBM, target );
                 }
                 else
