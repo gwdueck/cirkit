@@ -79,8 +79,8 @@ ibm_command::ibm_command( const environment::ptr& env )
     ( "rm_dup,r",  "Remove duplicate gates" )
     ( "ibm_qx4,4", "The IBM Qx4 is the target")
     ( "verbose,v",  "verbose" )
-    ( "template,t", "use template transformations--instead of swap based")
-    ( "toffoli", value_with_default(&type), "transform Toffoli")
+    ( "swap,s", "use swap based instead of template transformations")
+    // ( "toffoli", value_with_default(&type), "transform Toffoli")
     ;
   add_new_option();
 }
@@ -94,6 +94,7 @@ command::rules_t ibm_command::validity_rules() const
     
 bool ibm_command::execute()
 {
+    std::vector<std::vector<unsigned>> qx2 ={{0,0,0,10,10},{4,0,0,10,10},{4,4,0,4,4},{10,10,0,0,0},{10,10,0,4,0}};
     std::vector<std::vector<unsigned>> qx4 ={{0,4,4,7,7},{0,0,4,7,7},{0,0,0,4,4},{3,3,0,0,0},{3,3,0,4,0}};
 
     auto& circuits = env->store<circuit>();
@@ -108,15 +109,15 @@ bool ibm_command::execute()
     
     if( !is_set( "all_perm" ) )
     {
-        if ( is_set( "toffoli" ) )
-            circ_working = transform_tof_clif(circ_working, qx4, type);
         if ( is_set( "ibm_qx4" ) )
         {
-            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, is_set( "template" ) );
+            circ_working = transform_tof_clif(circ_working, qx4, 3);
+            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx4, !is_set( "swap" ) );
         }
         else
         {
-            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2, is_set( "template" ) );
+            circ_working = transform_tof_clif(circ_working, qx2, 3);
+            circ_IBM = transform_to_IBMQ( circ_working, map_method_qx2, !is_set( "swap" ) );
         }
         
         if ( is_set( "new" ) )
@@ -139,15 +140,15 @@ bool ibm_command::execute()
             clear_circuit(permuted);
             copy_circuit(circ_working, permuted);
             permute_lines( permuted, perm );
-            if ( is_set( "toffoli" ) )
-                permuted = transform_tof_clif(permuted, qx4, type);
             if ( is_set( "ibm_qx4" ) )
             {
-                circ_IBM = transform_to_IBMQ( permuted, map_method_qx4, is_set( "template" ) );
+                permuted = transform_tof_clif(permuted, qx4, 3);
+                circ_IBM = transform_to_IBMQ( permuted, map_method_qx4, !is_set( "swap" ) );
             }
             else
             {
-                circ_IBM = transform_to_IBMQ( permuted, map_method_qx2, is_set( "template" ) );
+                permuted = transform_tof_clif(permuted, qx2, 3);
+                circ_IBM = transform_to_IBMQ( permuted, map_method_qx2, !is_set( "swap" ) );
             }
             if ( is_set( "new" ) )
             {
