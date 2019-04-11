@@ -66,6 +66,7 @@ namespace cirkit
 void permute_lines( circuit& circ , int perm[]);
 
 circuit transform_to_IBMQ( const circuit& circ, const int map_method[5][5], bool templ );
+circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsigned>>& costs, unsigned type );
 
 int levels(const circuit& circ, circuit& result );
 }
