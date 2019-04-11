@@ -234,27 +234,33 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 		outputFile << "st" << std::endl;
 }
 
-unsigned int toffoliCost(matrix& qx, unsigned a, unsigned b, unsigned t)
+unsigned int toffoliCost(matrix& qx, unsigned c1, unsigned c2, unsigned t)
 {
-	unsigned cost1, cost2, aux1, aux2;
-	if (qx[a][t] < qx[t][a])
-		aux1 = qx[a][t];
+	unsigned cost1, cost2, aux1, a, b;
+	if(c1 < c2)
+	{
+		a = c1;
+		b = c2;
+	}
 	else
-		aux1 = qx[t][a];
-	if (qx[b][t] < qx[t][b])
-		aux2 = qx[b][t];
-	else
-		aux2 = qx[t][b];
-	cost1 = 2*aux1 + (4 * aux2) + (2 * qx[a][b]);
+	{
+		a = c2;
+		b = c1;
+	}
 	if (qx[b][t] < qx[t][b])
 		aux1 = qx[b][t];
 	else
 		aux1 = qx[t][b];
+
+	cost1 = 2*aux1 + 2*qx[t][a] + 2 * qx[b][a];
+
 	if (qx[a][t] < qx[t][a])
-		aux2 = qx[a][t];
+		aux1 = qx[a][t];
 	else
-		aux2 = qx[t][a];
-	cost2 = 2*aux1 + (4 * aux2) + (2 * qx[b][a]);
+		aux1 = qx[t][a];
+	
+	cost2 = 2*aux1 + 2*qx[t][b] + 2*qx[a][b];
+
 	if( cost1 < cost2 )
 		return cost1;
 	else

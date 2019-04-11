@@ -105,7 +105,7 @@ circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsign
             }
             else if( gate.controls().size() == 2 )
             {
-                unsigned ca, cb, target;
+                unsigned ca, cb, target, aux;
                 bool pa, pb;
                 if( gate.controls().front().line() < gate.controls().back().line())
                 {
@@ -259,16 +259,13 @@ circuit transform_tof_clif( const circuit& circ,  std::vector<std::vector<unsign
                         tac = 2*costs[target][ca];
 
                     std::vector<unsigned> controla, controlb, controlt;
-                    if(2*costs[target][ca] + 2*costs[cb][ca] + tbc < 2*costs[target][cb] + 2*costs[ca][cb] + tac)
+                    if( (2*costs[target][cb] + 2*costs[ca][cb] + tac) < (2*costs[target][ca] + 2*costs[cb][ca] + tbc) )
                     {
-                        ca = gate.controls().front().line();
-                        cb = gate.controls().back().line();
+                        aux = cb;
+                        cb = ca;
+                        ca = aux;
                     }
-                    else
-                    {
-                        cb = gate.controls().front().line();
-                        ca = gate.controls().back().line();
-                    }
+
                     controla.push_back(ca);
                     controlb.push_back(cb);
                     controlt.push_back(target);
