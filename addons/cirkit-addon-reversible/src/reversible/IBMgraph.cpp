@@ -436,152 +436,21 @@ namespace cirkit
         }
     }
 
-    // circuit transform_tof_clif( const circuit& circ )
-    // {
-    //     circuit circ_IBM;
-    //     copy_metadata(circ, circ_IBM);
-    //     for ( const auto& gate : circ )
-    //     {
-    //         if ( is_toffoli( gate ) )
-    //         {
-    //             if( gate.controls().size() == 1 || gate.controls().empty() )
-    //             {
-    //                 circ_IBM.append_gate() = gate;
-    //             }
-    //             else if( gate.controls().size() == 2 )
-    //             {
-    //                 unsigned ca, cb, target;
-    //                 bool pa, pb;
-    //                 if( gate.controls().front().line() < gate.controls().back().line())
-    //                 {
-    //                     ca = gate.controls().front().line();
-    //                     cb = gate.controls().back().line();
-    //                     pa = gate.controls().front().polarity();
-    //                     pb = gate.controls().back().polarity();
-    //                 }
-    //                 else
-    //                 {
-    //                     cb = gate.controls().front().line();
-    //                     ca = gate.controls().back().line();
-    //                     pb = gate.controls().front().polarity();
-    //                     pa = gate.controls().back().polarity();
-    //                 }
-                    
-    //                 target = gate.targets().front();
-        
-    //                 unsigned tbc, tac;
-    //                 bool ta1, ta2, ta3, ta4;
-    //                 bool tb, tc1, tc2;
-
-    //                 if(pa == true && pb == true)
-    //                 {
-    //                     ta1 = ta3 = tb = tc2 = true;
-    //                     ta2 = ta4 = tc1 = false;
-    //                 }
-    //                 else if(pa == false && pb == true)
-    //                 {
-    //                     ta2 = ta4 = tb = tc2 = true;
-    //                     ta1 = ta3 = tc1 = false;
-    //                 }
-    //                 else if(pa == true && pb == false)
-    //                 {
-    //                     ta1 = ta4 = tc1 = tc2 = true;
-    //                     ta2 = ta3 = tb = false;
-    //                 }
-    //                 else if(pa == false && pb == false)
-    //                 {
-    //                     ta2 = ta3 = tc1 = tc2 = true;
-    //                     ta1 = ta4 = tb = false;
-    //                 }
-    //                 if(costs[cb][target] < costs[target][cb])
-    //                     tbc = 2*costs[cb][target];
-    //                 else
-    //                     tbc = 2*costs[target][cb];
-    //                 if(costs[ca][target] < costs[target][ca])
-    //                     tac = 2*costs[ca][target];
-    //                 else
-    //                     tac = 2*costs[target][ca];
-
-    //                 std::vector<unsigned> controla, controlb, controlt;
-    //                 if(2*costs[target][ca] + 2*costs[cb][ca] + tbc < 2*costs[target][cb] + 2*costs[ca][cb] + tac)
-    //                 {
-    //                     ca = gate.controls().front().line();
-    //                     cb = gate.controls().back().line();
-    //                 }
-    //                 else
-    //                 {
-    //                     cb = gate.controls().front().line();
-    //                     ca = gate.controls().back().line();
-    //                 }
-    //                 controla.push_back(ca);
-    //                 controlb.push_back(cb);
-    //                 controlt.push_back(target);
-
-    //                 append_hadamard( circ_IBM, target );
-    //                 append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta1 );
-    //                 append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, tb );
-    //                 append_toffoli( circ_IBM, controlt, ca );
-    //                 append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta2 );
-    //                 append_toffoli( circ_IBM, controlb, ca );
-    //                 append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta3 );
-    //                 append_toffoli( circ_IBM, controlt, ca );
-    //                 append_pauli( circ_IBM,  ca, pauli_axis::Z, 4u, ta4 );
-    //                 append_toffoli( circ_IBM, controlb, ca );
-
-    //                 if(costs[cb][target] < costs[target][cb])
-    //                 {
-    //                     append_toffoli( circ_IBM, controlb, target );
-    //                     append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tc1 );
-    //                     append_toffoli( circ_IBM, controlb, target );
-    //                 }
-    //                 else
-    //                 {
-    //                     append_toffoli( circ_IBM, controlt, cb );
-    //                     append_pauli( circ_IBM,  cb, pauli_axis::Z, 4u, tc1 );
-    //                     append_toffoli( circ_IBM, controlt, cb );
-    //                 }
-    //                 append_pauli( circ_IBM,  target, pauli_axis::Z, 4u, tc2 );
-    //                 append_hadamard( circ_IBM, target );
-    //             }
-    //             else
-    //             {
-    //                 assert( false );
-    //             }
-    //         }
-    //         else
-    //             circ_IBM.append_gate() = gate;
-    //     }
-    //     return circ_IBM;
-    // }
-
-    // expand the cnot gates that are not supported by the architecture
-    // assume that the corresponding matricies have been set up correctly
-    void expand_cnots( circuit& circ_out, const circuit& circ_in ){
-        
-        unsigned target, control, moreCnot3 = 0, aux = 0;
-        std::vector<unsigned int> new_controls, control2, old_controls;
-        
-        copy_metadata( circ_in, circ_out );
-        for ( const auto& gate : circ_in )
+    circuit transform_tof_clif( const circuit& circ )
+    {
+        circuit circ_out;
+        copy_metadata(circ, circ_out);
+        for ( const auto& gate : circ )
         {
-            target = gate.targets().front();
-            new_controls.clear();
-            new_controls.push_back( target );
-            if( !gate.controls().empty() )
-            {
-                control = gate.controls().front().line();
-                old_controls.clear();
-                old_controls.push_back( control );
-            }
             if ( is_toffoli( gate ) )
             {
-                if( gate.controls().empty() ) // a NOT gate
+                if( gate.controls().size() == 1 || gate.controls().empty() )
                 {
                     circ_out.append_gate() = gate;
                 }
-                else if( gate.controls().size() == 2 ) // Toffoli
+                else if( gate.controls().size() == 2 )
                 {
-                    unsigned ca, cb, target;
+                    unsigned ca, cb, target, aux;
                     bool pa, pb;
                     if( gate.controls().front().line() < gate.controls().back().line())
                     {
@@ -634,15 +503,11 @@ namespace cirkit
                         tac = 2*trans_cost[target][ca];
 
                     std::vector<unsigned> controla, controlb, controlt;
-                    if(2*trans_cost[target][ca] + 2*trans_cost[cb][ca] + tbc < 2*trans_cost[target][cb] + 2*trans_cost[ca][cb] + tac)
+                   if( (2*trans_cost[target][cb] + 2*trans_cost[ca][cb] + tac) < (2*trans_cost[target][ca] + 2*trans_cost[cb][ca] + tbc) )
                     {
-                        ca = gate.controls().front().line();
-                        cb = gate.controls().back().line();
-                    }
-                    else
-                    {
-                        cb = gate.controls().front().line();
-                        ca = gate.controls().back().line();
+                        aux = cb;
+                        cb = ca;
+                        ca = aux;
                     }
                     controla.push_back(ca);
                     controlb.push_back(cb);
@@ -673,6 +538,44 @@ namespace cirkit
                     }
                     append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc2 );
                     append_hadamard( circ_out, target );
+                }
+                else
+                {
+                    assert( false );
+                }
+            }
+            else
+                circ_out.append_gate() = gate;
+        }
+        return circ_out;
+    }
+
+    // expand the cnot gates that are not supported by the architecture
+    // assume that the corresponding matricies have been set up correctly
+    void expand_cnots( circuit& circ_out, const circuit& circ_in ){
+
+        circ_in = transform_tof_clif(circ_in);
+        unsigned target, control, moreCnot3 = 0, aux = 0;
+        std::vector<unsigned int> new_controls, control2, old_controls;
+        
+        copy_metadata( circ_in, circ_out );
+        
+        for ( const auto& gate : circ_in )
+        {
+            target = gate.targets().front();
+            new_controls.clear();
+            new_controls.push_back( target );
+            if( !gate.controls().empty() )
+            {
+                control = gate.controls().front().line();
+                old_controls.clear();
+                old_controls.push_back( control );
+            }
+            if ( is_toffoli( gate ) )
+            {
+                if( gate.controls().empty() ) // a NOT gate
+                {
+                    circ_out.append_gate() = gate;
                 }
                 else // CNOT gate
                 {
