@@ -554,13 +554,15 @@ namespace cirkit
     // assume that the corresponding matricies have been set up correctly
     void expand_cnots( circuit& circ_out, const circuit& circ_in ){
 
-        circ_in = transform_tof_clif(circ_in);
+        circuit circ_aux;
+        copy_metadata( circ_in, circ_aux );
+        circ_aux = transform_tof_clif(circ_in);
         unsigned target, control, moreCnot3 = 0, aux = 0;
         std::vector<unsigned int> new_controls, control2, old_controls;
         
         copy_metadata( circ_in, circ_out );
         
-        for ( const auto& gate : circ_in )
+        for ( const auto& gate : circ_aux )
         {
             target = gate.targets().front();
             new_controls.clear();
