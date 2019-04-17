@@ -350,7 +350,8 @@ namespace cirkit
             {
                 for( int w = 0; w < graph_size; w++)
                 {
-                    trans_cost[v][w] = trans_cost[v][w]-trans_path[v][w].opt();
+                    trans_cost[v][w] = trans_cost[v][w];
+                    // trans_cost[v][w] = trans_cost[v][w]-trans_path[v][w].opt();
                     std::cout << trans_cost[v][w] << " ";
                 }
                 std::cout << std::endl;
@@ -372,7 +373,7 @@ namespace cirkit
                     {
                         std::cout << "cnot(" << v << "," << w << ") => ";
                         trans_path[v][w].print();
-                        std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
+                        // std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
             }
