@@ -75,6 +75,69 @@ command::rules_t alex_command::validity_rules() const
 }
 
 
+using matrix = std::vector<std::vector<unsigned>>;
+
+
+void cMatrix( matrix& m, unsigned size )
+{
+	// std::cout << "Creating matrix..." << std::endl;
+  	std::vector<unsigned> v;
+	for (int i = 0; i < size; ++i)
+		v.push_back(0);
+	for (int i = 0; i < size; ++i)
+		m.push_back(v);
+}
+
+void gMatrix( circuit& circ, matrix& m )
+{
+	// std::cout << "Generating matrix..." << std::endl;	
+  	unsigned target, control;
+	for ( const auto& gate : circ )
+	{
+		assert( gate.controls().size() == 1 );
+		if( gate.controls().size() == 1 )
+		{
+		  target = gate.targets().front();
+		  control = gate.controls().front().line();
+		  if( is_toffoli( gate ) )
+		  	++m[control][target];
+		}
+	}
+}
+
+void pMatrix( matrix& m )
+{
+	// std::cout << "Printing matrix..." << std::endl;
+	for (int i = 0; i < m.size(); ++i)
+	{
+		for (int j = 0; j < m[i].size(); ++j)
+			std::cout << " " << m[i][j];
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+unsigned int costMatrix( matrix& m, matrix& c )
+{
+	// std::cout << "Printing matrix..." << std::endl;
+	unsigned cost = 0;
+	for (int i = 0; i < m.size(); ++i)
+		for (int j = 0; j < m[i].size(); ++j)
+			cost += m[i][j]*c[i][j];
+	return cost;
+}
+
+// matrix permuteMatrix( matrix m, std::vector<int> p )
+// {
+// 	matrix permuted;
+// 	cMatrix( permuted, m.size() );
+// 	for (int i = 0; i < m.size(); ++i)
+// 	{
+// 		permuted[][]
+// 	}
+
+// }
+
 bool alex_command::execute()
 {
 	auto& circuits = env->store<circuit>();
