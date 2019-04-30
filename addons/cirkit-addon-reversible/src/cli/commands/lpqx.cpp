@@ -1436,7 +1436,7 @@ bool lpqx_command::execute()
 				{10,13,7,4,10,19,29,33,43,33,23,19,7,4,0,4},
 				{0,10,0,3,9,19,29,41,51,45,35,31,19,10,0,0}};
 			
-	//matrix of cost for ibm qx2 -- That is not qx2, has to update it.
+	//matrix of cost for ibm qx2 -- That is not qx2, need to be updated.
 	matrix qx2 ={{0,4,4,10,10},{0,0,4,10,10},{0,0,0,4,0},{3,3,0,0,0},{10,10,4,4,0}};
 	//matrix of cost for ibm qx4
 	matrix qx4 ={{0,4,4,7,7},{0,0,4,7,7},{0,0,0,4,4},{3,3,0,0,0},{3,3,0,4,0}};
