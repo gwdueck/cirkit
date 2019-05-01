@@ -76,7 +76,7 @@ command::rules_t alex_command::validity_rules() const
 
 
 using matrix = std::vector<std::vector<unsigned>>;
-
+std::vector< std::pair< int, std::pair< int,int> >> v;
 
 void cMatrix( matrix& m, unsigned size )
 {
@@ -94,7 +94,7 @@ void gMatrix( circuit& circ, matrix& m )
   	unsigned target, control;
 	for ( const auto& gate : circ )
 	{
-		assert( gate.controls().size() == 1 );
+		assert( gate.controls().size() <= 1 );
 		if( gate.controls().size() == 1 )
 		{
 		  target = gate.targets().front();
@@ -113,6 +113,22 @@ void pMatrix( matrix& m )
 		for (int j = 0; j < m[i].size(); ++j)
 			std::cout << " " << m[i][j];
 		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+void pCnots( matrix& m )
+{
+	// std::cout << "Printing matrix..." << std::endl;
+	for (int i = 0; i < m.size(); ++i)
+	{
+		for (int j = 0; j < m[i].size(); ++j)
+		{
+			if( m[i][j] > 0 ){
+				v.push_back(std::make_pair(m[i][j],std::make_pair(i,j)));
+				std::cout << "[" << i << "," << j << "] = " << m[i][j] << std::endl; 
+			}
+		}
 	}
 	std::cout << std::endl;
 }
@@ -142,8 +158,23 @@ bool alex_command::execute()
 {
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
-	std::cout << "	" << circ.num_gates() << std::endl;
-	
+	matrix cnots;
+	cMatrix( cnots, circ.num_gates() );
+	gMatrix( circ, cnots );
+	// pMatrix( cnots );
+	pCnots( cnots );
+	// std::cout << "	" << circ.num_gates() << std::endl;
+	for (int i = 0; i < v.size(); ++i)
+	{
+		std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+	}
+	// std::sort(v.begin(), v.end(), [](const vector<int> & a, const vector<int> & b){ return a.size() < b.size(); });
+	std::sort(v.begin(), v.end(), std::greater<>());
+	std::cout << std::endl;
+	for (int i = 0; i < v.size(); ++i)
+	{
+		std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+	}
 	return true;
 }
 
