@@ -94,7 +94,6 @@ void gMatrix( circuit& circ, matrix& m )
   	unsigned target, control;
 	for ( const auto& gate : circ )
 	{
-		assert( gate.controls().size() <= 1 );
 		if( gate.controls().size() == 1 )
 		{
 		  target = gate.targets().front();
@@ -126,11 +125,11 @@ void pCnots( matrix& m )
 		{
 			if( m[i][j] > 0 ){
 				v.push_back(std::make_pair(m[i][j],std::make_pair(i,j)));
-				std::cout << "[" << i << "," << j << "] = " << m[i][j] << std::endl; 
+				// std::cout << "[" << i << "," << j << "] = " << m[i][j] << std::endl; 
 			}
 		}
 	}
-	std::cout << std::endl;
+	// std::cout << std::endl;
 }
 
 unsigned int costMatrix( matrix& m, matrix& c )
@@ -156,25 +155,25 @@ unsigned int costMatrix( matrix& m, matrix& c )
 
 bool alex_command::execute()
 {
+	v.clear();
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
 	matrix cnots;
-	cMatrix( cnots, circ.num_gates() );
+	cMatrix( cnots, circ.lines() );
 	gMatrix( circ, cnots );
 	// pMatrix( cnots );
 	pCnots( cnots );
 	// std::cout << "	" << circ.num_gates() << std::endl;
-	for (int i = 0; i < v.size(); ++i)
-	{
-		std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
-	}
 	// std::sort(v.begin(), v.end(), [](const vector<int> & a, const vector<int> & b){ return a.size() < b.size(); });
 	std::sort(v.begin(), v.end(), std::greater<>());
-	std::cout << std::endl;
+	// std::sort(v.begin(), v.end());
+	// std::cout << std::endl;
 	for (int i = 0; i < v.size(); ++i)
-	{
-		std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
-	}
+		if( v[i].first == v[0].first)
+			std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] "; 
+			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+
+	std::cout << std::endl; 
 	return true;
 }
 
