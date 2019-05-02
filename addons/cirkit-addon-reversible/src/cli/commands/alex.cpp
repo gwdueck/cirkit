@@ -170,6 +170,9 @@ bool alex_command::execute()
 	// std::cout << std::endl;
 	bool seg = false;
 	unsigned segValue = 0;
+	std::vector< std::pair< int, std::pair< int,int> >> f;
+	std::vector< std::pair< int, std::pair< int,int> >> s;
+
 	for (int i = 0; i < v.size(); ++i)
 	{
 		if( v[i].first == v[0].first)
@@ -182,7 +185,9 @@ bool alex_command::execute()
 				c = c + cnots[j][v[i].second.first];
 				t = t + cnots[v[i].second.second][j];
 			}
-			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;			
+			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
+			f.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
+
 		}
 		else if( v[i].first == segValue )
 		{
@@ -194,7 +199,8 @@ bool alex_command::execute()
 				c = c + cnots[j][v[i].second.first];
 				t = t + cnots[v[i].second.second][j];
 			}
-			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;			
+			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
+			s.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
 		}
 		else if(seg == false)
 		{
@@ -202,7 +208,21 @@ bool alex_command::execute()
 			segValue = cnots[v[i].second.first][v[i].second.second];
 		}
 	}
-	std::cout << std::endl; 
+	std::cout << std::endl;
+
+	std::sort(f.begin(), f.end(), std::greater<>());
+	for (int i = 0; i < f.size(); ++i)
+	{
+		if( f[i].first == f[0].first)
+			std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << f[i].first << std::endl;
+	}
+	std::sort(s.begin(), s.end(), std::greater<>());
+	for (int i = 0; i < s.size(); ++i)
+	{
+		if( s[i].first == s[0].first)
+			std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << s[i].first << std::endl; 
+	}
+
 	return true;
 }
 
