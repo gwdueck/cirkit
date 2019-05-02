@@ -168,11 +168,40 @@ bool alex_command::execute()
 	std::sort(v.begin(), v.end(), std::greater<>());
 	// std::sort(v.begin(), v.end());
 	// std::cout << std::endl;
+	bool seg = false;
+	unsigned segValue = 0;
 	for (int i = 0; i < v.size(); ++i)
+	{
 		if( v[i].first == v[0].first)
-			std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] "; 
+		{
+			std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] -> " << v[i].first << " : "; 
 			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
-
+			unsigned c = 0, t = 0;
+			for (int j = 0; j < cnots.size(); ++j)
+			{
+				c = c + cnots[j][v[i].second.first];
+				t = t + cnots[v[i].second.second][j];
+			}
+			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;			
+		}
+		else if( v[i].first == segValue )
+		{
+			std::cout << "{" << v[i].second.first << "," << v[i].second.second << "} -> " << v[i].first << " : "; 
+			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+			unsigned c = 0, t = 0;
+			for (int j = 0; j < cnots.size(); ++j)
+			{
+				c = c + cnots[j][v[i].second.first];
+				t = t + cnots[v[i].second.second][j];
+			}
+			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;			
+		}
+		else if(seg == false)
+		{
+			seg = true;
+			segValue = cnots[v[i].second.first][v[i].second.second];
+		}
+	}
 	std::cout << std::endl; 
 	return true;
 }
