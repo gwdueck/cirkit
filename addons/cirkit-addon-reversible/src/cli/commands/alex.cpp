@@ -161,7 +161,7 @@ bool alex_command::execute()
 	matrix cnots;
 	cMatrix( cnots, circ.lines() );
 	gMatrix( circ, cnots );
-	// pMatrix( cnots );
+	pMatrix( cnots );
 	pCnots( cnots );
 	// std::cout << "	" << circ.num_gates() << std::endl;
 	// std::sort(v.begin(), v.end(), [](const vector<int> & a, const vector<int> & b){ return a.size() < b.size(); });
@@ -175,9 +175,11 @@ bool alex_command::execute()
 
 	for (int i = 0; i < v.size(); ++i)
 	{
+		// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+
 		if( v[i].first == v[0].first)
 		{
-			std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] -> " << v[i].first << " : "; 
+			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] -> " << v[i].first << " : "; 
 			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
 			unsigned c = 0, t = 0;
 			for (int j = 0; j < cnots.size(); ++j)
@@ -185,44 +187,63 @@ bool alex_command::execute()
 				c = c + cnots[j][v[i].second.first];
 				t = t + cnots[v[i].second.second][j];
 			}
-			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
+			// std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
 			f.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
-
-		}
-		else if( v[i].first == segValue )
-		{
-			std::cout << "{" << v[i].second.first << "," << v[i].second.second << "} -> " << v[i].first << " : "; 
-			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
-			unsigned c = 0, t = 0;
-			for (int j = 0; j < cnots.size(); ++j)
-			{
-				c = c + cnots[j][v[i].second.first];
-				t = t + cnots[v[i].second.second][j];
-			}
-			std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
-			s.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
 		}
 		else if(seg == false)
 		{
 			seg = true;
 			segValue = cnots[v[i].second.first][v[i].second.second];
 		}
+		if( v[i].first == segValue )
+		{
+			// std::cout << "{" << v[i].second.first << "," << v[i].second.second << "} -> " << v[i].first << " : "; 
+			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+			unsigned c = 0, t = 0;
+			for (int j = 0; j < cnots.size(); ++j)
+			{
+				c = c + cnots[j][v[i].second.first];
+				t = t + cnots[v[i].second.second][j];
+			}
+			// std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
+			s.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
+		}
 	}
-	std::cout << std::endl;
+	// std::cout << std::endl;
 
 	std::sort(f.begin(), f.end(), std::greater<>());
 	for (int i = 0; i < f.size(); ++i)
 	{
-		if( f[i].first == f[0].first)
-			std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << f[i].first << std::endl;
+		// if( f[i].first == f[0].first)
+		// {
+			unsigned c = 0, t = 0;
+			for (int j = 0; j < cnots.size(); ++j)
+			{
+				c = c + cnots[j][f[i].second.first];
+				t = t + cnots[f[i].second.second][j];
+			}
+			// std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] ";
+			std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << c << " " << t << std::endl;
+			// std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << f[i].first << std::endl;
+		// }
 	}
 	std::sort(s.begin(), s.end(), std::greater<>());
 	for (int i = 0; i < s.size(); ++i)
 	{
-		if( s[i].first == s[0].first)
-			std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << s[i].first << std::endl; 
+		// if( s[i].first == s[0].first)
+		// {
+			unsigned c = 0, t = 0;
+			for (int j = 0; j < cnots.size(); ++j)
+			{
+				c = c + cnots[j][s[i].second.first];
+				t = t + cnots[s[i].second.second][j];
+			}
+			// std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} ";
+			std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << c << " " << t << std::endl;
+			// std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << s[i].first << std::endl; 
+		// }
 	}
-
+	std::cout << std::endl;
 	return true;
 }
 
