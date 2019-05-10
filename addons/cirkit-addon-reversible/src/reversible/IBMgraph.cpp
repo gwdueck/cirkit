@@ -623,13 +623,60 @@ namespace cirkit
         return circ_out;
     }
 
+    circuit transform_v_clif( const circuit& circ )
+    {
+        circuit circ_out;
+        copy_metadata(circ, circ_out);
+        std::vector<unsigned int> controls;
+        unsigned target, control;
+        for ( const auto& gate : circ )
+        {
+            if ( is_v( gate ) )
+            {
+                const auto& tag = boost::any_cast<v_tag>( gate.type() );
+                target = gate.targets().front();
+                control = gate.controls().front().line();
+                
+
+                if (trans_cost[control][target] < trans_cost[target][control])
+                {
+                    controls.clear();
+                    controls.push_back( control );   
+                    append_hadamard( circ_out, target );
+                    append_toffoli( circ_out, controls, target );
+                    append_pauli( circ_out, target, pauli_axis::Z, 4u, !tag.adjoint );
+                    append_toffoli( circ_out, controls, target );
+                    append_pauli( circ_out, control, pauli_axis::Z, 4u, tag.adjoint );
+                    append_pauli( circ_out, target, pauli_axis::Z, 4u, tag.adjoint );
+                    append_hadamard( circ_out, target );
+                }
+                else
+                {
+                    controls.clear();
+                    controls.push_back( target );   
+                    append_hadamard( circ_out, target );
+                    append_toffoli( circ_out, controls, control );
+                    append_pauli( circ_out, control, pauli_axis::Z, 4u, !tag.adjoint );
+                    append_toffoli( circ_out, controls, control );
+                    append_pauli( circ_out, control, pauli_axis::Z, 4u, tag.adjoint );
+                    append_pauli( circ_out, target, pauli_axis::Z, 4u, tag.adjoint );
+                    append_hadamard( circ_out, target );
+                }
+            }
+            else
+                circ_out.append_gate() = gate;
+        }
+        return circ_out;
+    }
+
     // expand the cnot gates that are not supported by the architecture
     // assume that the corresponding matricies have been set up correctly
     void expand_cnots( circuit& circ_out, const circuit& circ_in ){
 
         circuit circ_aux;
         copy_metadata( circ_in, circ_aux );
-        circ_aux = transform_tof_clif(circ_in);
+        circ_aux = transform_v_clif(circ_in);
+        circ_aux = transform_tof_clif(circ_aux);
         unsigned target, control, moreCnot3 = 0, aux = 0;
         std::vector<unsigned int> new_controls, control2, old_controls;
         
