@@ -334,81 +334,48 @@ circuit circuit_tof_clif( const circuit& circ )
                     pa = gate.controls().back().polarity();
                 }
                 
-                target = gate.targets().front();
-    
-                unsigned tbc, tac;
+	            target = gate.targets().front();
+    			unsigned tbc, tac, tab, t1, t2, t3;
                 bool ta1, ta2, ta3, ta4;
                 bool tb, tc1, tc2;
 
+                std::vector<unsigned> controla, controlb, controlt;
                 if(pa == true && pb == true)
                 {
-                    ta1 = ta3 = tb = tc2 = true;
-                    ta2 = ta4 = tc1 = false;
-                }
-                else if(pa == false && pb == true)
-                {
-                    ta2 = ta4 = tb = tc2 = true;
-                    ta1 = ta3 = tc1 = false;
+                    ta2 = ta4 = tc1 = true;
+                    ta1 = tb = ta3 = tc2 = false;
                 }
                 else if(pa == true && pb == false)
                 {
                     ta1 = ta4 = tc1 = tc2 = true;
-                    ta2 = ta3 = tb = false;
+                    tb = ta2 = ta3 = false;
+                }
+                else if(pa == false && pb == true)
+                {
+                    tb = ta2 = tc1 = tc2 = true;
+                    ta1 = ta3 = ta4 = false;
                 }
                 else if(pa == false && pb == false)
                 {
-                    ta2 = ta3 = tc1 = tc2 = true;
-                    ta1 = ta4 = tb = false;
+                    ta2 = ta3 = ta4 = tc2 = true;
+                    ta1 = tb = tc1 = false;
                 }
-                // tac = 2*trans_cost[ca][target];
-                // tbc = 2*trans_cost[cb][target];
-                // if(trans_cost[cb][target] < trans_cost[target][cb])
-                //     tbc = 2*trans_cost[cb][target];
-                // else
-                //     tbc = 2*trans_cost[target][cb];
-                // if(trans_cost[ca][target] < trans_cost[target][ca])
-                //     tac = 2*trans_cost[ca][target];
-                // else
-                //     tac = 2*trans_cost[target][ca];
-
-                std::vector<unsigned> controla, controlb, controlt;
-               // if( (2*trans_cost[target][cb] + 2*trans_cost[ca][cb] + tac) < (2*trans_cost[target][ca] + 2*trans_cost[cb][ca] + tbc) )
-               //  {
-               //      aux = cb;
-               //      cb = ca;
-               //      ca = aux;
-               //  }
                 controla.push_back(ca);
                 controlb.push_back(cb);
                 controlt.push_back(target);
-
                 append_hadamard( circ_out, target );
                 append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta1 );
                 append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tb );
-                append_toffoli( circ_out, controlt, ca );
-                append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta2 );
-                append_toffoli( circ_out, controlb, ca );
-                append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta3 );
-                append_toffoli( circ_out, controlt, ca );
-                append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta4 );
-                append_toffoli( circ_out, controlb, ca );
-
+                append_toffoli( circ_out, controla, target );
+                append_pauli( circ_out,  target, pauli_axis::Z, 4u, ta2 );
                 append_toffoli( circ_out, controlb, target );
-                append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc1 );
+                append_pauli( circ_out,  target, pauli_axis::Z, 4u, ta3 );
+                append_toffoli( circ_out, controla, target );
+                append_pauli( circ_out,  target, pauli_axis::Z, 4u, ta4 );
                 append_toffoli( circ_out, controlb, target );
-
-                // if(trans_cost[cb][target] < trans_cost[target][cb])
-                // {
-                //     append_toffoli( circ_out, controlb, target );
-                //     append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc1 );
-                //     append_toffoli( circ_out, controlb, target );
-                // }
-                // else
-                // {
-                //     append_toffoli( circ_out, controlt, cb );
-                //     append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tc1 );
-                //     append_toffoli( circ_out, controlt, cb );
-                // }
+                append_toffoli( circ_out, controla, cb );
+                append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tc1 );
+                append_toffoli( circ_out, controla, cb );
                 append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc2 );
                 append_hadamard( circ_out, target );
             }
@@ -548,9 +515,7 @@ bool tvc_command::execute()
 	{
 		circuits.extend();
 		circuit circ_out;
-		std::cout << "AA" << std::endl;
 		circ_out = circuit_tof_clif(circ);
-		std::cout << "BB" << std::endl;
 		circuits.current() = circ_out;
 		return true;
 	}
