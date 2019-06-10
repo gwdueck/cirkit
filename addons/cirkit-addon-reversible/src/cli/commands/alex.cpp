@@ -158,6 +158,31 @@ bool alex_command::execute()
 	v.clear();
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
+	
+
+	unsigned target, control, vgate=0, toffoligate=0, cnotgate=0, others=0;
+	for ( const auto& gate : circ )
+	{
+		if( gate.controls().size() == 1 )
+		{
+		  if( is_toffoli( gate ) )
+		  	++cnotgate;
+		  else if( is_v( gate ) )
+		  	++vgate;
+		}
+		else if( gate.controls().size() == 2 )
+		{
+		  if( is_toffoli( gate ) )
+		  	++toffoligate;
+		}
+		else
+		{
+			++others;
+		}
+	}
+	std::cout << "cnot: " << cnotgate << " toffoli: " << toffoligate << " v: " << vgate << " others: " << others << std::endl;
+	return true; 
+
 	matrix cnots;
 	cMatrix( cnots, circ.lines() );
 	gMatrix( circ, cnots );

@@ -236,7 +236,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 
 unsigned int toffoliCost(matrix& qx, unsigned c1, unsigned c2, unsigned t)
 {
-	unsigned cost1, cost2, aux1, a, b;
+	unsigned cost1, cost2, cost3, aux1, a, b;
 	if(c1 < c2)
 	{
 		a = c1;
@@ -261,10 +261,19 @@ unsigned int toffoliCost(matrix& qx, unsigned c1, unsigned c2, unsigned t)
 	
 	cost2 = 2*aux1 + 2*qx[t][b] + 2*qx[a][b];
 
-	if( cost1 < cost2 )
-		return cost1;
+	if (qx[a][b] < qx[b][a])
+		aux1 = qx[a][b];
 	else
+		aux1 = qx[b][a];
+	
+	cost3 = 2*aux1 + 2*qx[a][t] + 2*qx[b][t];
+
+	if( cost1 < cost2 && cost1 < cost3)
+		return cost1;
+	else if (cost2 < cost3)
 		return cost2;
+	else
+		return cost3;
 
 }
 
