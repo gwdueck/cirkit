@@ -133,7 +133,8 @@ bool levels_command::execute()
     }
     // std::cout << " " << max_lev;
     
-    std::cout << "The circuit has " << max_lev << " levels" << std::endl;
+    // std::cout << "The circuit has " << max_lev << " levels" << std::endl;
+    std::cout << result.num_gates() << " " << max_lev << std::endl;
     // std::cout << " levels: " << max_lev;
     if ( is_set( "new" ) )
     {

@@ -15,3 +15,19 @@ alias "abc_read ([^\\s]+)" "abc -c \"%1%; strash; &get -n\""
 
 # An expression simulator
 alias "exprsim ([^\\s]+)" "expr %1%; expr > tt; print -t"
+
+# Shortcut for test
+alias "g" "random_circuit --lines 5 -c; graph -f graphteste.txt; graph --try_all"
+
+# Shortcut for test
+#alias "r ([[:digit:]]+) ([[:digit:]]+)" "random_circuit --lines %1% --gates %2% -c; print -c; alex"
+#alias "pp" "tt -l 0x3c; convert --tt_to_aig; convert --aig_to_mig; exact_mig -o 1"
+#alias "a ([^\\s]+)" "read_qc ibmBench/to_qasm/%1%.qc; write_qasm ibmBench/%1%.qasm"
+#alias "r" "read_qc test.qc; print -c; graph -f qx4testfile.txt; graph -x;
+#alias "r" "graph -f qx5file.txt;"
+#alias "a" "read_qc teste.qc; print -c; ibm -4; print -c"
+#alias "b" "read_qc teste.qc; print -c; ibm -4 -t; print -c"
+#alias "r" "store -c --clear; read_qc teste.qc; print -c; rm_dup -n; print -c; qec -q 0 -q 1"
+#alias "r" "store -c --clear; read_qc teste.qc; print -c; ibm -4 -t -n; print -c; qec -q 0 -q 1"
+#alias "rr" "store -c --clear; read_qc teste.qc; print -c; ibm -4 -n; print -c; qec -q 0 -q 1"
+alias "r" "store -c --clear; read_qc teste.qc; print -c; read_qc -n teste.qc; ibm -4; print -c; qec -r 0 -q 1"

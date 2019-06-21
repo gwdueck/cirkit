@@ -350,7 +350,8 @@ namespace cirkit
             {
                 for( int w = 0; w < graph_size; w++)
                 {
-                    trans_cost[v][w] = trans_cost[v][w]-trans_path[v][w].opt();
+                    trans_cost[v][w] = trans_cost[v][w];
+                    // trans_cost[v][w] = trans_cost[v][w]-trans_path[v][w].opt();
                     std::cout << trans_cost[v][w] << " ";
                 }
                 std::cout << std::endl;
@@ -372,7 +373,7 @@ namespace cirkit
                     {
                         std::cout << "cnot(" << v << "," << w << ") => ";
                         trans_path[v][w].print();
-                        std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
+                        // std::cout << "Can reduce: " << trans_path[v][w].opt() << std::endl;
                     }
                 }
             }
@@ -466,33 +467,17 @@ namespace cirkit
                         pb = gate.controls().front().polarity();
                         pa = gate.controls().back().polarity();
                     }
-                    
                     target = gate.targets().front();
-        
-                    unsigned tbc, tac;
+                    
+                    unsigned tbc, tac, tab, t1, t2, t3;
                     bool ta1, ta2, ta3, ta4;
                     bool tb, tc1, tc2;
 
-                    if(pa == true && pb == true)
-                    {
-                        ta1 = ta3 = tb = tc2 = true;
-                        ta2 = ta4 = tc1 = false;
-                    }
-                    else if(pa == false && pb == true)
-                    {
-                        ta2 = ta4 = tb = tc2 = true;
-                        ta1 = ta3 = tc1 = false;
-                    }
-                    else if(pa == true && pb == false)
-                    {
-                        ta1 = ta4 = tc1 = tc2 = true;
-                        ta2 = ta3 = tb = false;
-                    }
-                    else if(pa == false && pb == false)
-                    {
-                        ta2 = ta3 = tc1 = tc2 = true;
-                        ta1 = ta4 = tb = false;
-                    }
+                    if(trans_cost[ca][cb] < trans_cost[cb][ca])
+                        tab = 2*trans_cost[ca][cb];
+                    else
+                        tab = 2*trans_cost[cb][ca];
+                    
                     if(trans_cost[cb][target] < trans_cost[target][cb])
                         tbc = 2*trans_cost[cb][target];
                     else
@@ -502,46 +487,180 @@ namespace cirkit
                     else
                         tac = 2*trans_cost[target][ca];
 
+                    t1 = 2*trans_cost[ca][target] + 2*trans_cost[cb][target] + tab;
+                    t2 = 2*trans_cost[target][ca] + 2*trans_cost[cb][ca] + tbc;
+                    t3 = 2*trans_cost[target][cb] + 2*trans_cost[ca][cb] + tac;
+                    // std::cout << "t1: " << t1 << " t2: " << t2 << " t3: " << t3 << std::endl;  
                     std::vector<unsigned> controla, controlb, controlt;
-                   if( (2*trans_cost[target][cb] + 2*trans_cost[ca][cb] + tac) < (2*trans_cost[target][ca] + 2*trans_cost[cb][ca] + tbc) )
+                    if( t1 < t2 && t1 < t3 )
                     {
-                        aux = cb;
-                        cb = ca;
-                        ca = aux;
-                    }
-                    controla.push_back(ca);
-                    controlb.push_back(cb);
-                    controlt.push_back(target);
-
-                    append_hadamard( circ_out, target );
-                    append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta1 );
-                    append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tb );
-                    append_toffoli( circ_out, controlt, ca );
-                    append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta2 );
-                    append_toffoli( circ_out, controlb, ca );
-                    append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta3 );
-                    append_toffoli( circ_out, controlt, ca );
-                    append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta4 );
-                    append_toffoli( circ_out, controlb, ca );
-
-                    if(trans_cost[cb][target] < trans_cost[target][cb])
-                    {
+                        if(pa == true && pb == true)
+                        {
+                            ta2 = ta4 = tc1 = true;
+                            ta1 = tb = ta3 = tc2 = false;
+                        }
+                        else if(pa == true && pb == false)
+                        {
+                            ta1 = ta4 = tc1 = tc2 = true;
+                            tb = ta2 = ta3 = false;
+                        }
+                        else if(pa == false && pb == true)
+                        {
+                            tb = ta2 = tc1 = tc2 = true;
+                            ta1 = ta3 = ta4 = false;
+                        }
+                        else if(pa == false && pb == false)
+                        {
+                            ta2 = ta3 = ta4 = tc2 = true;
+                            ta1 = tb = tc1 = false;
+                        }
+                        controla.push_back(ca);
+                        controlb.push_back(cb);
+                        controlt.push_back(target);
+                        append_hadamard( circ_out, target );
+                        append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta1 );
+                        append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tb );
+                        append_toffoli( circ_out, controla, target );
+                        append_pauli( circ_out,  target, pauli_axis::Z, 4u, ta2 );
                         append_toffoli( circ_out, controlb, target );
-                        append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc1 );
+                        append_pauli( circ_out,  target, pauli_axis::Z, 4u, ta3 );
+                        append_toffoli( circ_out, controla, target );
+                        append_pauli( circ_out,  target, pauli_axis::Z, 4u, ta4 );
                         append_toffoli( circ_out, controlb, target );
+
+                        if(trans_cost[ca][cb] < trans_cost[cb][ca])
+                        {
+                            append_toffoli( circ_out, controla, cb );
+                            append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tc1 );
+                            append_toffoli( circ_out, controla, cb );
+                        }
+                        else
+                        {
+                            append_toffoli( circ_out, controlb, ca );
+                            append_pauli( circ_out,  ca, pauli_axis::Z, 4u, tc1 );
+                            append_toffoli( circ_out, controlb, ca );
+                        }
+                        append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc2 );
+                        append_hadamard( circ_out, target );
                     }
                     else
                     {
-                        append_toffoli( circ_out, controlt, cb );
-                        append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tc1 );
-                        append_toffoli( circ_out, controlt, cb );
+                        if(pa == true && pb == true)
+                        {
+                            ta1 = ta3 = tb = tc2 = true;
+                            ta2 = ta4 = tc1 = false;
+                        }
+                        else if(pa == false && pb == true)
+                        {
+                            ta2 = ta4 = tb = tc2 = true;
+                            ta1 = ta3 = tc1 = false;
+                        }
+                        else if(pa == true && pb == false)
+                        {
+                            ta1 = ta4 = tc1 = tc2 = true;
+                            ta2 = ta3 = tb = false;
+                        }
+                        else if(pa == false && pb == false)
+                        {
+                            ta2 = ta3 = tc1 = tc2 = true;
+                            ta1 = ta4 = tb = false;
+                        }
+                        if(t3 < t2)
+                        {
+                            aux = cb;
+                            cb = ca;
+                            ca = aux;
+                            if(pa == true && pb == false)
+                            {
+                                ta2 = ta4 = tb = tc2 = true;
+                                ta1 = ta3 = tc1 = false;
+                            }
+                            else if(pa == false && pb == true)
+                            {
+                                ta1 = ta4 = tc1 = tc2 = true;
+                                ta2 = ta3 = tb = false;
+                            }
+                        }
+                        controla.push_back(ca);
+                        controlb.push_back(cb);
+                        controlt.push_back(target);
+
+                        append_hadamard( circ_out, target );
+                        append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta1 );
+                        append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tb );
+                        append_toffoli( circ_out, controlt, ca );
+                        append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta2 );
+                        append_toffoli( circ_out, controlb, ca );
+                        append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta3 );
+                        append_toffoli( circ_out, controlt, ca );
+                        append_pauli( circ_out,  ca, pauli_axis::Z, 4u, ta4 );
+                        append_toffoli( circ_out, controlb, ca );
+
+                        if(trans_cost[cb][target] < trans_cost[target][cb])
+                        {
+                            append_toffoli( circ_out, controlb, target );
+                            append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc1 );
+                            append_toffoli( circ_out, controlb, target );
+                        }
+                        else
+                        {
+                            append_toffoli( circ_out, controlt, cb );
+                            append_pauli( circ_out,  cb, pauli_axis::Z, 4u, tc1 );
+                            append_toffoli( circ_out, controlt, cb );
+                        }
+                        append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc2 );
+                        append_hadamard( circ_out, target );
                     }
-                    append_pauli( circ_out,  target, pauli_axis::Z, 4u, tc2 );
-                    append_hadamard( circ_out, target );
                 }
                 else
                 {
                     assert( false );
+                }
+            }
+            else
+                circ_out.append_gate() = gate;
+        }
+        return circ_out;
+    }
+
+    circuit transform_v_clif( const circuit& circ )
+    {
+        circuit circ_out;
+        copy_metadata(circ, circ_out);
+        std::vector<unsigned int> controls;
+        unsigned target, control;
+        for ( const auto& gate : circ )
+        {
+            if ( is_v( gate ) )
+            {
+                const auto& tag = boost::any_cast<v_tag>( gate.type() );
+                target = gate.targets().front();
+                control = gate.controls().front().line();
+                
+
+                if (trans_cost[control][target] < trans_cost[target][control])
+                {
+                    controls.clear();
+                    controls.push_back( control );   
+                    append_hadamard( circ_out, target );
+                    append_toffoli( circ_out, controls, target );
+                    append_pauli( circ_out, target, pauli_axis::Z, 4u, !tag.adjoint );
+                    append_toffoli( circ_out, controls, target );
+                    append_pauli( circ_out, control, pauli_axis::Z, 4u, tag.adjoint );
+                    append_pauli( circ_out, target, pauli_axis::Z, 4u, tag.adjoint );
+                    append_hadamard( circ_out, target );
+                }
+                else
+                {
+                    controls.clear();
+                    controls.push_back( target );   
+                    append_hadamard( circ_out, target );
+                    append_toffoli( circ_out, controls, control );
+                    append_pauli( circ_out, control, pauli_axis::Z, 4u, !tag.adjoint );
+                    append_toffoli( circ_out, controls, control );
+                    append_pauli( circ_out, control, pauli_axis::Z, 4u, tag.adjoint );
+                    append_pauli( circ_out, target, pauli_axis::Z, 4u, tag.adjoint );
+                    append_hadamard( circ_out, target );
                 }
             }
             else
@@ -556,7 +675,8 @@ namespace cirkit
 
         circuit circ_aux;
         copy_metadata( circ_in, circ_aux );
-        circ_aux = transform_tof_clif(circ_in);
+        circ_aux = transform_v_clif(circ_in);
+        circ_aux = transform_tof_clif(circ_aux);
         unsigned target, control, moreCnot3 = 0, aux = 0;
         std::vector<unsigned int> new_controls, control2, old_controls;
         
