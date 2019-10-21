@@ -29,7 +29,7 @@
  *
  * @brief Move a qubit from a to b (this is a partial swap)
  *
- * @author Gerhard Dueck
+ * @author Alexandre and Gerhard Dueck
  * @since  2.3
  */
 

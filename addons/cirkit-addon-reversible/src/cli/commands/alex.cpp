@@ -181,13 +181,13 @@ bool alex_command::execute()
 		}
 	}
 	std::cout << "cnot: " << cnotgate << " toffoli: " << toffoligate << " v: " << vgate << " others: " << others << std::endl;
-	return true; 
 
 	matrix cnots;
 	cMatrix( cnots, circ.lines() );
 	gMatrix( circ, cnots );
 	pMatrix( cnots );
 	pCnots( cnots );
+	return true; 
 	// std::cout << "	" << circ.num_gates() << std::endl;
 	// std::sort(v.begin(), v.end(), [](const vector<int> & a, const vector<int> & b){ return a.size() < b.size(); });
 	std::sort(v.begin(), v.end(), std::greater<>());

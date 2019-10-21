@@ -29,7 +29,7 @@
  *
  * @brief Data structure to represent IBM quantum computer architecture
  *
- * @author Gerhard Dueck
+ * @author Alexandre and Gerhard Dueck
  * @since  2.3
  */
 
