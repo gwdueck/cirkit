@@ -56,6 +56,8 @@ class alex_command : public cirkit_command
   		bool execute();
 
 	private:
+		unsigned numberPenalty = 1u;
+		unsigned numberIterations = 1000u;
 };
 
 }

@@ -65,6 +65,9 @@ alex_command::alex_command( const environment::ptr& env )
 	: cirkit_command( env, "Random projects" )
 {
 	opts.add_options()
+    ( "penalty,p",   value_with_default( &numberPenalty ), "penalty number (times the number of combination)" )
+    ( "iterations,i",   value_with_default( &numberIterations ), "number of iterations" )
+
 	;
 
 }
@@ -181,6 +184,7 @@ std::pair<unsigned,unsigned> chooseDelta( matrix& delta, unsigned& bestCost )
 	// prtMatrix(m);
 	for (int i = 0; i < delta.size(); ++i)
 	{
+		// if ( delta[i][3] == 0 || delta[i][2] < bestCost )
 		if ( delta[i][3] == 0 || delta[i][2] < bestCost )
 		{
 			d = std::make_pair( delta[i][0], delta[i][1] );
@@ -191,10 +195,10 @@ std::pair<unsigned,unsigned> chooseDelta( matrix& delta, unsigned& bestCost )
 	return d;
 }
 
-void updateDelta( matrix& delta )
+void updateDelta( matrix& delta, unsigned numberPenalty )
 {
 	for (int i = 0; i < delta.size(); ++i)
-		if ( delta[i][3] > delta.size() )
+		if ( delta[i][3] > numberPenalty*delta.size() )
 			delta[i][3] = 0;
 		else if ( delta[i][3] > 0 )
 			++delta[i][3];
@@ -234,7 +238,7 @@ bool alex_command::execute()
 	// initialize the best permutation vector
 	bestPermutation = permutation;
 	// Start algorithm
-	for (int i = 0; i < 1200; ++i)
+	for (int i = 0; i < numberIterations; ++i)
 	{
 		// std::cout << "Iteration: " << i << std::endl;
 		// prtMatrix( cnots );
@@ -244,7 +248,7 @@ bool alex_command::execute()
 		d = chooseDelta( delta, bestCost );
 		// prtMatrix( delta );
 		// update the penalty
-		updateDelta( delta );
+		updateDelta( delta, numberPenalty );
 		// prtMatrix( delta );
 		// std::cout << " " << d.first << " " << d.second;
 		// permute for the best delta
