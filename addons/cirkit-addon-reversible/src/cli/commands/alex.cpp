@@ -74,13 +74,9 @@ command::rules_t alex_command::validity_rules() const
   return {has_store_element<circuit>( env )};
 }
 
-
-using matrix = std::vector<std::vector<unsigned>>;
-std::vector< std::pair< int, std::pair< int,int> >> v;
-
-void cMatrix( matrix& m, unsigned size )
+void alcMatrix( matrix& m, unsigned size )
 {
-	// std::cout << "Creating matrix..." << std::endl;
+	// std::cout << "Allocating matrix..." << std::endl;
   	std::vector<unsigned> v;
 	for (int i = 0; i < size; ++i)
 		v.push_back(0);
@@ -88,7 +84,7 @@ void cMatrix( matrix& m, unsigned size )
 		m.push_back(v);
 }
 
-void gMatrix( circuit& circ, matrix& m )
+void genMatrix( circuit& circ, matrix& m )
 {
 	// std::cout << "Generating matrix..." << std::endl;	
   	unsigned target, control;
@@ -104,7 +100,7 @@ void gMatrix( circuit& circ, matrix& m )
 	}
 }
 
-void pMatrix( matrix& m )
+void prtMatrix( matrix& m )
 {
 	// std::cout << "Printing matrix..." << std::endl;
 	for (int i = 0; i < m.size(); ++i)
@@ -114,22 +110,6 @@ void pMatrix( matrix& m )
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
-}
-
-void pCnots( matrix& m )
-{
-	// std::cout << "Printing matrix..." << std::endl;
-	for (int i = 0; i < m.size(); ++i)
-	{
-		for (int j = 0; j < m[i].size(); ++j)
-		{
-			if( m[i][j] > 0 ){
-				v.push_back(std::make_pair(m[i][j],std::make_pair(i,j)));
-				// std::cout << "[" << i << "," << j << "] = " << m[i][j] << std::endl; 
-			}
-		}
-	}
-	// std::cout << std::endl;
 }
 
 unsigned int costMatrix( matrix& m, matrix& c )
@@ -142,135 +122,215 @@ unsigned int costMatrix( matrix& m, matrix& c )
 	return cost;
 }
 
-// matrix permuteMatrix( matrix m, std::vector<int> p )
-// {
-// 	matrix permuted;
-// 	cMatrix( permuted, m.size() );
-// 	for (int i = 0; i < m.size(); ++i)
-// 	{
-// 		permuted[][]
-// 	}
+matrix qx5 ={{0,4,10,13,19,29,39,51,61,55,45,41,29,20,10,4},
+			{0,0,0,3,9,19,29,41,51,61,53,41,29,19,9,10},
+			{10,4,0,0,3,13,23,35,45,55,45,35,23,13,3,4},
+			{19,7,4,0,0,10,19,31,41,45,35,31,19,10,0,7},
+			{25,13,7,4,0,4,7,19,29,33,23,19,7,4,10,13},
+			{35,25,19,10,0,0,4,10,20,23,13,10,4,10,13,23},
+			{45,33,23,13,3,0,0,0,10,13,3,0,10,13,25,33},
+			{55,43,33,23,13,10,4,0,4,7,0,10,19,23,35,43},
+			{67,55,45,35,25,22,10,0,0,4,3,13,23,35,45,55},
+			{57,65,55,45,35,25,13,3,0,0,0,10,19,31,35,45},
+			{45,53,43,33,23,19,7,4,7,4,0,4,7,19,23,33},
+			{35,43,33,23,13,10,4,10,19,10,0,0,4,10,13,23},
+			{25,33,23,13,3,0,10,13,23,13,3,0,0,0,3,13},
+			{22,25,19,10,0,10,19,23,33,23,13,10,4,0,0,10},
+			{10,13,7,4,10,19,29,33,43,33,23,19,7,4,0,4},
+			{0,10,0,3,9,19,29,41,51,45,35,31,19,10,0,0}};
 
-// }
+matrix qx4 ={{0,4,4,7,7},{0,0,4,7,7},{0,0,0,4,4},{3,3,0,0,0},{3,3,0,4,0}};
+
+void permuteLines( matrix& cnots, unsigned x, unsigned y )
+{
+	for (int i = 0; i < cnots.size(); ++i)
+		std::swap( cnots[i][x], cnots[i][y] );
+	for (int i = 0; i < cnots.size(); ++i)
+		std::swap( cnots[x][i], cnots[y][i] );
+}
+
+matrix calcDelta( matrix& cnots, matrix qxCost )
+{
+	matrix delta;
+	std::vector<unsigned> v;
+
+	for (int i = 0; i < cnots.size(); ++i)
+	{
+		for (int j = i + 1; j < cnots.size(); ++j)
+		{
+			std::cout << "Permuting: " << i << " " << j;		
+			std::cout << " Cost ";
+			permuteLines( cnots, i, j);
+			v.clear();
+			v.push_back(i);
+			v.push_back(j);
+			v.push_back(costMatrix(cnots, qxCost));
+			std::cout << costMatrix(cnots, qxCost) << std::endl;
+			permuteLines( cnots, i, j);
+			delta.push_back(v);
+		}
+	}
+	return delta;
+}
+
+std::pair<unsigned,unsigned> chooseDelta( matrix m )
+{
+	std::pair<unsigned,unsigned> d;
+	prtMatrix(m);
+	std::sort(m.begin(), m.end(),
+          [](const std::vector<unsigned>& a, const std::vector<unsigned>& b) {
+  		return a[2] < b[2];
+	});
+	prtMatrix(m);
+	d = std::make_pair(m[0][0],m[0][1]);
+	return d;
+}
 
 bool alex_command::execute()
 {
-	v.clear();
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
 	
+	matrix cnots, qxCost, delta;
+	std::pair<unsigned,unsigned> d;
 
-	unsigned target, control, vgate=0, toffoligate=0, cnotgate=0, others=0;
-	for ( const auto& gate : circ )
-	{
-		if( gate.controls().size() == 1 )
-		{
-		  if( is_toffoli( gate ) )
-		  	++cnotgate;
-		  else if( is_v( gate ) )
-		  	++vgate;
-		}
-		else if( gate.controls().size() == 2 )
-		{
-		  if( is_toffoli( gate ) )
-		  	++toffoligate;
-		}
-		else
-		{
-			++others;
-		}
-	}
-	std::cout << "cnot: " << cnotgate << " toffoli: " << toffoligate << " v: " << vgate << " others: " << others << std::endl;
+	if ( circ.lines() == 5 )
+		qxCost = qx4;
+	else
+		qxCost = qx5;
 
-	matrix cnots;
-	cMatrix( cnots, circ.lines() );
-	gMatrix( circ, cnots );
-	pMatrix( cnots );
-	pCnots( cnots );
+	// allocate matrix
+	alcMatrix( cnots, circ.lines() );
+	// generate the matrix from the circuit
+	genMatrix( circ, cnots );
+	// print matrix
+	prtMatrix( cnots );
+
+	// Start algorithm
+	delta = calcDelta( cnots, qxCost );
+	d = chooseDelta( delta );
+	std::cout << " " << d.first << " " << d.second << std::endl;
 	return true; 
-	// std::cout << "	" << circ.num_gates() << std::endl;
-	// std::sort(v.begin(), v.end(), [](const vector<int> & a, const vector<int> & b){ return a.size() < b.size(); });
-	std::sort(v.begin(), v.end(), std::greater<>());
-	// std::sort(v.begin(), v.end());
-	// std::cout << std::endl;
-	bool seg = false;
-	unsigned segValue = 0;
-	std::vector< std::pair< int, std::pair< int,int> >> f;
-	std::vector< std::pair< int, std::pair< int,int> >> s;
-
-	for (int i = 0; i < v.size(); ++i)
-	{
-		// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
-
-		if( v[i].first == v[0].first)
-		{
-			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] -> " << v[i].first << " : "; 
-			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
-			unsigned c = 0, t = 0;
-			for (int j = 0; j < cnots.size(); ++j)
-			{
-				c = c + cnots[j][v[i].second.first];
-				t = t + cnots[v[i].second.second][j];
-			}
-			// std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
-			f.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
-		}
-		else if(seg == false)
-		{
-			seg = true;
-			segValue = cnots[v[i].second.first][v[i].second.second];
-		}
-		if( v[i].first == segValue )
-		{
-			// std::cout << "{" << v[i].second.first << "," << v[i].second.second << "} -> " << v[i].first << " : "; 
-			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
-			unsigned c = 0, t = 0;
-			for (int j = 0; j < cnots.size(); ++j)
-			{
-				c = c + cnots[j][v[i].second.first];
-				t = t + cnots[v[i].second.second][j];
-			}
-			// std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
-			s.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
-		}
-	}
-	// std::cout << std::endl;
-
-	std::sort(f.begin(), f.end(), std::greater<>());
-	for (int i = 0; i < f.size(); ++i)
-	{
-		// if( f[i].first == f[0].first)
-		// {
-			unsigned c = 0, t = 0;
-			for (int j = 0; j < cnots.size(); ++j)
-			{
-				c = c + cnots[j][f[i].second.first];
-				t = t + cnots[f[i].second.second][j];
-			}
-			// std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] ";
-			std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << c << " " << t << std::endl;
-			// std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << f[i].first << std::endl;
-		// }
-	}
-	std::sort(s.begin(), s.end(), std::greater<>());
-	for (int i = 0; i < s.size(); ++i)
-	{
-		// if( s[i].first == s[0].first)
-		// {
-			unsigned c = 0, t = 0;
-			for (int j = 0; j < cnots.size(); ++j)
-			{
-				c = c + cnots[j][s[i].second.first];
-				t = t + cnots[s[i].second.second][j];
-			}
-			// std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} ";
-			std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << c << " " << t << std::endl;
-			// std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << s[i].first << std::endl; 
-		// }
-	}
-	std::cout << std::endl;
-	return true;
 }
+
+// bool alex_command::execute()
+// {
+// 	v.clear();
+// 	auto& circuits = env->store<circuit>();
+// 	circuit circ = circuits.current();
+	
+
+// 	unsigned target, control, vgate=0, toffoligate=0, cnotgate=0, others=0;
+// 	for ( const auto& gate : circ )
+// 	{
+// 		if( gate.controls().size() == 1 )
+// 		{
+// 		  if( is_toffoli( gate ) )
+// 		  	++cnotgate;
+// 		  else if( is_v( gate ) )
+// 		  	++vgate;
+// 		}
+// 		else if( gate.controls().size() == 2 )
+// 		{
+// 		  if( is_toffoli( gate ) )
+// 		  	++toffoligate;
+// 		}
+// 		else
+// 		{
+// 			++others;
+// 		}
+// 	}
+// 	std::cout << "cnot: " << cnotgate << " toffoli: " << toffoligate << " v: " << vgate << " others: " << others << std::endl;
+
+// 	matrix cnots;
+// 	alcMatrix( cnots, circ.lines() );
+// 	genMatrix( circ, cnots );
+// 	prtMatrix( cnots );
+// 	pCnots( cnots );
+// 	return true; 
+// 	// std::cout << "	" << circ.num_gates() << std::endl;
+// 	// std::sort(v.begin(), v.end(), [](const vector<int> & a, const vector<int> & b){ return a.size() < b.size(); });
+// 	std::sort(v.begin(), v.end(), std::greater<>());
+// 	// std::sort(v.begin(), v.end());
+// 	// std::cout << std::endl;
+// 	bool seg = false;
+// 	unsigned segValue = 0;
+// 	std::vector< std::pair< int, std::pair< int,int> >> f;
+// 	std::vector< std::pair< int, std::pair< int,int> >> s;
+
+// 	for (int i = 0; i < v.size(); ++i)
+// 	{
+// 		// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+
+// 		if( v[i].first == v[0].first)
+// 		{
+// 			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] -> " << v[i].first << " : "; 
+// 			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+// 			unsigned c = 0, t = 0;
+// 			for (int j = 0; j < cnots.size(); ++j)
+// 			{
+// 				c = c + cnots[j][v[i].second.first];
+// 				t = t + cnots[v[i].second.second][j];
+// 			}
+// 			// std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
+// 			f.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
+// 		}
+// 		else if(seg == false)
+// 		{
+// 			seg = true;
+// 			segValue = cnots[v[i].second.first][v[i].second.second];
+// 		}
+// 		if( v[i].first == segValue )
+// 		{
+// 			// std::cout << "{" << v[i].second.first << "," << v[i].second.second << "} -> " << v[i].first << " : "; 
+// 			// std::cout << "[" << v[i].second.first << "," << v[i].second.second << "] = " << v[i].first << std::endl; 
+// 			unsigned c = 0, t = 0;
+// 			for (int j = 0; j < cnots.size(); ++j)
+// 			{
+// 				c = c + cnots[j][v[i].second.first];
+// 				t = t + cnots[v[i].second.second][j];
+// 			}
+// 			// std::cout << "c: " << c << " t: " << t << " T: " << t + c << std::endl;
+// 			s.push_back(std::make_pair(t+c,std::make_pair(v[i].second.first,v[i].second.second)));
+// 		}
+// 	}
+// 	// std::cout << std::endl;
+
+// 	std::sort(f.begin(), f.end(), std::greater<>());
+// 	for (int i = 0; i < f.size(); ++i)
+//  	{
+// 		// if( f[i].first == f[0].first)
+// 		// {
+// 			unsigned c = 0, t = 0;
+// 			for (int j = 0; j < cnots.size(); ++j)
+// 			{
+// 				c = c + cnots[j][f[i].second.first];
+// 				t = t + cnots[f[i].second.second][j];
+// 			}
+// 			// std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] ";
+// 			std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << c << " " << t << std::endl;
+// 			// std::cout << "[" << f[i].second.first << "," << f[i].second.second << "] -> " << f[i].first << std::endl;
+// 		// }
+// 	}
+// 	std::sort(s.begin(), s.end(), std::greater<>());
+// 	for (int i = 0; i < s.size(); ++i)
+// 	{
+// 		// if( s[i].first == s[0].first)
+// 		// {
+// 			unsigned c = 0, t = 0;
+// 			for (int j = 0; j < cnots.size(); ++j)
+// 			{
+// 				c = c + cnots[j][s[i].second.first];
+// 				t = t + cnots[s[i].second.second][j];
+// 			}
+// 			// std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} ";
+// 			std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << c << " " << t << std::endl;
+// 			// std::cout << "{" << s[i].second.first << "," << s[i].second.second << "} -> " << s[i].first << std::endl; 
+// 		// }
+// 	}
+// 	std::cout << std::endl;
+// 	return true;
+// }
 
 command::log_opt_t alex_command::log() const
 {
