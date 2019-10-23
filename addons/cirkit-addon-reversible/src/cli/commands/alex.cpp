@@ -161,16 +161,16 @@ void calcDelta( matrix& cnots, matrix qxCost, matrix& delta )
 {
 	for (int i = 0; i < delta.size(); ++i)
 	{
-		std::cout << "Permuting: " << delta[i][0] << " " << delta[i][1];		
-		std::cout << " Cost ";
+		// std::cout << "Permuting: " << delta[i][0] << " " << delta[i][1];		
+		// std::cout << " Cost ";
 		permuteLines( cnots, delta[i][0], delta[i][1] );
 		delta[i][2] = costMatrix( cnots, qxCost );
-		std::cout << costMatrix( cnots, qxCost ) << std::endl;
+		// std::cout << costMatrix( cnots, qxCost ) << std::endl;
 		permuteLines( cnots, delta[i][0], delta[i][1] );
 	}
 }
 
-std::pair<unsigned,unsigned> chooseDelta( matrix& delta )
+std::pair<unsigned,unsigned> chooseDelta( matrix& delta, unsigned& bestCost )
 {
 	std::pair<unsigned,unsigned> d;
 	// prtMatrix(m);
@@ -181,7 +181,7 @@ std::pair<unsigned,unsigned> chooseDelta( matrix& delta )
 	// prtMatrix(m);
 	for (int i = 0; i < delta.size(); ++i)
 	{
-		if ( delta[i][3] == 0 )
+		if ( delta[i][3] == 0 || delta[i][2] < bestCost )
 		{
 			d = std::make_pair( delta[i][0], delta[i][1] );
 			++delta[i][3];
@@ -194,10 +194,10 @@ std::pair<unsigned,unsigned> chooseDelta( matrix& delta )
 void updateDelta( matrix& delta )
 {
 	for (int i = 0; i < delta.size(); ++i)
-		if ( delta[i][3] > 0 )
-			++delta[i][3];
-		else if ( delta[i][3] > 3 )
+		if ( delta[i][3] > delta.size() )
 			delta[i][3] = 0;
+		else if ( delta[i][3] > 0 )
+			++delta[i][3];
 }
 
 
@@ -207,8 +207,9 @@ bool alex_command::execute()
 	circuit circ = circuits.current();
 	
 	matrix cnots, qxCost, delta;
-	std::vector<unsigned> v;
+	std::vector<unsigned> permutation, bestPermutation;
 	std::pair<unsigned,unsigned> d;
+	unsigned int actCost, bestCost = -1;
 
 	if ( circ.lines() == 5 )
 		qxCost = qx4;
@@ -221,29 +222,56 @@ bool alex_command::execute()
 	genMatrix( circ, cnots );
 	// generate the delta matrix
 	genDelta( delta, circ.lines() );
-	
+	// std::cout << delta.size() << std::endl;
 	// print cnots matrix
-	prtMatrix( cnots );
-
+	// prtMatrix( cnots );
 	// print delta matrix
-	prtMatrix( delta );
+	// prtMatrix( delta );
+	// create the default permutation
+	for (int i = 0; i < circ.lines(); ++i)
+		permutation.push_back(i);
 
+	// initialize the best permutation vector
+	bestPermutation = permutation;
 	// Start algorithm
-	for (int i = 0; i < 120; ++i)
+	for (int i = 0; i < 1200; ++i)
 	{
-		std::cout << "Iteration: " << i << std::endl;
-		prtMatrix( cnots );
+		// std::cout << "Iteration: " << i << std::endl;
+		// prtMatrix( cnots );
+		// calculate the delta
 		calcDelta( cnots, qxCost, delta );
-		d = chooseDelta( delta );
-		prtMatrix( delta );
+		// choose the best delta
+		d = chooseDelta( delta, bestCost );
+		// prtMatrix( delta );
+		// update the penalty
 		updateDelta( delta );
-		prtMatrix( delta );
-		std::cout << " " << d.first << " " << d.second;
+		// prtMatrix( delta );
+		// std::cout << " " << d.first << " " << d.second;
+		// permute for the best delta
 		permuteLines( cnots, d.first, d.second );
-		std::cout << " Cost: " << costMatrix( cnots, qxCost ) << std::endl;
-		getchar();
+		// update the permutation
+		std::swap( permutation[d.first], permutation[d.second] );
+		// std::cout << "\npermutation: ";
+		// for (int i = 0; i < permutation.size(); ++i)
+			// std::cout << " " << permutation[i];
+		// std::cout << std::endl;
+		// update the cost
+		actCost = costMatrix( cnots, qxCost );
+		// if better cost is found, update the bestPermutation
+		if ( actCost < bestCost )
+		{
+			bestCost = actCost;
+			bestPermutation = permutation;
+		}
+		// std::cout << " Cost: " << actCost << std::endl;
+
+		// getchar();
 	}
 		
+	std::cout << "BP: ";
+	for (int i = 0; i < bestPermutation.size(); ++i)
+		std::cout << " " << bestPermutation[i];
+	std::cout << " BC: " << bestCost << std::endl;
 	return true; 
 }
 
