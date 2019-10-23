@@ -154,6 +154,14 @@ matrix calcDelta( matrix& cnots, matrix qxCost )
 	matrix delta;
 	std::vector<unsigned> v;
 
+	std::cout << "Permuting: 0 0 Cost ";
+	v.clear();
+	v.push_back(0);
+	v.push_back(0);
+	v.push_back(costMatrix(cnots, qxCost));
+	delta.push_back(v);
+	std::cout << costMatrix(cnots, qxCost) << std::endl;
+	
 	for (int i = 0; i < cnots.size(); ++i)
 	{
 		for (int j = i + 1; j < cnots.size(); ++j)
@@ -173,15 +181,15 @@ matrix calcDelta( matrix& cnots, matrix qxCost )
 	return delta;
 }
 
-std::pair<unsigned,unsigned> chooseDelta( matrix m )
+std::pair<unsigned,unsigned> chooseDelta( matrix m, matrix penalty )
 {
 	std::pair<unsigned,unsigned> d;
-	prtMatrix(m);
+	// prtMatrix(m);
 	std::sort(m.begin(), m.end(),
           [](const std::vector<unsigned>& a, const std::vector<unsigned>& b) {
   		return a[2] < b[2];
 	});
-	prtMatrix(m);
+	// prtMatrix(m);
 	d = std::make_pair(m[0][0],m[0][1]);
 	return d;
 }
@@ -191,7 +199,8 @@ bool alex_command::execute()
 	auto& circuits = env->store<circuit>();
 	circuit circ = circuits.current();
 	
-	matrix cnots, qxCost, delta;
+	matrix cnots, qxCost, delta, penalty;
+	std::vector<unsigned> v;
 	std::pair<unsigned,unsigned> d;
 
 	if ( circ.lines() == 5 )
@@ -207,9 +216,20 @@ bool alex_command::execute()
 	prtMatrix( cnots );
 
 	// Start algorithm
-	delta = calcDelta( cnots, qxCost );
-	d = chooseDelta( delta );
-	std::cout << " " << d.first << " " << d.second << std::endl;
+	for (int i = 0; i < 120; ++i)
+	{
+		std::cout << "Iteration: " << i << std::endl;
+		prtMatrix( cnots );
+		delta = calcDelta( cnots, qxCost );
+		d = chooseDelta( delta, penalty );
+		penalty.push_back({d.first, d.second, 0});
+		prtMatrix(penalty);
+		std::cout << " " << d.first << " " << d.second;
+		permuteLines( cnots, d.first, d.second );
+		std::cout << " Cost: " << costMatrix( cnots, qxCost ) << std::endl;
+		getchar();
+	}
+		
 	return true; 
 }
 
