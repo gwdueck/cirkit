@@ -272,10 +272,10 @@ bool alex_command::execute()
 		// getchar();
 	}
 		
-	std::cout << "BP: ";
+	// std::cout << "BP: ";
 	for (int i = 0; i < bestPermutation.size(); ++i)
 		std::cout << " " << bestPermutation[i];
-	std::cout << " BC: " << bestCost << std::endl;
+	std::cout << "\t" << bestCost << std::endl;
 	return true; 
 }
 
