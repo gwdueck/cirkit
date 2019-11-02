@@ -215,6 +215,7 @@ bool alex_command::execute()
 	std::pair<unsigned,unsigned> d;
 	unsigned int actCost, bestCost = -1;
 
+
 	if ( circ.lines() == 5 )
 		qxCost = qx4;
 	else
@@ -228,7 +229,7 @@ bool alex_command::execute()
 	genDelta( delta, circ.lines() );
 	// std::cout << delta.size() << std::endl;
 	// print cnots matrix
-	// prtMatrix( cnots );
+	prtMatrix( cnots );
 	// print delta matrix
 	// prtMatrix( delta );
 	// create the default permutation
@@ -266,6 +267,7 @@ bool alex_command::execute()
 		{
 			bestCost = actCost;
 			bestPermutation = permutation;
+			i = 0;
 		}
 		// std::cout << " Cost: " << actCost << std::endl;
 
