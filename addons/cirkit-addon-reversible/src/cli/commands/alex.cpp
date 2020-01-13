@@ -155,8 +155,8 @@ void permuteLines( matrix& cnots, unsigned x, unsigned y )
 void genDelta( matrix& delta, unsigned s )
 {
 	delta.push_back({0,0,0,0});
-	for (int i = 0; i < s; ++i)
-		for (int j = i + 1; j < s; ++j)
+	for (unsigned int i = 0; i < s; ++i)
+		for (unsigned int j = i + 1; j < s; ++j)
 			delta.push_back({i,j,0,0});
 }
 

@@ -97,9 +97,9 @@
 #include <reversible/rcbdd.hpp>
 #include <reversible/truth_table.hpp>
 
-#include<cli/commands/rm_dup.hpp>
-#include<cli/commands/invert.hpp>
-#include<cli/commands/qxg.hpp>
+#include <cli/commands/rm_dup.hpp>
+#include <cli/commands/invert.hpp>
+#include <cli/commands/qxg.hpp>
 #include <cli/commands/ibm.hpp>
 #include <cli/commands/alex.hpp>
 #include <cli/commands/tvc.hpp>
@@ -108,6 +108,7 @@
 #include <cli/commands/graph.hpp>
 #include <cli/commands/tabu.hpp>
 #include <cli/commands/lpqx.hpp>
+#include <cli/commands/test_ident.hpp>
 
 
 using namespace cirkit;
@@ -232,6 +233,7 @@ ALICE_BEGIN(revkit)
   ADD_COMMAND( invert );
   ADD_COMMAND( rm_dup );
   ADD_COMMAND( tabu );
+  ADD_COMMAND( test_ident );
 
 
 ALICE_END
