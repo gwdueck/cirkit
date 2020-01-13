@@ -29,7 +29,7 @@
  *
  * @brief graph maniputation for IBM quantum computer architectures
  *
- * @author Gerhard Dueck
+ * @author Alexandre and Gerhard Dueck
  * @since  2.3
  */
 

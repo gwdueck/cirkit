@@ -29,7 +29,7 @@
  *
  * @brief path of transformation to implement a singel cnot gate
  *
- * @author Gerhard Dueck
+ * @author Alexandre and Gerhard Dueck
  * @since  2.3
  */
 

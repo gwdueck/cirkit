@@ -45,7 +45,9 @@ namespace cirkit
 levels_command::levels_command( const environment::ptr& env )
   : cirkit_command( env, "Prints the number of levels\nRearranges the gates accordingly." )
 {
-    add_new_option();
+    opts.add_options()
+    ( "print_circuit,p",                             "print the circuit" )
+    ;
 }
 
 command::rules_t levels_command::validity_rules() const
@@ -131,6 +133,8 @@ bool levels_command::execute()
   */
         i++;
     }
+    if( is_set("print_circuit") )
+        std::cout << result << std::endl;
     // std::cout << " " << max_lev;
     
     // std::cout << "The circuit has " << max_lev << " levels" << std::endl;

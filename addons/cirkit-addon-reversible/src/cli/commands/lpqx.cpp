@@ -204,15 +204,20 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 				{
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
+						outputFile << (qx[k][m]*cnots[i][j])+(qx[m][k]*cnots[j][i]) << " G" << i << "_" << j << "c" << k << "_" << m;
 						++end;
-						outputFile << qx[k][m]*cnots[i][j] << " G" << i << "_" << j << "c" << k << "_" << m;
 						if(end < tam)
 							outputFile << " + ";
 						else
 							++aux;
-						line = true;
+						line = true;	
 					}
 				}
+			}
+			if(cnots[i][j] > 0 && cnots[j][i] > 0)
+			{
+				cnots[j][i] = 0;
+				++aux;
 			}
 			if(line && aux < cnotdifgates)
 				outputFile << " + " << std::endl;
@@ -236,7 +241,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates )
 
 unsigned int toffoliCost(matrix& qx, unsigned c1, unsigned c2, unsigned t)
 {
-	unsigned cost1, cost2, aux1, a, b;
+	unsigned cost1, cost2, cost3, aux1, a, b;
 	if(c1 < c2)
 	{
 		a = c1;
@@ -261,11 +266,120 @@ unsigned int toffoliCost(matrix& qx, unsigned c1, unsigned c2, unsigned t)
 	
 	cost2 = 2*aux1 + 2*qx[t][b] + 2*qx[a][b];
 
-	if( cost1 < cost2 )
-		return cost1;
+	if (qx[a][b] < qx[b][a])
+		aux1 = qx[a][b];
 	else
-		return cost2;
+		aux1 = qx[b][a];
+	
+	cost3 = 2*aux1 + 2*qx[a][t] + 2*qx[b][t];
 
+	if( cost1 < cost2 && cost1 < cost3)
+		return cost1;
+	else if (cost2 < cost3)
+		return cost2;
+	else
+		return cost3;
+
+}
+
+unsigned int qtdToffoli(matrix& tgates, unsigned c1, unsigned c2, unsigned t)
+{
+	unsigned tofTotal = 0;
+	for (int i = 0; i < tgates.size(); ++i)
+		for (int j = 0; j < tgates[i].size(); ++j)
+			if( i/tgates[i].size() == t && i%tgates[i].size() == c1 && j == c2 )
+				tofTotal += tgates[i][j];
+			else if( i/tgates[i].size() == t && i%tgates[i].size() == c2 && j == c1 )
+				tofTotal += tgates[i][j];
+			else if( i/tgates[i].size() == c1 && i%tgates[i].size() == c2 && j == t )
+				tofTotal += tgates[i][j];
+			else if( i/tgates[i].size() == c1 && i%tgates[i].size() == t && j == c2 )
+				tofTotal += tgates[i][j];
+			else if( i/tgates[i].size() == c2 && i%tgates[i].size() == t && j == c1 )
+				tofTotal += tgates[i][j];
+			else if( i/tgates[i].size() == c2 && i%tgates[i].size() == c1 && j == t )
+				tofTotal += tgates[i][j];
+	return tofTotal;
+}
+
+unsigned int rmvToffoli(matrix& tgates, unsigned c1, unsigned c2, unsigned t)
+{
+	bool first = true;
+	unsigned int toffgates = 0;
+	for (int i = 0; i < tgates.size(); ++i)
+	{
+		for (int j = 0; j < tgates[i].size(); ++j)
+		{
+			if( tgates[i][j] > 0 && i/tgates[i].size() == t && i%tgates[i].size() == c1 && j == c2 )
+			{
+				// std::cout << i << " " << j << std::endl;
+				if(!first){
+					tgates[i][j] = 0;
+					// std::cout << "REMOVIDO: " << i << " " << j << std::endl;
+				}
+				if(first)
+					first = false;
+				++toffgates;
+			}
+			else if( tgates[i][j] > 0 && i/tgates[i].size() == t && i%tgates[i].size() == c2 && j == c1 )
+			{
+				// std::cout << i << " " << j << std::endl;
+				if(!first){
+					tgates[i][j] = 0;
+					// std::cout << "REMOVIDO: " << i << " " << j << std::endl;
+				}
+				if(first)
+					first = false;
+				++toffgates;
+			}
+			else if( tgates[i][j] > 0 && i/tgates[i].size() == c1 && i%tgates[i].size() == t && j == c2 )
+			{
+				// std::cout << i << " " << j << std::endl;
+				if(!first){
+					tgates[i][j] = 0;
+					// std::cout << "REMOVIDO: " << i << " " << j << std::endl;
+				}
+				if(first)
+					first = false;
+				++toffgates;
+			}
+			else if( tgates[i][j] > 0 && i/tgates[i].size() == c1 && i%tgates[i].size() == c2 && j == t )
+			{
+				// std::cout << i << " " << j << std::endl;
+				if(!first){
+					tgates[i][j] = 0;
+					// std::cout << "REMOVIDO: " << i << " " << j << std::endl;
+				}
+				if(first)
+					first = false;
+				++toffgates;
+			}
+			else if( tgates[i][j] > 0 && i/tgates[i].size() == c2 && i%tgates[i].size() == c1 && j == t )
+			{
+				// std::cout << i << " " << j << std::endl;
+				if(!first){
+					tgates[i][j] = 0;
+					// std::cout << "REMOVIDO: " << i << " " << j << std::endl;
+				}
+				if(first)
+					first = false;
+				++toffgates;
+			}
+			else if( tgates[i][j] > 0 && i/tgates[i].size() == c2 && i%tgates[i].size() == t && j == c1 )
+			{
+				// std::cout << i << " " << j << std::endl;
+				if(!first){
+					tgates[i][j] = 0;
+					// std::cout << "REMOVIDO: " << i << " " << j << std::endl;
+				}
+				if(first)
+					first = false;
+				++toffgates;
+			}		
+		}
+	}
+	// std::cout << "TOFFGATES: " << toffgates << std::endl;
+	return (toffgates-1);
 }
 
 // Function to print the objective function
@@ -332,7 +446,8 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 					if( i != j && cnots[i][j] > 0 && k != m)
 					{
 						++end;
-						outputFile << qx[k][m]*cnots[i][j] << " G" << i << "_" << j << "c" << k << "_" << m;
+						outputFile << (qx[k][m]*cnots[i][j])+(qx[m][k]*cnots[j][i]) << " G" << i << "_" << j << "c" << k << "_" << m;
+						// outputFile << qx[k][m]*cnots[i][j] << " G" << i << "_" << j << "c" << k << "_" << m;
 						if(end < tam)
 							outputFile << " + ";
 						else
@@ -340,6 +455,11 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 						line = true;
 					}
 				}
+			}
+			if(cnots[i][j] > 0 && cnots[j][i] > 0)
+			{
+				cnots[j][i] = 0;
+				++aux;
 			}
 			if(line && aux < cnotdifgates || (line && toffolidifgates > 0))
 				outputFile << " + " << std::endl;
@@ -362,7 +482,7 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 						if( i%qx.size() != j && tgates[i][j] > 0 && k != m && m != n && k != n)
 						{
 							++end;
-							outputFile << toffoliCost(qx, k, m, n) << " T" << i%qx.size() << "_" << j << "_" << int(i/qx.size()) << "c" << k << "_" << m << "_" << n;
+							outputFile << qtdToffoli(tgates, i%qx.size(),j,int(i/qx.size()))*toffoliCost(qx, k, m, n) << " T" << i%qx.size() << "_" << j << "_" << int(i/qx.size()) << "c" << k << "_" << m << "_" << n;
 							if(end < tam)
 								outputFile << " + ";
 							else
@@ -372,6 +492,8 @@ void printObjectiveFunction( matrix& qx, matrix& cnots, matrix& vgates, matrix& 
 					}
 				}
 			}
+			if(line)
+				aux += rmvToffoli(tgates, i%qx.size(),j,int(i/qx.size()));
 			if(line && aux < toffolidifgates)
 				outputFile << " + " << std::endl;
 		}
@@ -1404,6 +1526,18 @@ void getBlockLessEqualRestrictions(matrix& cnots, matrix& vgates, matrix& tgates
 	writeBlockRestrictions(res, cnots.size());
 }
 
+void removeRedudance(matrix& cnots)
+{
+	for (int i = 0; i < cnots.size(); ++i)
+	{
+		for (int j = 0; j < cnots[i].size(); ++j)
+		{
+			if( cnots[i][j] > 0 && cnots[j][i] > 0 )
+				cnots[j][i] = 0;
+		}
+	}
+}
+
 bool lpqx_command::execute()
 {
 	bool artificial = false;
@@ -1573,6 +1707,7 @@ bool lpqx_command::execute()
 		}
 		else
 		{
+			// removeRedudance(cnots);
 			getCombinationAnotherApproach(cnots, vgates);
 			getBlockLessEqualRestrictions(cnots, vgates);
 		}
