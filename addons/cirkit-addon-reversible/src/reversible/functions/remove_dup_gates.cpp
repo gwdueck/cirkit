@@ -145,6 +145,8 @@ bool can_be_removed(const gate& g1, const gate& g2 )
             return true;
         if( is_Z_gate( g1 ) && is_Z_gate( g2 ) )
             return true;
+        if( is_Y_gate( g1 ) && is_Y_gate( g2 ) )
+            return true;
 
     }
     return false;
@@ -522,6 +524,18 @@ bool is_Z_gate( const gate& g )
     {
         const auto& tag = boost::any_cast<pauli_tag>( g.type() );
         return ( ( tag.axis == pauli_axis::Z ) &&
+                ( tag.root == 1u ));
+    }
+    return false;
+}
+
+// added 2020/01/14 by Gerhard Dueck
+bool is_Y_gate( const gate& g )
+{
+    if ( is_pauli( g ) )
+    {
+        const auto& tag = boost::any_cast<pauli_tag>( g.type() );
+        return ( ( tag.axis == pauli_axis::Y ) &&
                 ( tag.root == 1u ));
     }
     return false;
