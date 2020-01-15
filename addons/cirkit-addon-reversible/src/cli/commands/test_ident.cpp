@@ -27,33 +27,34 @@
 #include "test_ident.hpp"
 
 #include <iostream>
+#include <fstream>
+#include <string>
 #include <time.h>
 #include <core/utils/timer.hpp>
 #include <alice/rules.hpp>
 #include <cli/reversible_stores.hpp>
 #include <reversible/circuit.hpp>
 #include <reversible/io/print_circuit.hpp>
+#include <reversible/io/read_qc.hpp>
+#include <reversible/io/write_qc.hpp>
 #include <reversible/functions/add_circuit.hpp>
-//#include <reversible/functions/add_gates.hpp>
 #include <reversible/functions/copy_circuit.hpp>
 #include <reversible/functions/clear_circuit.hpp>
 #include <reversible/functions/is_identity.hpp>
 #include <reversible/functions/reverse_circuit.hpp>
+#include <reversible/functions/remove_dup_gates.hpp>
 
-//#include <reversible/pauli_tags.hpp>
-//#include <reversible/target_tags.hpp>
+
 
 #include <cli/commands/rules.hpp>
 #include <core/utils/program_options.hpp>
 
 
-typedef std::vector<std::vector<int>> matrix;
-
 namespace cirkit
 {
  
 test_ident_command::test_ident_command(const environment::ptr& env)
-    : cirkit_command(env, "Tabu Search")
+    : cirkit_command(env, "testing identities")
 {
 	opts.add_options()
     ( "verbose,v",	"be verbose")
@@ -63,14 +64,39 @@ test_ident_command::test_ident_command(const environment::ptr& env)
 
 command::rules_t test_ident_command::validity_rules() const
 {
-	return {has_store_element<circuit>( env )};
+	 return {has_store_element<circuit>( env )};
+
 }
 
 
 
 bool test_ident_command::execute()
 {
-	std::cout << "here we are\n";
+	auto& circuits = env->store<circuit>();
+
+	std::ifstream fileList ("file_list.txt");
+	std::ofstream filterfile ("filter/file_list.txt");
+	std::string infile_qc;
+	circuit circ_working, circ_reduced;
+ 	if ( !fileList.is_open() )
+ 	{
+ 		std::cout << "ERROR cannot open file file_list.txt\n";
+ 		return false;
+ 	}
+
+ 	fileList >> infile_qc;
+ 	while( !fileList.eof() )
+ 	{
+ 		circ_working = read_qc( infile_qc );
+ 		circ_reduced = remove_dup_gates( circ_working );
+ 		if( circ_working.num_gates() == circ_reduced.num_gates() )
+ 		{
+ 			filterfile << infile_qc << std::endl;
+ 			write_qc( circ_working, "filter/" + infile_qc, false );
+ 		}
+ 		fileList >> infile_qc;
+ 	}
+ 	filterfile.close();
 
 	return true;
 }
