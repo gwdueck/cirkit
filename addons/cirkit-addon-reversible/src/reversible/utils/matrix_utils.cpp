@@ -199,6 +199,16 @@ xt::xarray<complex_t> matrix_from_clifford_t_circuit( const circuit& circ, bool 
           std::cout << "[w] unsupported X gate" << std::endl;
         }
         break;
+      case pauli_axis::Y:
+        if ( pauli.root == 1u )
+        {
+          gates.push_back( identity_padding( matrix_Y, target, target, n ) );
+        }
+        else
+        {
+          std::cout << "[w] unsupported Y gate" << std::endl;
+        }
+        break;
       case pauli_axis::Z:
         if ( pauli.root == 1u )
         {
