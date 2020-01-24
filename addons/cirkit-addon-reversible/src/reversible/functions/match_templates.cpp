@@ -24,43 +24,46 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/**
- * @file test_ident.hpp
- *
- * @brief test circuits for template generation
- *
- * @author Gerhard Dueck
- * @2
- */
-
-#ifndef CLI_TEST_IDENT_COMMAND_HPP
-#define CLI_TEST_IDENT_COMMAND_HPP
-
-#include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+#include "match_templates.hpp"
+#include <reversible/functions/clifford_templates.hpp>
 
 namespace cirkit
 {
 
-class test_ident_command : public cirkit_command
-    {
-    public:
-        test_ident_command( const environment::ptr& env );
+void set_id_perm( int p[], int n)
+{
+	for(int i =0 ; i < n ; i++)
+	{
+		p[i] = i;
+	}
+}
+/*
+	Check if there is a match of the template in the circuit.
+	If there is, replace it.
+*/
+bool match_template( circuit& circ, Clifford_Template &ctempl)
+{
+	bool match; 
+	int permutation[ circ.num_gates() ];
+	set_id_perm( permutation, circ.num_gates() );
+	// start with each gate
+	int start = 0, len = ctempl.gates_matched.size();
+	while( start < circ.num_gates() - len)
+	{
+		int i = 0;
+		match = is_Gate[ ctempl.gates_matched[i].gtype ]( circ[start] );
+		while( match && i < len )
+		{
 
-protected:
-  bool execute();
- // rules_t validity_rules() const;
-
-private:
-  
-	
-public:
-  log_opt_t log() const;
-};
+		}
+		start++;
+	}
+	return false;
+}
 
 }
 
-#endif
+
 
 // Local Variables:
 // c-basic-offset: 2

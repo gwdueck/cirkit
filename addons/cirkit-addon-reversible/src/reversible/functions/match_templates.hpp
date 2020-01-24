@@ -25,38 +25,24 @@
  */
 
 /**
- * @file test_ident.hpp
+ * @file match_templates.hpp
  *
- * @brief test circuits for template generation
+ * @brief match templates for Clifford+T circuits
  *
  * @author Gerhard Dueck
- * @2
+ * @since  2.1
  */
 
-#ifndef CLI_TEST_IDENT_COMMAND_HPP
-#define CLI_TEST_IDENT_COMMAND_HPP
+#ifndef MATCH_TEMPLATES_HPP
+#define MATCH_TEMPLATES_HPP
 
 #include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+#include <reversible/functions/clifford_templates.hpp>
 
 namespace cirkit
 {
 
-class test_ident_command : public cirkit_command
-    {
-    public:
-        test_ident_command( const environment::ptr& env );
-
-protected:
-  bool execute();
- // rules_t validity_rules() const;
-
-private:
-  
-	
-public:
-  log_opt_t log() const;
-};
+bool match_template( circuit& circ, Clifford_Template &ctempl );
 
 }
 

@@ -25,38 +25,74 @@
  */
 
 /**
- * @file test_ident.hpp
+ * @file clifford_templates.hpp
  *
- * @brief test circuits for template generation
+ * @brief structures for Clifford+T templates
  *
  * @author Gerhard Dueck
- * @2
+ * @since  2.1
  */
 
-#ifndef CLI_TEST_IDENT_COMMAND_HPP
-#define CLI_TEST_IDENT_COMMAND_HPP
+#ifndef CLIFFORD_TEMPLATES_HPP
+#define CLIFFORD_TEMPLATES_HPP
 
-#include <reversible/circuit.hpp>
-#include <cli/cirkit_command.hpp>
+#include <reversible/target_tags.hpp>
+#include <reversible/functions/remove_dup_gates.hpp>
+
 
 namespace cirkit
 {
 
-class test_ident_command : public cirkit_command
-    {
-    public:
-        test_ident_command( const environment::ptr& env );
+bool is_CNOT_gate( const gate& g );
 
-protected:
-  bool execute();
- // rules_t validity_rules() const;
+enum Cliff_Gate_Type { T, Ts, S, Ss, Z, Y, RZ, V, Vs, X, CNOT };
 
-private:
-  
-	
-public:
-  log_opt_t log() const;
+const static std::string gate_name[] = { "T", "Ts", "S", "Ss", "Z", "Y", "RZ", "V", "Vs", "X", "CNOT" };
+
+static bool ( *is_Gate[] )( const gate& g ) = {
+	&is_T_gate,
+	&is_T_star_gate,
+	&is_S_gate,
+	&is_S_star_gate,
+	&is_Z_gate,
+	&is_Y_gate,
+	&is_RZ_gate,
+	&is_V_gate,
+	&is_V_star_gate,
+	&is_X_gate,
+	&is_CNOT_gate };
+
+static std::map<char, Cliff_Gate_Type> cliff_map = {
+	{'t', T}, 
+	{'T', Ts},
+	{'s', S},
+	{'S', Ss},
+	{'z', Z},
+	{'y', Y},
+	{'r', RZ},
+	{'v', V},
+	{'V', Vs},
+	{'x', X},
+	{'c', CNOT}
 };
+
+class Cliff_Gate{
+public:
+	Cliff_Gate_Type gtype;
+	int target, control;
+};
+
+class Clifford_Template{
+public:
+	std::vector<Cliff_Gate> gates_matched;
+	std::vector<Cliff_Gate> gates_replaced;
+	int num_qubits;
+	void print();
+	void read( std::ifstream &infile );
+	void clear();
+};
+
+static std::vector<Clifford_Template> cliff_templates;
 
 }
 
