@@ -260,6 +260,28 @@ bool gates_can_move( const gate& g1, const gate& g2 )
     return false;
 }
 
+// check if gate b can be mode right after gate a
+// if it can do it
+bool move_gate( circuit& circ, int a, int b)
+{
+    if( a + 1 == b){
+        return true;
+    }
+    int i = b - 1;
+    while( a  < i)
+    {
+        if( !gates_can_move( circ[ i ] , circ[ b ] ))
+        {
+            return false;
+        }
+        i--;
+    }
+    gate g = circ[ b ];
+    circ.remove_gate_at( b );
+    circ.insert_gate( a + 1 ) = g;
+    return true;
+}
+
 bool gates_can_move( const gate& g1, const gate& g2, const gate& g3, const gate& g4 )
 {
     // std::cout << "inside move????" << std::endl;
