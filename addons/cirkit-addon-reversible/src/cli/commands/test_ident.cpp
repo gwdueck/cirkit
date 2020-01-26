@@ -62,6 +62,7 @@ test_ident_command::test_ident_command(const environment::ptr& env)
     ( "filter,f", "filter identities")
     ( "read_templ,r", "read templates")
     ( "print_templ,p", "print templates")
+    ( "test,t", "test templates matching (very simplistic)")
     ;
  //   add_new_option();
 }
@@ -128,6 +129,16 @@ bool test_ident_command::execute()
 	 		fileList >> infile_qc;
 	 	}
 	 	filterfile.close();
+	}
+
+	if( is_set( "test" ) )
+	{
+		auto& circuits = env->store<circuit>();
+    	circuit circ_working = circuits.current();
+    	bool flag = match_template( circ_working, cliff_templates[0] );
+    	std::cout << "flag = " << flag << std::endl;
+    	circuits.extend();
+    	circuits.current() = circ_working;
 	}
 
 	return true;

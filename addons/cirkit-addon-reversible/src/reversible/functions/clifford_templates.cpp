@@ -43,26 +43,16 @@ void Clifford_Template::read( std::ifstream &infile )
     Cliff_Gate cliffg;
     char gcode;
     int ngates_match, ngates_repl;
-    infile >> ngates_match;
-    infile >> ngates_repl;
-    num_qubits = 1;
+    infile >> num_qubits >> ngates_match >> ngates_repl;  
     for(int i = 0; i < ngates_match + ngates_repl; i++){
         infile >> gcode;
         while( gcode == ' ' ) infile >> gcode;
         cliffg.gtype = cliff_map.find(gcode)->second;
         infile >> cliffg.target;
-        if( cliffg.target >= num_qubits )
-        {
-            num_qubits = cliffg.target + 1;
-        }
         if( cliffg.gtype == CNOT )
         {
             cliffg.control = cliffg.target;
             infile >> cliffg.target;
-            if( cliffg.target >= num_qubits )
-            {
-                num_qubits = cliffg.target + 1;
-            }
         }
         if( i < ngates_match )
         {
