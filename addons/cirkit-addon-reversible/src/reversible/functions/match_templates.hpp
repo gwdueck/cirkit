@@ -43,6 +43,7 @@ namespace cirkit
 {
 
 bool match_template( circuit& circ, Clifford_Template &ctempl );
+bool match_any_template( circuit& circ, std::vector<Clifford_Template> &ctempls );
 
 }
 

@@ -135,7 +135,7 @@ bool test_ident_command::execute()
 	{
 		auto& circuits = env->store<circuit>();
     	circuit circ_working = circuits.current();
-    	bool flag = match_template( circ_working, cliff_templates[0] );
+    	bool flag = match_any_template( circ_working, cliff_templates );
     	std::cout << "flag = " << flag << std::endl;
     	circuits.extend();
     	circuits.current() = circ_working;

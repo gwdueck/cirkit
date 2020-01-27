@@ -69,7 +69,7 @@ void replace_matched_template( circuit& circ, Clifford_Template &ctempl, int qub
 	for( int i = 0; i < ctempl.gates_replaced.size(); i++ )
 	{
 		gate g;
-		g.add_target( ctempl.gates_replaced[i].target );
+		g.add_target( qubit_map[ ctempl.gates_replaced[i].target ] );
 		switch ( ctempl.gates_replaced[i].gtype )
 		{
 			case T:
@@ -96,7 +96,7 @@ void replace_matched_template( circuit& circ, Clifford_Template &ctempl, int qub
 				break;
 			case CNOT: 
 				g.set_type( toffoli_tag() );
-				g.add_control( make_var( ctempl.gates_replaced[i].control, true ) );
+				g.add_control( make_var( qubit_map[ ctempl.gates_replaced[i].control ], true ) );
 				break;
 		}
 		circ.insert_gate( start ) = g;
@@ -146,6 +146,24 @@ bool match_template( circuit& circ, Clifford_Template &ctempl )
 	return false;
 }
 
+/*
+	Check if there is a match with any of the templates given.
+	If there is one, then apply it and return true.
+*/
+
+bool match_any_template( circuit& circ, std::vector<Clifford_Template> &ctempls )
+{
+	int i = 0;
+	for (std::vector<Clifford_Template>::iterator it = ctempls.begin() ; it != ctempls.end(); ++it)
+	{
+		std::cout << "in match ==> " << i++ << "\n";
+		if( match_template( circ, *it ) )
+		{
+			return true;
+		}
+	}
+	return false;
+}
 }
 
 
