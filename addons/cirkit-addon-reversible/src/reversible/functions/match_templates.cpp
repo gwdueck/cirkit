@@ -85,10 +85,14 @@ void replace_matched_template( circuit& circ, Clifford_Template &ctempl, int qub
 				g.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
 				break;
 			case Z:
+				g.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
+				break;
 			case Y:
 				g.set_type( pauli_tag( pauli_axis::Y, 1u, false ) );
 				break;
 			case RZ:
+				std::cout << "ERROR in replace_matched_template(): RZ gate not implemented!\n";
+				break;
 //			case V: 	// not Clifford gates 
 //			case Vs:	// not needed for now
 			case X:
@@ -98,6 +102,8 @@ void replace_matched_template( circuit& circ, Clifford_Template &ctempl, int qub
 				g.set_type( toffoli_tag() );
 				g.add_control( make_var( qubit_map[ ctempl.gates_replaced[i].control ], true ) );
 				break;
+			otherwise:
+				std::cout << "ERROR in replace_matched_template(): RZ gate not implemented!\n";
 		}
 		circ.insert_gate( start ) = g;
 		start++;
