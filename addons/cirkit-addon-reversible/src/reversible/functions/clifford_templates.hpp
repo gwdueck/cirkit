@@ -37,6 +37,7 @@
 #define CLIFFORD_TEMPLATES_HPP
 
 #include <reversible/target_tags.hpp>
+#include <reversible/pauli_tags.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
 
 
@@ -45,11 +46,12 @@ namespace cirkit
 
 bool is_CNOT_gate( const gate& g );
 
-enum Cliff_Gate_Type { T, Ts, S, Ss, Z, Y, RZ, V, Vs, X, CNOT };
+enum Cliff_Gate_Type { H, T, Ts, S, Ss, Z, Y, RZ, V, Vs, X, CNOT };
 
-const static std::string gate_name[] = { "T", "Ts", "S", "Ss", "Z", "Y", "RZ", "V", "Vs", "X", "CNOT" };
+const static std::string gate_name[] = { "H", "T", "Ts", "S", "Ss", "Z", "Y", "RZ", "V", "Vs", "X", "CNOT" };
 
 static bool ( *is_Gate[] )( const gate& g ) = {
+	&is_hadamard,
 	&is_T_gate,
 	&is_T_star_gate,
 	&is_S_gate,
@@ -63,6 +65,7 @@ static bool ( *is_Gate[] )( const gate& g ) = {
 	&is_CNOT_gate };
 
 static std::map<char, Cliff_Gate_Type> cliff_map = {
+	{'h', H},
 	{'t', T}, 
 	{'T', Ts},
 	{'s', S},

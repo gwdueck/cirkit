@@ -72,6 +72,9 @@ void replace_matched_template( circuit& circ, Clifford_Template &ctempl, int qub
 		g.add_target( qubit_map[ ctempl.gates_replaced[i].target ] );
 		switch ( ctempl.gates_replaced[i].gtype )
 		{
+			case H:
+				g.set_type( hadamard_tag() );
+				break;
 			case T:
 				g.set_type( pauli_tag( pauli_axis::Z, 4u, false ) );
 				break;
@@ -162,7 +165,6 @@ bool match_any_template( circuit& circ, std::vector<Clifford_Template> &ctempls 
 	int i = 0;
 	for (std::vector<Clifford_Template>::iterator it = ctempls.begin() ; it != ctempls.end(); ++it)
 	{
-		std::cout << "in match ==> " << i++ << "\n";
 		if( match_template( circ, *it ) )
 		{
 			return true;

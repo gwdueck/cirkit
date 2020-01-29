@@ -109,6 +109,7 @@ bool test_ident_command::execute()
 		std::ofstream filterfile ("filter/file_list.txt");
 		std::string infile_qc;
 		circuit circ_working, circ_reduced;
+		int not_reduced = 0, n = 0;
 
 	 	if ( !fileList.is_open() )
 	 	{
@@ -119,14 +120,24 @@ bool test_ident_command::execute()
 	 	fileList >> infile_qc;
 	 	while( !fileList.eof() )
 	 	{
+	 		n++;
 	 		circ_working = read_qc( infile_qc );
 	 		circ_reduced = remove_dup_gates( circ_working );
 	 		if( circ_working.num_gates() == circ_reduced.num_gates() )
 	 		{
+	 			bool flag = match_any_template( circ_reduced, cliff_templates );
+	 		}
+	 		if( circ_working.num_gates() == circ_reduced.num_gates() )
+	 		{
 	 			filterfile << infile_qc << std::endl;
 	 			write_qc( circ_working, "filter/" + infile_qc, false );
+	 			not_reduced++;
 	 		}
 	 		fileList >> infile_qc;
+	 		if ( n%10000 == 0 )
+	 		{
+	 			std::cout << not_reduced << "\n";
+	 		}
 	 	}
 	 	filterfile.close();
 	}
