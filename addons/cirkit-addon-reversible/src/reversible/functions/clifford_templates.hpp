@@ -38,6 +38,7 @@
 
 #include <reversible/target_tags.hpp>
 #include <reversible/pauli_tags.hpp>
+#include <reversible/circuit.hpp>
 #include <reversible/functions/remove_dup_gates.hpp>
 
 
@@ -48,7 +49,7 @@ bool is_CNOT_gate( const gate& g );
 
 enum Cliff_Gate_Type { H, T, Ts, S, Ss, Z, Y, RZ, V, Vs, X, CNOT };
 
-const static std::string gate_name[] = { "H", "T", "Ts", "S", "Ss", "Z", "Y", "RZ", "V", "Vs", "X", "CNOT" };
+const static std::string gate_name[] = { "h", "t", "T", "s", "S", "z", "y", "r", "v", "V", "x", "c" };
 
 static bool ( *is_Gate[] )( const gate& g ) = {
 	&is_hadamard,
@@ -83,6 +84,7 @@ class Cliff_Gate{
 public:
 	Cliff_Gate_Type gtype;
 	int target, control;
+	void convert_gate( const gate &g );
 };
 
 class Clifford_Template{
@@ -92,6 +94,7 @@ public:
 	int num_qubits;
 	void print();
 	void read( std::ifstream &infile );
+	void convert_circ( circuit &circ );
 	void clear();
 };
 

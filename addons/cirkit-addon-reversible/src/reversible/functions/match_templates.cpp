@@ -106,7 +106,7 @@ void replace_matched_template( circuit& circ, Clifford_Template &ctempl, int qub
 				g.add_control( make_var( qubit_map[ ctempl.gates_replaced[i].control ], true ) );
 				break;
 			otherwise:
-				std::cout << "ERROR in replace_matched_template(): RZ gate not implemented!\n";
+				std::cout << "ERROR in replace_matched_template(): gate not implemented!\n";
 		}
 		circ.insert_gate( start ) = g;
 		start++;
@@ -124,7 +124,7 @@ bool match_template( circuit& circ, Clifford_Template &ctempl )
 	std::fill_n(qubits, ctempl.num_qubits, -1);
 
 	int start = 0, len = ctempl.gates_matched.size();
-	while( start < circ.num_gates() - len)
+	while( start < circ.num_gates() - len )
 	{
 		int i = 0;
 		match = gate_matches_template( circ[ start ], ctempl.gates_matched[i], qubits );

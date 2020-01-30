@@ -35,7 +35,55 @@ namespace cirkit
 
 bool is_CNOT_gate( const gate& g )
 {
-    return is_toffoli( g );
+    return is_toffoli( g ) && ( g.controls().size() == 1 );
+}
+
+void Cliff_Gate::convert_gate( const gate &g )
+{
+    control = -1;
+    target = g.targets().front();
+    if( is_hadamard( g ) )
+    {
+        gtype = H;
+    }
+    else if( is_T_gate( g ) )
+    {
+        gtype = T;
+    } 
+    else if( is_T_star_gate( g ) )
+    {
+        gtype = Ts;
+    } 
+    else if( is_S_gate( g ) )
+    {
+        gtype = S;
+    } 
+    else if( is_S_star_gate( g ) )
+    {
+        gtype = Ss;
+    } 
+    else if( is_Z_gate( g ) )
+    {
+        gtype = Z;
+    } 
+    else if( is_Y_gate( g ) )
+    {
+        gtype = Y;
+    } 
+    else if( is_X_gate( g ) )
+    {
+        gtype = X;
+    } 
+    else if( is_CNOT_gate ( g ) )
+    {
+        gtype = CNOT;
+        control = g.controls().front().line();
+
+    }
+    else
+    {
+        std::cout << "ERROR gate not supported! in Cliff_Gate::convert_gate\n";
+    }
 }
 
 void Clifford_Template::read( std::ifstream &infile )
@@ -65,17 +113,40 @@ void Clifford_Template::read( std::ifstream &infile )
     }
 }
 
+void Clifford_Template::convert_circ( circuit &circ )
+{
+    num_qubits = circ.lines();
+    Cliff_Gate cliffg;
+    int n = circ.num_gates(), i = 0;
+    for ( auto& gate : circ )
+    {
+        cliffg.convert_gate( gate );
+        if( i <= n/2 )
+        {
+            gates_matched.push_back( cliffg );
+        }
+        else
+        {
+            gates_replaced.insert( gates_replaced.begin(), cliffg );
+        }
+        i++;
+    }
+
+}
+
 void Clifford_Template::print( )
 {
-    std::cout << "num_qubits = " << num_qubits << " ";
+    std::cout  << num_qubits << " " << gates_matched.size() << " " << gates_replaced.size() << " ";
+    std::string control_str;
     for (std::vector<Cliff_Gate>::iterator it = gates_matched.begin() ; it != gates_matched.end(); ++it)
     {
-        std::cout << gate_name[it->gtype] << " " << it->target << " ";
+        control_str = ( it->gtype !=  CNOT )? "": std::to_string( it->control ) +  " ";
+        std::cout << gate_name[it->gtype] << " " << control_str << it->target << " " ;
     }
-    std::cout << " ==> ";
     for (std::vector<Cliff_Gate>::iterator it = gates_replaced.begin() ; it != gates_replaced.end(); ++it)
     {
-        std::cout << gate_name[it->gtype] << " " << it->target << " ";
+        control_str = (  it->gtype !=  CNOT )? "": std::to_string( it->control ) +  " ";
+        std::cout << gate_name[it->gtype] << " " << control_str << it->target << " " ;
     }
     std::cout << std::endl;
 }
