@@ -63,6 +63,7 @@ test_ident_command::test_ident_command(const environment::ptr& env)
     ( "read_templ,r", "read templates")
     ( "print_templ,p", "print templates")
     ( "test,t", "test templates matching (very simplistic)")
+    ( "circ_to_templ,c", "convert a circuit to a template")
     ( "experimental,e", "experiment with new functionality")
     ( "add_templ,a", "add new templates")
     ;
@@ -153,13 +154,43 @@ bool test_ident_command::execute()
     	circuits.extend();
     	circuits.current() = circ_working;
 	}
-	if( is_set( "experimental" ) )
+	if( is_set( "circ_to_templ" ) )
 	{
 		auto& circuits = env->store<circuit>();
     	circuit circ_working = circuits.current();
     	Clifford_Template my_temp;
     	my_temp.convert_circ( circ_working );
     	my_temp.print();
+	}
+	if( is_set( "experimental" ) )
+	{
+		circuit circ_working, circ_reduced;
+		std::ifstream fileList ("file_list.txt");
+		std::string infile_qc;
+		if ( !fileList.is_open() )
+	 	{
+	 		std::cout << "ERROR cannot open file file_list.txt\n";
+	 		return false;
+	 	}
+
+	 	fileList >> infile_qc;
+	 	while( !fileList.eof() )
+	 	{
+	 		std::cout << "read " << infile_qc << std::endl;
+	 		circ_working = read_qc( infile_qc );
+	 		circ_reduced = remove_dup_gates( circ_working );
+	 		if( circ_working.num_gates() == circ_reduced.num_gates() )
+	 		{
+	 			bool flag = match_any_template( circ_reduced, cliff_templates );
+	 		}
+	 		if( circ_working.num_gates() > circ_reduced.num_gates() )
+	 		{
+	 			circ_reduced = remove_dup_gates( circ_reduced );
+	 			std::cout << "Success " << infile_qc << " reduced from " << circ_working.num_gates() <<
+	 			" gates to " << circ_reduced.num_gates() << std::endl;
+	 		}
+	 		fileList >> infile_qc;
+	 	}
 	}
 	if( is_set( "add_templ" ))
 	{
