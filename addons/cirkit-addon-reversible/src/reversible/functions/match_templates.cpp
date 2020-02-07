@@ -29,6 +29,7 @@
 #include <reversible/target_tags.hpp>
 #include <reversible/pauli_tags.hpp>
 #include <reversible/rotation_tags.hpp>
+#include <reversible/io/print_circuit.hpp>
 
 namespace cirkit
 {
@@ -124,7 +125,7 @@ bool match_template( circuit& circ, Clifford_Template &ctempl )
 	std::fill_n(qubits, ctempl.num_qubits, -1);
 
 	int start = 0, len = ctempl.gates_matched.size();
-	while( start < circ.num_gates() - len )
+	while( start <= circ.num_gates() - len )
 	{
 		int i = 0;
 		match = gate_matches_template( circ[ start ], ctempl.gates_matched[i], qubits );
@@ -147,6 +148,10 @@ bool match_template( circuit& circ, Clifford_Template &ctempl )
 		}
 		if( match )
 		{
+			std::cout << "Matched! In match_template\n";
+			ctempl.print();
+			std::cout << "start = " << start << " ctempl.gates_matched.size() = " << ctempl.gates_matched.size() << "\n";
+//			std::cout << circ ;
 			replace_matched_template( circ, ctempl, qubits, start );
 			return true;
 		}
