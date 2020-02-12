@@ -122,12 +122,12 @@ bool match_template( circuit& circ, Clifford_Template &ctempl )
 {
 	bool match; 
 	int qubits[ ctempl.num_qubits ];
-	std::fill_n(qubits, ctempl.num_qubits, -1);
 
 	int start = 0, len = ctempl.gates_matched.size();
 	while( start <= circ.num_gates() - len )
 	{
 		int i = 0;
+		std::fill_n(qubits, ctempl.num_qubits, -1);
 		match = gate_matches_template( circ[ start ], ctempl.gates_matched[i], qubits );
 		i++;
 		while( match && i < len )
