@@ -195,6 +195,7 @@ bool test_ident_command::execute()
 	 				circ_reduced.num_gates() << " & "  << circ_working.num_gates() - circ_reduced.num_gates() << " & " <<
 	 				(int) ( circ_working.num_gates() - circ_reduced.num_gates() ) * 100 / circ_working.num_gates() 
 	 				<<  "\\% \\\\ \\hline\n";
+	 			tex_table.flush();
 	 		}
 	 		fileList >> infile_qc;
 	 	}
