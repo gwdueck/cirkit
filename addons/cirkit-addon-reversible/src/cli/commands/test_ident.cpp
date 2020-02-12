@@ -166,6 +166,7 @@ bool test_ident_command::execute()
 	{
 		circuit circ_working, circ_reduced;
 		std::ifstream fileList ("file_list.txt");
+		std::ofstream tex_table ("table.tex");
 		std::string infile_qc;
 		if ( !fileList.is_open() )
 	 	{
@@ -179,18 +180,25 @@ bool test_ident_command::execute()
 	 		std::cout << "read " << infile_qc << std::endl;
 	 		circ_working = read_qc( infile_qc );
 	 		circ_reduced = remove_dup_gates( circ_working );
-	 		if( circ_working.num_gates() == circ_reduced.num_gates() )
+	 		bool flag = match_any_template( circ_reduced, cliff_templates );
+	 		if( flag )
 	 		{
-	 			bool flag = match_any_template( circ_reduced, cliff_templates );
+	 			circ_reduced = remove_dup_gates( circ_reduced );
 	 		}
 	 		if( circ_working.num_gates() > circ_reduced.num_gates() )
 	 		{
 	 			circ_reduced = remove_dup_gates( circ_reduced );
 	 			std::cout << "Success " << infile_qc << " reduced from " << circ_working.num_gates() <<
 	 			" gates to " << circ_reduced.num_gates() << std::endl;
+	 		
+	 			tex_table << infile_qc << " & " << circ_working.num_gates() << " & " << 
+	 				circ_reduced.num_gates() << " & "  << circ_working.num_gates() - circ_reduced.num_gates() << " & " <<
+	 				(int) ( circ_working.num_gates() - circ_reduced.num_gates() ) * 100 / circ_working.num_gates() 
+	 				<<  "\\% \\\\ \\hline\n";
 	 		}
 	 		fileList >> infile_qc;
 	 	}
+	 	tex_table.close();
 	}
 	if( is_set( "add_templ" ))
 	{
@@ -220,6 +228,11 @@ bool test_ident_command::execute()
 	 			cliff_templates.push_back( my_temp );
 	 			my_temp.print();
 	 			std::cout << "add new template " << infile_qc << std::endl;
+	 		}
+	 		else
+	 		{
+	 			std::cout << "reduced circuit\n";
+	 			std::cout << circ_reduced;
 	 		}
 	 		my_temp.clear();
 	 		fileList >> infile_qc;
