@@ -95,6 +95,7 @@ public:
 	void print();
 	void read( std::ifstream &infile );
 	void convert_circ( circuit &circ );
+	circuit convert_to_circ( );
 	void clear();
 };
 

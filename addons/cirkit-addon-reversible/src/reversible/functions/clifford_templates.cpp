@@ -29,6 +29,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <reversible/functions/add_gates.hpp>
 
 namespace cirkit
 {
@@ -156,6 +157,68 @@ void Clifford_Template::clear( )
     gates_matched.clear();
     gates_replaced.clear();
 }
+
+void append_cliff_gate( circuit &circ, Cliff_Gate gate ){
+    std::vector<unsigned> control;
+    switch( gate.gtype )
+    {
+        case H :
+            append_hadamard( circ, gate.target );
+            break;
+        case T :
+            append_pauli( circ, gate.target, pauli_axis::Z, 4u, true );
+            break;
+        case Ts :
+            append_pauli( circ, gate.target, pauli_axis::Z, 4u, false );
+            break;
+        case S :
+            append_pauli( circ, gate.target, pauli_axis::Z, 2u, true );
+            break;
+        case Ss :
+            append_pauli( circ, gate.target, pauli_axis::Z, 2u, false );
+            break;
+        case Z :
+            append_pauli( circ, gate.target, pauli_axis::Z );
+            break;
+        case Y :
+            append_pauli( circ, gate.target, pauli_axis::Y );
+            break;
+        case X :
+            append_not( circ, gate.target );
+            break;
+        case CNOT :
+            control.push_back( gate.control );
+            append_toffoli( circ, control, gate.target );
+            break;
+        default :
+            std::cout << "error in append_cliff_gate " << gate.gtype << "\n";
+    }
+}
+// convert the given template to an identity circuit
+circuit Clifford_Template::convert_to_circ(  )
+{
+    circuit circ;
+    circ.set_lines( num_qubits );
+    std::vector<std::string> inputs;
+    std::vector<constant> constants;
+    for( int i = 0; i < num_qubits; i++ )
+    {
+        inputs.push_back( std::to_string(i) );
+        constants.push_back( constant( false ));
+    }
+    circ.set_inputs( inputs );
+    circ.set_constants( constants );
+    for( auto & gate : gates_matched )
+    {
+        append_cliff_gate( circ, gate );
+    }
+    for (auto it = gates_replaced.rbegin(); it != gates_replaced.rend(); ++it)
+    {
+        append_cliff_gate( circ, *it);
+    }
+    return circ;
+}
+
 }
 
 
