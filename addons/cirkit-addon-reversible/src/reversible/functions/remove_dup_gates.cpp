@@ -54,7 +54,7 @@ circuit remove_dup_gates( const circuit& circ )
             // std::cout << "removed?" << std::endl;
             if( can_be_removed( result[i], result[j] ) )
             {
-                // std::cout << "can be removed " << i << " " << j << "\n";
+                std::cout << "can be removed " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
                 done = true;
@@ -66,9 +66,10 @@ circuit remove_dup_gates( const circuit& circ )
                 incr_i = false;
             }
             // std::cout << "merge????" << std::endl;
+/*
             if ( j+1 < result.num_gates() && !done && gates_can_merge( result[i], result[j], result[j+1],  g) )
             {
-                // std::cout << "gates_can_merge " << i << " " << j << " " << j+1 << "\n";
+                std::cout << "gates_can_merge " << i << " " << j << " " << j+1 << "\n";
                 result.remove_gate_at(j+1);
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
@@ -82,13 +83,13 @@ circuit remove_dup_gates( const circuit& circ )
                 j = i + 1;  
                 incr_i = false;
             }
+*/
             // std::cout << "merge?" << std::endl;
             if ( !done && gates_can_merge( result[i], result[j], g) )
             {
-                // std::cout << "gates_can_merge " << i << " " << j << "\n";
+                std::cout << "gates_can_merge " << i << " " << j << "\n";
                 result.remove_gate_at(j);
                 result.remove_gate_at(i);
-                // result[i] = g;
                 result.insert_gate( i ) = g;
                 done = true;
                 if(i>3)
@@ -343,12 +344,14 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
     res = g1;
     if ( ( g1.targets() == g2.targets() ) && ( g1.controls() == g2.controls() ) ) 
     {
+        // results in a Z gate
         if ( ( is_S_gate( g1 )      && is_S_gate( g2 )      ) || 
              ( is_S_star_gate( g1 ) && is_S_star_gate( g2 ) ) ) 
         {
             res.set_type( pauli_tag( pauli_axis::Z, 1u, false ) );
             return true;
         }
+        // results in a S gate 
         else if ( ( is_T_gate( g1 )      && is_T_gate( g2 )      ) ||
                   ( is_S_star_gate( g1 ) && is_Z_gate( g2 )      ) ||
                   ( is_Z_gate( g1 )      && is_S_star_gate( g2 ) ) )
@@ -356,6 +359,7 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
             res.set_type( pauli_tag( pauli_axis::Z, 2u, false ) );
             return true;
         }
+        // results in a S* gate 
         else if ( ( is_T_star_gate( g1 ) && is_T_star_gate( g2 ) ) ||
                   ( is_S_gate( g1 )      && is_Z_gate( g2 ) )      ||
                   ( is_Z_gate( g1 )      && is_S_gate( g2 ) )      )
@@ -363,6 +367,7 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
             res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
             return true;
         }
+        // results in a T* gate 
         else if ( ( is_T_star_gate( g1 ) && is_S_gate( g2 ) )      ||
                   ( is_S_gate( g1 )      && is_T_star_gate( g2 ) ) )
         {

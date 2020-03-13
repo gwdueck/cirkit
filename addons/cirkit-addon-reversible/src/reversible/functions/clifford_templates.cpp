@@ -166,16 +166,16 @@ void append_cliff_gate( circuit &circ, Cliff_Gate gate ){
             append_hadamard( circ, gate.target );
             break;
         case T :
-            append_pauli( circ, gate.target, pauli_axis::Z, 4u, true );
-            break;
-        case Ts :
             append_pauli( circ, gate.target, pauli_axis::Z, 4u, false );
             break;
+        case Ts :
+            append_pauli( circ, gate.target, pauli_axis::Z, 4u, true );
+            break;
         case S :
-            append_pauli( circ, gate.target, pauli_axis::Z, 2u, true );
+            append_pauli( circ, gate.target, pauli_axis::Z, 2u, false );
             break;
         case Ss :
-            append_pauli( circ, gate.target, pauli_axis::Z, 2u, false );
+            append_pauli( circ, gate.target, pauli_axis::Z, 2u, true );
             break;
         case Z :
             append_pauli( circ, gate.target, pauli_axis::Z );
@@ -194,8 +194,10 @@ void append_cliff_gate( circuit &circ, Cliff_Gate gate ){
             std::cout << "error in append_cliff_gate " << gate.gtype << "\n";
     }
 }
-// convert the given template to an identity circuit
-circuit Clifford_Template::convert_to_circ(  )
+// convert the given template to a circuit
+// if "all" do the replace part as well
+// NOTE: this will not be an identity
+circuit Clifford_Template::convert_to_circ( bool all )
 {
     circuit circ;
     circ.set_lines( num_qubits );
@@ -212,9 +214,12 @@ circuit Clifford_Template::convert_to_circ(  )
     {
         append_cliff_gate( circ, gate );
     }
-    for (auto it = gates_replaced.rbegin(); it != gates_replaced.rend(); ++it)
+    if( all )
     {
-        append_cliff_gate( circ, *it);
+        for( auto & gate : gates_replaced )
+        {
+            append_cliff_gate( circ, gate );
+        }
     }
     return circ;
 }

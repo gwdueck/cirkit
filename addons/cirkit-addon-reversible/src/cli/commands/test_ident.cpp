@@ -62,7 +62,7 @@ test_ident_command::test_ident_command(const environment::ptr& env)
     ( "filter,f", "filter identities")
     ( "read_templ,r", "read templates")
     ( "print_templ,p", "print templates")
-    ( "test,t", "test templates matching (very simplistic)")
+    ( "temp,t", "test and develop new ideas")
     ( "circ_to_templ,c", "convert a circuit to a template")
     ( "experimental,e", "experiment with new functionality")
     ( "add_templ,a", "add new templates")
@@ -146,14 +146,43 @@ bool test_ident_command::execute()
 	 	filterfile.close();
 	}
 
-	if( is_set( "test" ) )
+	// read templates and test if they are not reducible by previously defined templates
+	if( is_set( "temp" ) )
 	{
-		auto& circuits = env->store<circuit>();
-    	circuit circ_working = circuits.current();
-    	bool flag = match_any_template( circ_working, cliff_templates );
-    	std::cout << "flag = " << flag << std::endl;
-    	circuits.extend();
-    	circuits.current() = circ_working;
+		// auto& circuits = env->store<circuit>();
+		std::string filename;
+    	std::cout << "Enter the file name for the templates ";
+      	std::cin >> filename;
+      	std::ifstream templ_file ( filename );
+      	int n_templs; // number of templates
+      	templ_file >> n_templs;
+      	Clifford_Template new_templ;
+      	for( int i = 0; i < n_templs; i++ )
+      	{
+      		new_templ.read( templ_file );
+      		circuit circ_reduced;
+      		circuit circ = new_templ.convert_to_circ( true );
+      		//circuits.extend();
+      		//circuits.current() = circ;
+      		std::cout << "\n";
+      		new_templ.print();
+      		std::cout << circ;
+      		circ = new_templ.convert_to_circ( false );
+      		circ_reduced = remove_dup_gates( circ );
+      		bool flag1 = circ.num_gates() > circ_reduced.num_gates();
+      		bool flag2 =  match_any_template( circ_reduced, cliff_templates );
+    		std::cout << "flag1 = " << flag1 <<  " flag2 = " << flag2 <<  std::endl;
+    		if( !flag1 && !flag2 )
+    		{
+      			cliff_templates.push_back( new_templ );
+      		}
+      		else
+      		{
+      			std::cout << "reduced circuit\n";
+      			std::cout << circ_reduced;
+      		}
+      		new_templ.clear();
+      	}
 	}
 	if( is_set( "circ_to_templ" ) )
 	{
@@ -249,7 +278,7 @@ bool test_ident_command::execute()
 		circuit circ;
 		for( auto & templ : cliff_templates )
 		{
-			circ = templ.convert_to_circ( );
+			circ = templ.convert_to_circ( true );
 			templ.print();
 			std::cout << circ;
 		}
