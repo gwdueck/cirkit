@@ -367,13 +367,14 @@ bool gates_can_merge( const gate& g1, const gate& g2, gate& res)
             res.set_type( pauli_tag( pauli_axis::Z, 2u, true ) );
             return true;
         }
-        // results in a T* gate 
+        // results in a T gate 
         else if ( ( is_T_star_gate( g1 ) && is_S_gate( g2 ) )      ||
                   ( is_S_gate( g1 )      && is_T_star_gate( g2 ) ) )
         {
             res.set_type( pauli_tag( pauli_axis::Z, 4u, false ) );
             return true;
         }
+        // results in a T* gate 
         else if ( ( is_T_gate( g1 )      && is_S_star_gate( g2 ) ) ||
                   ( is_S_star_gate( g1 ) && is_T_gate( g2 )      ) )
         {

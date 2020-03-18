@@ -87,6 +87,11 @@ void Cliff_Gate::convert_gate( const gate &g )
     }
 }
 
+void inline Cliff_Gate::invert( )
+{
+    gtype = Cliff_Gate_inverse[ gtype ];
+}
+
 void Clifford_Template::read( std::ifstream &infile )
 {
     Cliff_Gate cliffg;
@@ -128,6 +133,7 @@ void Clifford_Template::convert_circ( circuit &circ )
         }
         else
         {
+            cliffg.invert();
             gates_replaced.insert( gates_replaced.begin(), cliffg );
         }
         i++;
@@ -222,6 +228,19 @@ circuit Clifford_Template::convert_to_circ( bool all )
         }
     }
     return circ;
+}
+
+gate invert_gate( const gate &g ){
+    gate g_res = g;
+    if( is_pauli( g ) )
+    {
+        const auto& tag = boost::any_cast<pauli_tag>( g.type() );
+        if( tag.root > 1u )
+        {
+            g_res.set_type( pauli_tag( tag.axis, tag.root, !tag.adjoint ) );
+        }
+    }
+    return g_res;
 }
 
 }

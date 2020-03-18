@@ -48,6 +48,7 @@ namespace cirkit
 bool is_CNOT_gate( const gate& g );
 
 enum Cliff_Gate_Type { H, T, Ts, S, Ss, Z, Y, RZ, V, Vs, X, CNOT };
+static Cliff_Gate_Type Cliff_Gate_inverse[] = { H, Ts, T, Ss, S, Z, Y, RZ, Vs, V, X, CNOT };
 
 const static std::string gate_name[] = { "h", "t", "T", "s", "S", "z", "y", "r", "v", "V", "x", "c" };
 
@@ -85,6 +86,7 @@ public:
 	Cliff_Gate_Type gtype;
 	int target, control;
 	void convert_gate( const gate &g );
+	void inline invert();
 };
 
 class Clifford_Template{
@@ -100,6 +102,8 @@ public:
 };
 
 static std::vector<Clifford_Template> cliff_templates;
+
+gate invert_gate( const gate &g );
 
 }
 

@@ -67,6 +67,7 @@ test_ident_command::test_ident_command(const environment::ptr& env)
     ( "experimental,e", "experiment with new functionality")
     ( "add_templ,a", "add new templates")
     ( "print_templates,g", "print all templates graphically as identity circuits")
+    ( "junk,j", "temporary test")
     ;
  //   add_new_option();
 }
@@ -234,9 +235,11 @@ bool test_ident_command::execute()
 	 	}
 	 	tex_table.close();
 	}
+	// Read identity circuits 
+	// if they cannot be reduced, then add them to the list of templates
 	if( is_set( "add_templ" ))
 	{
-		circuit circ_working, circ_reduced;
+		circuit circ_working, circ_reduced, circ;
 		Clifford_Template my_temp;
 		std::ifstream fileList ("file_list.txt");
 		std::string infile_qc;
@@ -250,7 +253,14 @@ bool test_ident_command::execute()
 	 	while( !fileList.eof() )
 	 	{
 	 		std::cout << "read " << infile_qc << std::endl;
-	 		circ_working = read_qc( infile_qc );
+	 		circ = read_qc( infile_qc );
+	 		std::cout << circ;
+	 		circ_working = circ;
+	 		int size = (circ.num_gates() - 1) / 2; // gates to be removed
+	 		for( int i = 0; i < size; i++ )
+	 		{
+	 			circ_working.remove_gate_at( circ_working.num_gates() - 1); // remove last gate
+	 		}
 	 		circ_reduced = remove_dup_gates( circ_working );
 	 		if( circ_working.num_gates() == circ_reduced.num_gates() )
 	 		{
@@ -258,7 +268,7 @@ bool test_ident_command::execute()
 	 		}
 	 		if( circ_working.num_gates() == circ_reduced.num_gates() )
 	 		{
-	 			my_temp.convert_circ( circ_working );
+	 			my_temp.convert_circ( circ );
 	 			cliff_templates.push_back( my_temp );
 	 			my_temp.print();
 	 			std::cout << "add new template " << infile_qc << std::endl;
@@ -282,6 +292,18 @@ bool test_ident_command::execute()
 			templ.print();
 			std::cout << circ;
 		}
+	}
+
+	if( is_set( "junk" ))
+	{
+		auto& circuits = env->store<circuit>();
+    	circuit circ = circuits.current();
+    	gate g;
+    	for( unsigned i = 0; i < circ.num_gates(); i++ )
+    	{
+    		circ[ i ] = invert_gate( circ[ i ] );
+    	}    	
+    	std::cout << circ << std::endl;
 	}
 
 	return true;
